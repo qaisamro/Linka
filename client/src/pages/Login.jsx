@@ -41,7 +41,7 @@ export default function Login() {
   };
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col lg:flex-row bg-[#F9F5F0]">
+    <div className="min-h-screen lg:h-screen w-full flex flex-col lg:flex-row bg-[#F9F5F0] font-vazir overflow-y-auto lg:overflow-hidden">
       {/* ── Left Panel: Branding & Stats ───────────────────────────── */}
       <div className="hidden lg:flex lg:w-[45%] bg-[#344F1F] animated-gradient-rich relative overflow-hidden flex-col items-center justify-center p-12">
         <div className="absolute inset-0 bg-[#344F1F]/40 pointer-events-none" />
@@ -90,14 +90,14 @@ export default function Login() {
       </div>
 
       {/* ── Right Panel: Login Form ──────────────────────────────── */}
-      <div className="w-full lg:w-[55%] flex items-center justify-center bg-premium-mesh p-6 sm:p-12 overflow-hidden">
-        <div className="w-full max-w-md pt-20 lg:pt-0">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 py-12 lg:py-4">
+        <div className="w-full max-w-md pt-16 lg:pt-0">
           {/* Mobile-only Branding */}
           <div className="lg:hidden text-center mb-8">
-            <div className="w-20 h-20 bg-[#344F1F] rounded-[2rem] flex items-center justify-center mx-auto mb-4 shadow-2xl border-4 border-[#F2EAD3]">
-              <img src="/favicon.png" alt="Linka" className="w-12 h-12 object-contain invert" />
+            <div className="w-16 h-16 bg-[#344F1F] rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-xl border-2 border-white">
+              <img src="/favicon.png" alt="Linka" className="w-10 h-10 object-contain invert" />
             </div>
-            <h1 className="text-3xl font-black text-[#344F1F] mb-1">Linka</h1>
+            <h1 className="text-2xl font-black text-[#344F1F]">تسجيل الدخول</h1>
           </div>
 
           <motion.div
@@ -105,7 +105,7 @@ export default function Login() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <header className="mb-6 lg:mb-8">
+            <header className="mb-6 lg:mb-8 hidden lg:block">
               <h2 className="text-3xl font-black text-[#344F1F]">تسجيل الدخول 👋</h2>
               <p className="text-[#344F1F]/60 text-lg font-medium mt-1">سعداء برؤيتك مرة أخرى!</p>
             </header>

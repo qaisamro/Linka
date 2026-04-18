@@ -51,47 +51,26 @@ export default function Register() {
   };
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col lg:flex-row bg-[#F9F5F0]">
-      {/* ── Left Panel: Value Proposition ─────────────────────────── */}
-      <div className="hidden lg:flex lg:w-[40%] bg-[#344F1F] animated-gradient-rich relative overflow-hidden flex-col items-center justify-center p-12">
+    <div className="min-h-screen lg:h-screen w-full flex flex-col lg:flex-row bg-[#F9F5F0] font-vazir overflow-y-auto lg:overflow-hidden">
+      {/* ── Left Panel: Branding & Marketing ────────────────────────── */}
+      <div className="hidden lg:flex lg:w-[40%] bg-[#344F1F] animated-gradient flex-col items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-[#344F1F]/40 pointer-events-none" />
         <div className="absolute inset-0 dot-pattern opacity-10" />
 
-        <div className="hero-glow-orb w-[400px] h-[400px] -top-20 -right-20 bg-[#F4991A]/20" />
-        <div className="hero-glow-orb w-[300px] h-[300px] bottom-0 -left-20 bg-[#344F1F]/20" style={{ animationDelay: '1s' }} />
-
-        <motion.div
-          initial={{ opacity: 0, x: -40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative z-10 w-full max-w-sm"
-        >
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="w-20 h-20 bg-[#F9F5F0] rounded-[1.5rem] p-3 shadow-2xl mx-auto mb-8 border-4 border-white/10"
-          >
-            <img src="/favicon.png" alt="L" className="w-full h-full object-contain" />
+        <motion.div initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="relative z-10 w-full max-w-sm text-center">
+          <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="w-20 h-20 bg-[#F9F5F0] rounded-[1.8rem] p-4 shadow-2xl mx-auto mb-8">
+            <img src="/favicon.png" alt="Linka" className="w-full h-full object-contain" />
           </motion.div>
+          <h1 className="text-3xl font-black text-[#F9F5F0] mb-4">انضم لمجتمع Linka</h1>
+          <p className="text-[#F9F5F0]/80 text-base font-bold mb-10">أنشئ حسابك في ثوانٍ وابدأ تأثيرك الإيجابي في المجتمع</p>
 
-          <h1 className="text-3xl font-black text-[#F9F5F0] text-center mb-3 drop-shadow-lg">انضم لمجتمع Linka</h1>
-          <p className="text-[#F9F5F0]/80 text-center text-sm font-bold mb-8 italic">أنشئ حسابك في ثوانٍ وابدأ تأثيرك الإيجابي</p>
-
-          <div className="space-y-3">
-            {STEPS_INFO.map(({ icon, title, desc }, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + i * 0.1 }}
-                className="flex items-center gap-4 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all group"
-              >
-                <div className="w-10 h-10 bg-[#F9F5F0] rounded-xl flex items-center justify-center text-xl shadow-lg group-hover:scale-110 transition-transform">
-                  {icon}
-                </div>
-                <div className="text-right">
-                  <p className="font-black text-[#F9F5F0] text-sm leading-tight">{title}</p>
-                  <p className="text-[#F9F5F0]/60 text-[10px] font-bold mt-1">{desc}</p>
+          <div className="space-y-4">
+            {STEPS_INFO.map((step, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.1 }} className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 text-right backdrop-blur-sm">
+                <span className="text-2xl mt-1">{step.icon}</span>
+                <div>
+                  <h4 className="text-sm font-black text-[#F9F5F0]">{step.title}</h4>
+                  <p className="text-xs text-[#F9F5F0]/60 font-medium mt-0.5">{step.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -99,15 +78,15 @@ export default function Register() {
         </motion.div>
       </div>
 
-      {/* ── Right Panel: Registration Form ────────────────────────── */}
-      <div className="w-full lg:w-[60%] flex items-center justify-center bg-premium-mesh p-6 sm:p-12 overflow-hidden">
-        <div className="w-full max-w-2xl pt-20 lg:pt-0">
-          {/* Mobile UI */}
+      {/* ── Right Panel: Registration Form ──────────────────────────── */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4 py-10 lg:py-4">
+        <div className="w-full max-w-xl pr-0 lg:pr-8 xl:pr-20 pt-16 lg:pt-0">
+          {/* Mobile-only Branding */}
           <div className="lg:hidden text-center mb-6">
-            <div className="w-16 h-16 bg-[#344F1F] rounded-[1.5rem] flex items-center justify-center mx-auto mb-2 shadow-xl">
-              <img src="/favicon.png" alt="L" className="w-10 h-10 invert" />
+            <div className="w-12 h-12 bg-[#344F1F] rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-xl border-2 border-white">
+              <img src="/favicon.png" alt="Linka" className="w-7 h-7 object-contain invert" />
             </div>
-            <h2 className="text-2xl font-black text-[#344F1F]">انضم إلينا</h2>
+            <h1 className="text-2xl font-black text-[#344F1F]">إنشاء حساب جديد</h1>
           </div>
 
           <motion.div
@@ -115,7 +94,7 @@ export default function Register() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <header className="mb-6">
+            <header className="mb-6 hidden lg:block">
               <h2 className="text-3xl font-black text-[#344F1F]">إنشاء حساب جديد 🚀</h2>
               <p className="text-[#344F1F]/60 text-base font-medium mt-1">انضم لأكثر من 1,200 شاب يغيرون المجتمع</p>
             </header>

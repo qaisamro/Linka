@@ -73,7 +73,7 @@ export default function Navbar() {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <img src={logo} alt="Linka Logo" className="h-14 sm:h-16 md:h-20 w-auto rounded-lg shadow-sm group-hover:shadow-md transition-shadow duration-300 object-contain" />
+                <img src={logo} alt="Linka Logo" className="h-14 sm:h-16 md:h-20 w-auto rounded-lg  group-hover:shadow-md transition-shadow duration-300 object-contain" />
               </motion.div>
             </Link>
 

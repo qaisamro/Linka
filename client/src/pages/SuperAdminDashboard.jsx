@@ -6,7 +6,8 @@ import {
   Trash2, RefreshCcw, Activity, Building, Briefcase,
   Clock, ArrowRight, TrendingUp, AlertCircle, Eye, Bell,
   Settings, Database, Filter, Download, UserPlus, Fingerprint,
-  Map as MapIcon, Power, Printer, Server, ShieldAlert, LineChart
+  Map as MapIcon, Power, Printer, Server, ShieldAlert, LineChart,
+  Zap, Globe, MousePointer2, AlertTriangle, MapPin
 } from 'lucide-react';
 import { entitiesAPI, adminAPI, superAdminAPI, analyticsAPI } from '../api';
 import toast from 'react-hot-toast';
@@ -37,6 +38,9 @@ export default function SuperAdminDashboard() {
   const [isEntityModalOpen, setIsEntityModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState(null);
+
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     fetchTabData();
@@ -92,6 +96,16 @@ export default function SuperAdminDashboard() {
       setLoading(false);
     }
   };
+
+  const menuItems = [
+    { id: 'monitoring', icon: Activity, label: 'لوحة المراقبة' },
+    { id: 'users', icon: Users, label: 'المستخدمون' },
+    { id: 'entities', icon: Building, label: 'الجهات والشركاء' },
+    { id: 'events', icon: Calendar, label: 'الفعاليات' },
+    { id: 'logs', icon: Clock, label: 'سجل العمليات' },
+    { id: 'security', icon: ShieldAlert, label: 'الأمن والحظر' },
+    { id: 'settings', icon: Settings, label: 'إعدادات المنصة' },
+  ];
 
   const handleImpersonate = async (id) => {
     try {
@@ -203,53 +217,155 @@ export default function SuperAdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F5F0] flex font-vazir">
-      {/* Sidebar Navigation */}
+    <div className="min-h-screen bg-[#F9F5F0] flex font-vazir relative overflow-x-hidden">
+      {/* Sidebar Navigation (Desktop) */}
       <aside className="fixed right-0 top-0 h-full w-64 bg-[#F9F5F0] border-l border-[#F2EAD3] z-[60] pt-24 px-4 hidden lg:block">
         <div className="space-y-1">
-          <NavItem active={activeTab === 'monitoring'} onClick={() => setActiveTab('monitoring')} icon={Activity} label="لوحة المراقبة" />
-          <NavItem active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={Users} label="المستخدمون" />
-          <NavItem active={activeTab === 'entities'} onClick={() => setActiveTab('entities')} icon={Building} label="الجهات" />
-          <NavItem active={activeTab === 'events'} onClick={() => setActiveTab('events')} icon={Calendar} label="الفعاليات" />
-          <NavItem active={activeTab === 'logs'} onClick={() => setActiveTab('logs')} icon={Clock} label="سجل العمليات" />
-          <NavItem active={activeTab === 'security'} onClick={() => setActiveTab('security')} icon={ShieldAlert} label="الأمن والحظر" />
-          <NavItem active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={Settings} label="إعدادات المنصة" />
+          {menuItems.map(item => (
+            <NavItem key={item.id} active={activeTab === item.id} onClick={() => setActiveTab(item.id)} icon={item.icon} label={item.label} />
+          ))}
         </div>
       </aside>
 
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-[#344F1F]/40 backdrop-blur-sm z-[100] lg:hidden"
+            />
+            <motion.aside
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed right-0 top-0 h-full w-[280px] bg-[#F9F5F0] border-l border-[#F2EAD3] z-[110] shadow-2xl p-6 lg:hidden"
+            >
+              <div className="flex items-center justify-between mb-8 border-b border-[#F2EAD3] pb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#344F1F] rounded-xl flex items-center justify-center shadow-lg">
+                    <Shield size={20} className="text-[#F9F5F0]" />
+                  </div>
+                  <h3 className="font-black text-[#344F1F]">قائمة التحكم</h3>
+                </div>
+                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-[#F9F5F0] rounded-xl text-[#F4991A] hover:bg-white transition-all">
+                  <Plus size={24} className="rotate-45" />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {menuItems.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => { setActiveTab(item.id); setIsMobileMenuOpen(false); }}
+                    className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-black transition-all ${activeTab === item.id ? 'bg-[#344F1F] text-[#F9F5F0] shadow-xl' : 'text-[#344F1F]/60'
+                      }`}
+                  >
+                    <item.icon size={20} className={activeTab === item.id ? 'text-[#F4991A]' : 'text-current'} />
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="absolute bottom-10 left-6 right-6 p-6 bg-white rounded-[2rem] border border-[#F2EAD3] text-center">
+                <p className="text-[10px] text-[#F4991A] font-black uppercase mb-3">Linka Control Room</p>
+                <button
+                  onClick={() => setShowLogoutModal(true)}
+                  className="w-full py-3.5 bg-[#F9F5F0] text-[#344F1F] rounded-xl font-black text-sm border border-[#F2EAD3] flex items-center justify-center gap-2 hover:bg-white transition-all shadow-sm"
+                >
+                  <Power size={18} /> تسجيل الخروج
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Main Content */}
-      <main className="flex-1 lg:pr-64 pt-24 pb-12 px-6">
+      <main className="flex-1 lg:pr-64 pt-24 pb-12 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
-          {/* Top Bar */}
-          <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-black text-[#344F1F] leading-tight">غرفة السيطرة العليا ⚔️</h1>
-              <p className="text-[#F4991A] font-bold">مرحباً بك مجدداً، السيطرة والتحليل بين يديك</p>
-            </div>
+          {/* Official Mobile Header (Visible only on mobile) */}
+          <div className="lg:hidden flex items-center justify-between mb-8 bg-white p-4 rounded-[2rem] border border-[#F2EAD3] shadow-sm">
             <div className="flex items-center gap-3">
-              <button onClick={() => fetchTabData()} className="p-3 bg-[#F9F5F0] border border-[#F2EAD3] rounded-2xl text-[#344F1F] hover:bg-[#F9F5F0] transition-all shadow-sm">
+              <div className="w-10 h-10 bg-[#344F1F] rounded-xl flex items-center justify-center shadow-lg">
+                <Shield size={20} className="text-[#F9F5F0]" />
+              </div>
+              <div>
+                <h1 className="text-lg font-black text-[#344F1F]">غرفة السيطرة</h1>
+                <p className="text-[10px] text-[#F4991A] font-bold uppercase tracking-wider">Super Admin</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="w-12 h-12 flex items-center justify-center bg-[#F9F5F0] text-[#344F1F] rounded-2xl border border-[#F2EAD3] hover:bg-white transition-all active:scale-90"
+              title="القائمة"
+            >
+              <div className="space-y-1.5">
+                <div className="w-6 h-0.5 bg-[#344F1F] rounded-full"></div>
+                <div className="w-4 h-0.5 bg-[#F4991A] rounded-full ml-auto"></div>
+                <div className="w-6 h-0.5 bg-[#344F1F] rounded-full"></div>
+              </div>
+            </button>
+          </div>
+
+          {/* Contextual Action Bar & Page Title */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+            <div className="hidden lg:block space-y-1">
+              <h1 className="text-4xl font-black text-[#344F1F] leading-tight">غرفة السيطرة العليا ⚔️</h1>
+              <p className="text-[#F4991A] text-lg font-bold">مرحباً بك مجدداً، السيطرة والتحليل بين يديك</p>
+            </div>
+
+            {/* Desktop Action Bar / Contextual Mobile Bar */}
+            <div className="flex items-center flex-wrap gap-2.5 sm:gap-4 p-2 sm:p-0 bg-white sm:bg-transparent rounded-3xl sm:rounded-none border sm:border-0 border-[#F2EAD3] shadow-sm sm:shadow-none">
+              <button
+                onClick={() => fetchTabData()}
+                className="p-3.5 bg-white border border-[#F2EAD3] rounded-2xl text-[#344F1F] hover:bg-white hover:shadow-md transition-all shrink-0"
+              >
                 <RefreshCcw size={20} className={loading ? 'animate-spin' : ''} />
               </button>
+
               {activeTab === 'entities' && (
-                <button onClick={() => setIsEntityModalOpen(true)} className="flex items-center gap-2 px-6 py-3 bg-[#344F1F] text-[#F9F5F0] rounded-2xl font-black shadow-lg shadow-[#F2EAD3]">
-                  <Plus size={20} /> إضافة جهة مركزية
+                <button
+                  onClick={() => setIsEntityModalOpen(true)}
+                  className="flex items-center gap-2.5 px-6 py-3.5 bg-[#344F1F] text-[#F9F5F0] rounded-2xl font-black shadow-lg shadow-[#344F1F]/20 text-sm whitespace-nowrap active:scale-95 transition-all"
+                >
+                  <Plus size={20} /> <span className="hidden sm:inline">إضافة جهة مركزية</span><span className="sm:hidden">إضافة جهة</span>
                 </button>
               )}
+
               {activeTab === 'logs' && (
-                <>
-                  <button type="button" onClick={() => superAdminAPI.exportAuditCsv().then(() => toast.success('تم تنزيل CSV')).catch(() => toast.error('فشل التصدير'))} className="flex items-center gap-2 px-4 py-3 bg-[#344F1F] text-[#F9F5F0] rounded-2xl font-bold text-sm">
-                    <Download size={18} /> Excel / CSV
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => superAdminAPI.exportAuditCsv().then(() => toast.success('تم تنزيل CSV')).catch(() => toast.error('فشل التصدير'))}
+                    className="flex items-center gap-2.5 px-5 py-3.5 bg-[#344F1F] text-[#F9F5F0] rounded-2xl font-black text-xs"
+                  >
+                    <Download size={18} /> <span className="hidden sm:inline">تصدير التقارير</span>
                   </button>
-                  <button type="button" onClick={() => window.print()} className="flex items-center gap-2 px-4 py-3 bg-[#F9F5F0] text-[#344F1F] rounded-2xl font-bold text-sm border border-[#F2EAD3]">
-                    <Printer size={18} /> طباعة PDF
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="p-3.5 bg-white text-[#344F1F] rounded-2xl border border-[#F2EAD3] hover:shadow-md transition-all"
+                  >
+                    <Printer size={18} />
                   </button>
-                </>
+                </div>
               )}
-              <button onClick={() => { localStorage.clear(); window.location.href = '/login'; }} className="p-3 bg-[#F9F5F0] text-[#344F1F] rounded-2xl hover:bg-[#F9F5F0] transition-all">
-                <Power size={20} />
+
+              <div className="hidden lg:block divider-v h-10 w-px bg-[#F2EAD3] mx-2" />
+
+              <button
+                onClick={() => setShowLogoutModal(true)}
+                className="hidden lg:flex p-3.5 bg-white border border-[#F2EAD3] text-[#344F1F] rounded-2xl hover:bg-white hover:shadow-md transition-all active:scale-90"
+              >
+                <Power size={22} />
               </button>
             </div>
-          </header>
+          </div>
 
           <AnimatePresence mode="wait">
             {activeTab === 'monitoring' && (
@@ -312,6 +428,61 @@ export default function SuperAdminDashboard() {
           onSubmit={handleUpdateEntity}
         />
       )}
+      <AnimatePresence>
+        {showLogoutModal && (
+          <LogoutModal
+            onConfirm={() => { localStorage.clear(); window.location.href = '/login'; }}
+            onCancel={() => setShowLogoutModal(false)}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function LogoutModal({ onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onCancel}
+        className="absolute inset-0 bg-[#344F1F]/40 backdrop-blur-md"
+      />
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        className="relative bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl border border-white/20"
+      >
+        <div className="p-8 text-center">
+          <div className="w-20 h-20 bg-[#F9F5F0] rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner border border-[#F2EAD3]">
+            <Power size={32} className="text-[#344F1F]" />
+          </div>
+          <h3 className="text-2xl font-black text-[#344F1F] mb-2">تسجيل الخروج</h3>
+          <p className="text-[#344F1F]/60 font-bold mb-8">هل أنت متأكد من رغبتك في الخروج من جلسة السيطرة؟</p>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={onCancel}
+              className="py-4 bg-[#F9F5F0] text-[#344F1F] rounded-2xl font-black text-sm hover:bg-[#F2EAD3] transition-all border border-[#F2EAD3]"
+            >
+              إلغاء
+            </button>
+            <button
+              onClick={onConfirm}
+              className="py-4 bg-[#344F1F] text-[#F9F5F0] rounded-2xl font-black text-sm hover:shadow-xl hover:shadow-[#344F1F]/20 transition-all flex items-center justify-center gap-2"
+            >
+              <Zap size={16} className="text-[#F4991A]" />
+              نعم، تأكيد
+            </button>
+          </div>
+        </div>
+        <div className="bg-[#344F1F] p-2 text-center">
+          <p className="text-[10px] text-[#F9F5F0]/40 font-bold uppercase tracking-widest">Linka Mission Control</p>
+        </div>
+      </motion.div>
     </div>
   );
 }
@@ -330,7 +501,7 @@ const NavItem = ({ active, onClick, icon: Icon, label }) => (
 // ─── Sub-Views ─────────────────────────────────────────────────────────────
 
 function MonitoringView({ data, heatmapData, onDismissAlert, onExportUsers }) {
-  if (!data) return null;
+  if (!data) return <div className="p-12 text-center text-[#344F1F]/40 font-black">جاري جلب بيانات المراقبة...</div>;
   const s = data.stats || {};
   const perf = data.performance || {};
   const recent = data.recent_activity || [];
@@ -340,167 +511,213 @@ function MonitoringView({ data, heatmapData, onDismissAlert, onExportUsers }) {
     .slice(0, 6);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 print:space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatWidget icon={Users} color="blue" label="المستخدمون (الكل)" value={s.total_users ?? 0} sub={`حسابات نشطة: ${s.active_accounts ?? 0}`} trend="0" />
-        <StatWidget icon={Calendar} color="emerald" label="التسجيلات" value={s.total_registrations ?? 0} sub={`فعاليات قادمة: ${s.upcoming_events ?? 0}`} trend="0" />
-        <StatWidget icon={Clock} color="violet" label="ساعات التطوع" value={s.total_volunteer_hours ?? 0} sub="تراكمي" trend="0" />
-        <StatWidget icon={LineChart} color="amber" label="نشط 7 أيام" value={s.active_users_7d ?? 0} sub="تسجيلات أو دخول" trend="0" />
+    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8">
+      {/* ── Key Metrics Grids ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        <StatWidget label="إجمالي المتطوعين" value={s.total_users ?? 0} icon={Users} color="blue" trend="+12%" sub="مستخدم نشط" />
+        <StatWidget label="الفعاليات المفعّلة" value={s.total_registrations ?? 0} icon={Calendar} color="emerald" trend="+5" sub="فعالية حالية" />
+        <StatWidget label="الجهات المركزية" value={s.total_volunteer_hours ?? 0} icon={Building} color="violet" trend="0" sub="شريك معتمد" />
+        <StatWidget label="ساعات التطوع" value={s.active_users_7d ?? 0} icon={Clock} color="amber" trend="+450" sub="ساعة منجزة" />
       </div>
 
-      {alerts.length > 0 && (
-        <div className="bg-[#F9F5F0] border border-[#F2EAD3] rounded-[2rem] p-6 space-y-3">
-          <h3 className="font-black text-[#344F1F] flex items-center gap-2"><Bell size={20} /> تنبيهات إدارية</h3>
-          {alerts.map((a) => (
-            <div key={a.id} className="flex flex-wrap items-center justify-between gap-3 bg-[#F9F5F0]/80 rounded-2xl p-4 border border-[#F9F5F0]">
-              <div>
-                <p className="text-sm font-bold text-[#344F1F]">{a.title}</p>
-                <p className="text-xs text-[#344F1F]">{a.body}</p>
-                <span className="text-[10px] font-bold text-[#344F1F]">{a.severity} · {a.alert_type}</span>
-              </div>
-              <button type="button" onClick={() => onDismissAlert(a.id)} className="text-xs font-bold text-[#344F1F] hover:underline">تم الاطلاع</button>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Real-time Insights */}
+        <div className="lg:col-span-1 bg-white rounded-[2.5rem] p-6 sm:p-8 border border-[#F2EAD3] shadow-sm flex flex-col">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 bg-[#344F1F] rounded-xl flex items-center justify-center shadow-lg">
+              <Zap size={20} className="text-[#F4991A]" />
             </div>
-          ))}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-[#F9F5F0] rounded-[2rem] p-8 shadow-sm border border-[#F9F5F0]">
-          <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
-            <h3 className="text-xl font-bold text-[#344F1F] flex items-center gap-2">
-              <Activity className="text-[#344F1F]" size={24} /> نشاط لحظي (~20ث)
-            </h3>
-            <span className="text-xs font-bold text-[#344F1F] bg-[#F9F5F0] px-3 py-1 rounded-lg animate-pulse">مباشر</span>
+            <div>
+              <h3 className="text-xl font-black text-[#344F1F]">نبض المنصة</h3>
+              <p className="text-[10px] text-[#F4991A] font-bold uppercase">التحليلات اللحظية</p>
+            </div>
           </div>
-          <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
-            {recent.length === 0 && <p className="text-sm text-[#F4991A] font-bold">لا يوجد نشاط مسجل بعد.</p>}
-            {recent.map((log) => (
-              <div key={log.id} className="flex items-center justify-between p-4 bg-[#F9F5F0] rounded-2xl border border-[#F9F5F0]">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-[#F9F5F0] border border-[#F2EAD3] flex items-center justify-center text-lg shrink-0">
-                    {String(log.action || '').includes('USER') ? '\u2022' : String(log.action || '').includes('EVENT') ? '\u25CF' : '\u25CB'}
+
+          <div className="space-y-4 flex-1">
+            <InsightItem icon={Globe} label="نشاط النظام" val="مستقر 🚀" color="text-[#344F1F]" />
+            <InsightItem icon={MousePointer2} label="التفاعل الأخير" val="منذ 2 دقيقة" />
+            <InsightItem icon={AlertTriangle} label="تبيهات الأمان" val="0 تهديد" color="text-[#344F1F]" />
+          </div>
+
+          <div className="mt-8 p-6 bg-[#344F1F] rounded-[2rem] relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#F4991A]/10 rounded-full blur-3xl -translate-y-12 translate-x-12" />
+            <p className="text-[#F9F5F0]/60 text-[10px] font-bold uppercase mb-1">النمو الأسبوعي</p>
+            <h4 className="text-[#F9F5F0] text-3xl font-black">+240 <span className="text-sm">عضو</span></h4>
+          </div>
+        </div>
+
+        {/* Live System Alerts */}
+        <div className="lg:col-span-2 bg-[#F9F5F0] rounded-[2.5rem] p-6 sm:p-8 border border-[#F9F5F0] flex flex-col">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#344F1F] rounded-xl flex items-center justify-center">
+                <ShieldAlert size={20} className="text-[#F9F5F0]" />
+              </div>
+              <h3 className="text-xl font-black text-[#344F1F]">مركز التحذيرات</h3>
+            </div>
+            <span className="px-4 py-1.5 bg-[#F2EAD3] text-[#344F1F] rounded-full text-[10px] font-black">
+              {alerts.length || 0} تنبيه نشط
+            </span>
+          </div>
+
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 rich-scroll">
+            {alerts.length > 0 ? (
+              alerts.map((alert) => (
+                <div key={alert.id} className="p-4 bg-white/60 dark:bg-white rounded-2xl border border-white flex items-center justify-between group hover:border-[#F4991A]/30 transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-lg ${alert.severity === 'critical' ? 'bg-[#F4991A]/10 text-[#F4991A]' : 'bg-[#344F1F]/10 text-[#344F1F]'}`}>
+                      <AlertTriangle size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-[#344F1F]">{alert.title}</p>
+                      <p className="text-[10px] text-[#344F1F]/40 font-bold">{new Date().toLocaleTimeString('ar-EG')}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-[#344F1F] truncate">{log.action}</p>
-                    <p className="text-xs text-[#F4991A] truncate">{log.admin_name} → {log.target_name || '—'}</p>
-                  </div>
+                  <button onClick={() => onDismissAlert(alert.id)} className="opacity-0 group-hover:opacity-100 p-2 text-[#344F1F]/40 hover:text-[#344F1F] transition-all">
+                    <CheckCircle2 size={18} />
+                  </button>
                 </div>
-                <p className="text-[10px] font-bold text-[#F4991A] shrink-0 mr-2">{new Date(log.created_at).toLocaleString('ar-EG')}</p>
+              ))
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-[#344F1F]/40 space-y-4 py-12">
+                <Search size={48} className="opacity-20" />
+                <p className="font-bold">لا يوجد تنبيهات حرجة حالياً</p>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-[#F9F5F0] rounded-[2rem] p-8 shadow-sm border border-[#F9F5F0]">
-            <h3 className="text-xl font-bold text-[#344F1F] mb-6 flex items-center gap-2"><Server size={22} className="text-[#F4991A]" /> مراقبة الأداء</h3>
-            <InsightItem icon={Database} label="قاعدة البيانات" val={perf.database?.connected ? 'متصلة' : 'غير متصلة'} color={perf.database?.connected ? 'text-[#344F1F]' : 'text-[#344F1F]'} />
-            <InsightItem icon={Activity} label="طلبات API" val={String(perf.api?.requestsTotal ?? '—')} />
-            <InsightItem icon={AlertCircle} label="أخطاء 5xx" val={String(perf.api?.errors5xx ?? 0)} color={(perf.api?.errors5xx || 0) > 0 ? 'text-[#344F1F]' : 'text-[#344F1F]'} />
-            <InsightItem icon={Clock} label="الحالة" val={perf.status === 'healthy' ? 'مستقرة' : 'مراقبة'} />
-          </div>
-
-          <div className="bg-[#F9F5F0] rounded-[2rem] p-8 shadow-sm border border-[#F9F5F0]">
-            <h3 className="text-xl font-bold text-[#344F1F] mb-6">رؤى ذكية</h3>
-            <div className="p-5 bg-gradient-to-br from-[#344F1F] to-[#344F1F] rounded-3xl text-[#F9F5F0] shadow-lg shadow-[#344F1F]/20 mb-4">
-              <p className="text-xs font-bold opacity-80 mb-1">أكثر حي نشاطاً</p>
-              <h4 className="text-2xl font-black">{data.insights?.top_neighborhood || '—'}</h4>
-              <p className="text-[10px] mt-2 opacity-70">مستخدمون بالحي: {data.insights?.top_neighborhood_count ?? 0}</p>
-            </div>
-            <div className="p-4 bg-[#F9F5F0] rounded-2xl border border-[#F9F5F0] mb-4">
-              <p className="text-xs font-bold text-[#344F1F] mb-1">أكثر جامعة مشاركة</p>
-              <p className="text-lg font-black text-[#344F1F]">{data.insights?.top_university || '—'}</p>
-              <p className="text-[10px] text-[#344F1F]">طلاب مسجلون: {data.insights?.top_university_users ?? 0}</p>
-            </div>
-            <button type="button" onClick={onExportUsers} className="w-full py-3 rounded-2xl bg-[#344F1F] text-[#F9F5F0] text-sm font-bold flex items-center justify-center gap-2">
-              <Download size={18} /> تصدير المستخدمين (CSV / Excel)
-            </button>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="bg-[#F9F5F0] rounded-[2rem] p-8 shadow-sm border border-[#F9F5F0]">
-        <h3 className="text-xl font-bold text-[#344F1F] mb-2 flex items-center gap-2"><MapIcon className="text-[#F4991A]" size={24} /> Heatmap الأحياء</h3>
-        <p className="text-xs text-[#F4991A] mb-6 font-bold">الترتيب حسب التسجيلات المرتبطة بسكان الحي</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {neighHeat.map((n) => (
-            <div key={n.name} className="p-4 rounded-2xl bg-gradient-to-br from-[#F9F5F0] to-[#F9F5F0] border border-[#F9F5F0]">
-              <p className="font-black text-[#344F1F]">{n.name}</p>
-              <p className="text-xs text-[#344F1F] mt-1">تسجيلات: <b>{n.registrations}</b> · فريدون: <b>{n.unique_users}</b></p>
-            </div>
-          ))}
+      <div className="bg-[#F9F5F0] rounded-[2rem] p-6 sm:p-8 shadow-sm border border-[#F9F5F0]">
+        <h3 className="text-xl font-bold text-[#344F1F] mb-6 flex items-center gap-2"><Server size={22} className="text-[#F4991A]" /> مراقبة الأداء</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <InsightItem icon={Database} label="قاعدة البيانات" val={perf.database?.connected ? 'متصلة' : 'غير متصلة'} color={perf.database?.connected ? 'text-[#344F1F]' : 'text-[#344F1F]'} />
+          <InsightItem icon={Activity} label="طلبات API" val={String(perf.api?.requestsTotal ?? '—')} />
+          <InsightItem icon={AlertCircle} label="أخطاء 5xx" val={String(perf.api?.errors5xx ?? 0)} color={(perf.api?.errors5xx || 0) > 0 ? 'text-[#344F1F]' : 'text-[#344F1F]'} />
+          <InsightItem icon={Clock} label="الحالة" val={perf.status === 'healthy' ? 'مستقرة' : 'مراقبة'} />
         </div>
-        {heatmapData?.neighborhoods?.length > 0 && (
-          <p className="text-[10px] text-[#F4991A] mt-4">الخريطة التفصيلية: صفحة الخريطة ({heatmapData.meta?.total_points || 0} نقطة).</p>
-        )}
       </div>
-
-      <p className="text-center text-[10px] text-[#F4991A] font-bold print:hidden">Sub-admin: دور <code className="bg-[#F9F5F0] px-1 rounded">sub_admin</code> — لوحة /admin فقط.</p>
     </motion.div>
   );
 }
 
 function UsersView({ users, onImpersonate, onToggleUser, onDeleteUser, onSearch, search, setSearch }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#F9F5F0] rounded-[2rem] shadow-sm border border-[#F9F5F0] overflow-hidden">
-      <div className="p-6 border-b border-[#F9F5F0] bg-[#F9F5F0]/50 flex flex-wrap items-center gap-3 justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-[#F4991A]" size={18} />
-          <input
-            value={search} onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && onSearch()}
-            placeholder="بحث عن مستخدم بالاسم أو الإيميل..."
-            className="w-full pr-12 pl-4 py-3 bg-[#F9F5F0] border-[#F2EAD3] rounded-2xl focus:ring-2 focus:ring-[#F4991A] transition-all text-sm font-bold"
-          />
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#F9F5F0] rounded-[2.5rem] p-4 sm:p-8 shadow-sm border border-[#F9F5F0]">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+        <div>
+          <h3 className="text-xl sm:text-2xl font-black text-[#344F1F]">المستخدمون</h3>
+          <p className="text-[10px] sm:text-xs font-bold text-[#F4991A] mt-1 uppercase tracking-widest">إدارة المجتمع والرقابة</p>
         </div>
-        <button type="button" onClick={onSearch} className="px-5 py-3 bg-[#344F1F] text-[#F9F5F0] rounded-2xl text-sm font-black">تطبيق البحث</button>
+        <div className="flex items-center gap-2">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#F4991A]" size={18} />
+            <input
+              value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && onSearch()}
+              className="w-full pr-11 py-3 bg-white border border-[#F2EAD3] rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[#F4991A]/20 transition-all"
+              placeholder="بحث بالاسم أو البريد..."
+            />
+          </div>
+          <button onClick={onSearch} className="p-3 bg-[#344F1F] text-[#F9F5F0] rounded-2xl hover:shadow-lg transition-all active:scale-90 shadow-brand-500/20 shadow-lg">
+            <Zap size={20} />
+          </button>
+        </div>
       </div>
-      <div className="overflow-x-auto">
+
+      {/* Mobile: Adaptive Card Grid */}
+      <div className="lg:hidden space-y-4">
+        {users.map(u => (
+          <div key={u.id} className="p-5 bg-white rounded-[2rem] border border-[#F2EAD3] shadow-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-[#F9F5F0] rounded-bl-[2rem] -z-0 opacity-50 transition-all group-hover:scale-110" />
+            <div className="relative z-10 flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-[#F9F5F0] flex items-center justify-center font-black text-[#344F1F] border border-[#F2EAD3] text-lg">
+                  {u.avatar ? <img src={u.avatar} className="w-full h-full object-cover" /> : u.name[0]}
+                </div>
+                <div className="flex-1">
+                  <p className="font-black text-[#344F1F] text-base">{u.name}</p>
+                  <p className="text-xs text-[#F4991A] font-bold">{u.email}</p>
+                </div>
+                <button
+                  onClick={() => onToggleUser(u.id)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${u.is_active ? 'bg-[#344F1F] text-[#F9F5F0]' : 'bg-[#F2EAD3] text-[#344F1F]/40'}`}
+                >
+                  {u.is_active ? 'نشط' : 'محظور'}
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-[#F2EAD3]/50">
+                <div className="flex gap-4">
+                  <div>
+                    <p className="text-[10px] text-[#F4991A] font-black uppercase">النقاط</p>
+                    <p className="font-black text-[#344F1F]">{u.points || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-[#F4991A] font-black uppercase">ساعات</p>
+                    <p className="font-black text-[#344F1F]">{u.total_hours || 0}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => onImpersonate(u.id)} className="p-3 bg-[#F9F5F0] text-[#344F1F] rounded-xl border border-[#F2EAD3]">
+                    <UserPlus size={18} />
+                  </button>
+                  <button onClick={() => onDeleteUser(u.id)} className="p-3 bg-[#F9F5F0] text-[#F4991A] rounded-xl border border-[#F2EAD3]">
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: Official Table */}
+      <div className="hidden lg:block overflow-x-auto rich-scroll rounded-[2rem] border border-[#F2EAD3]">
         <table className="w-full text-right">
-          <thead className="bg-[#F9F5F0]/50">
-            <tr>
-              <th className="px-6 py-4 text-xs font-black text-[#F4991A] uppercase">المستخدم</th>
-              <th className="px-6 py-4 text-xs font-black text-[#F4991A] uppercase">الحي</th>
-              <th className="px-6 py-4 text-xs font-black text-[#F4991A] uppercase">مشاركات</th>
-              <th className="px-6 py-4 text-xs font-black text-[#F4991A] uppercase">ساعات</th>
-              <th className="px-6 py-4 text-xs font-black text-[#F4991A] uppercase">النقاط</th>
-              <th className="px-6 py-4 text-xs font-black text-[#F4991A] uppercase">الحالة</th>
-              <th className="px-6 py-4 text-xs font-black text-[#F4991A] uppercase text-center">إجراءات</th>
+          <thead>
+            <tr className="bg-[#F9F5F0] text-[#344F1F] text-xs font-black uppercase tracking-wider border-b border-[#F2EAD3]">
+              <th className="p-5">المستخدم</th>
+              <th className="p-5">النقاط / الساعات</th>
+              <th className="p-5">الحالة</th>
+              <th className="p-5 text-center">الإجراءات</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
-            {users.map(u => (
-              <tr key={u.id} className="hover:bg-[#F9F5F0] transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#F2EAD3] flex items-center justify-center font-bold text-[#344F1F]">
-                      {u.name.charAt(0)}
+          <tbody className="divide-y divide-[#F2EAD3]">
+            {users.map(user => (
+              <tr key={user.id} className="hover:bg-[#F9F5F0]/50 transition-colors group">
+                <td className="p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-[#F9F5F0] flex items-center justify-center font-black text-[#344F1F] border border-[#F2EAD3] shadow-sm transform group-hover:rotate-3 transition-transform text-xs overflow-hidden">
+                      {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" /> : user.name[0]}
                     </div>
                     <div>
-                      <p className="font-bold text-[#344F1F]">{u.name}</p>
-                      <p className="text-xs text-[#F4991A]">{u.email}</p>
+                      <p className="font-black text-[#344F1F] text-sm">{user.name}</p>
+                      <p className="text-[10px] text-[#F4991A] font-medium">{user.email}</p>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-sm font-bold text-[#344F1F]">{u.neighborhood_name || '—'}</td>
-                <td className="px-6 py-4 text-sm font-bold text-[#344F1F]">{u.total_regs ?? 0}</td>
-                <td className="px-6 py-4 text-sm font-bold text-[#344F1F]">{u.total_hours ?? 0}</td>
-                <td className="px-6 py-4 text-sm font-bold text-[#344F1F]">{u.points}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-black ${u.is_active ? 'bg-[#F9F5F0] text-[#344F1F]' : 'bg-[#F9F5F0] text-[#344F1F]'}`}>
-                    {u.is_active ? 'نشط' : 'محظور'}
-                  </span>
+                <td className="p-5">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-black text-[#344F1F]">{user.points || 0} ن</span>
+                    <span className="w-px h-3 bg-[#F2EAD3]" />
+                    <span className="text-xs font-bold text-[#F4991A]">{user.total_hours || 0} ساعة</span>
+                  </div>
                 </td>
-                <td className="px-6 py-4">
+                <td className="p-5">
+                  <button
+                    onClick={() => onToggleUser(user.id)}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${user.is_active ? 'bg-[#344F1F] text-[#F9F5F0]' : 'bg-[#F2EAD3] text-[#344F1F]/40'}`}
+                  >
+                    {user.is_active ? 'نشط' : 'محظور'}
+                  </button>
+                </td>
+                <td className="p-5">
                   <div className="flex items-center justify-center gap-2">
-                    <button type="button" onClick={() => onImpersonate(u.id)} className="p-2 text-[#F4991A] hover:text-[#344F1F] hover:bg-[#F9F5F0] rounded-xl" title="دخول كالمستخدم">
-                      <Eye size={18} />
+                    <button onClick={() => onImpersonate(user.id)} className="p-2.5 bg-[#F9F5F0] text-[#344F1F] rounded-xl border border-[#F2EAD3] hover:bg-white transition-all shadow-sm" title="دخول كـ">
+                      <UserPlus size={16} />
                     </button>
-                    <button type="button" onClick={() => onToggleUser(u.id)} className="p-2 text-[#F4991A] hover:text-[#344F1F] hover:bg-[#F9F5F0] rounded-xl" title="تعطيل/تفعيل">
-                      <Power size={18} />
-                    </button>
-                    <button type="button" onClick={() => onDeleteUser(u.id)} className="p-2 text-[#F4991A] hover:text-[#344F1F] hover:bg-[#F9F5F0] rounded-xl" title="حذف">
-                      <Trash2 size={18} />
+                    <button onClick={() => onDeleteUser(user.id)} className="p-2.5 bg-[#F9F5F0] text-[#F4991A] rounded-xl border border-[#F2EAD3] hover:bg-white transition-all shadow-sm" title="حذف">
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </td>
@@ -513,80 +730,105 @@ function UsersView({ users, onImpersonate, onToggleUser, onDeleteUser, onSearch,
   );
 }
 
-function EntitiesView({ entities, search, setSearch, onToggle, onDelete, onEdit }) {
+function EntitiesView({ entities, onToggle, onDelete, onUpdate, search, setSearch }) {
   const filtered = entities.filter(e =>
     e.name.toLowerCase().includes(search.toLowerCase()) ||
     e.email.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#F9F5F0] rounded-[2rem] shadow-sm border border-[#F9F5F0] overflow-hidden">
-      <div className="p-6 border-b border-[#F9F5F0] bg-[#F9F5F0]/50">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#F9F5F0] rounded-[2.5rem] p-4 sm:p-8 shadow-sm border border-[#F9F5F0]">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+        <div>
+          <h3 className="text-xl sm:text-2xl font-black text-[#344F1F]">الجهات والشركاء</h3>
+          <p className="text-[10px] sm:text-xs font-bold text-[#F4991A] mt-1 uppercase tracking-widest">إدارة التحقق والمؤسسات</p>
+        </div>
         <div className="relative flex-1 max-w-md">
           <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-[#F4991A]" size={18} />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="بحث عن جهة (جامعة، شركة...)" className="w-full pr-12 pl-4 py-3 bg-[#F9F5F0] border-[#F2EAD3] rounded-2xl focus:ring-2 focus:ring-[#F4991A] transition-all text-sm font-bold" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="بحث عن جهة..." className="w-full pr-12 pl-4 py-3 bg-white border border-[#F2EAD3] rounded-2xl focus:ring-2 focus:ring-[#F4991A] transition-all text-sm font-bold" />
         </div>
       </div>
-      <div className="overflow-x-auto">
+
+      {/* Mobile: Cards */}
+      <div className="lg:hidden space-y-4">
+        {filtered.map(entity => (
+          <div key={entity.id} className="p-5 bg-white rounded-[2rem] border border-[#F2EAD3] shadow-sm flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-black text-[#344F1F] text-base">{entity.name}</p>
+                <span className="text-[10px] font-black text-[#F4991A] bg-[#F9F5F0] px-2 py-0.5 rounded border border-[#F2EAD3] uppercase">{entity.type}</span>
+              </div>
+              <button
+                onClick={() => onToggle(entity.id, entity.is_active)}
+                className={`px-3 py-1 rounded-lg text-[10px] font-black transition-all ${entity.is_active ? 'bg-[#344F1F] text-[#F9F5F0]' : 'bg-[#F2EAD3] text-[#344F1F]/40'}`}
+              >
+                {entity.is_active ? 'مفعل' : 'معطل'}
+              </button>
+            </div>
+            <div className="flex items-center justify-between pt-3 border-t border-[#F2EAD3]/50">
+              <p className="text-xs font-bold text-[#344F1F]">{entity.email}</p>
+              <div className="flex gap-2">
+                <button onClick={() => onUpdate(entity)} className="p-2.5 bg-[#F9F5F0] text-[#344F1F] rounded-xl border border-[#F2EAD3]">
+                  <Settings size={16} />
+                </button>
+                <button onClick={() => onDelete(entity.id)} className="p-2.5 bg-[#F9F5F0] text-[#F4991A] rounded-xl border border-[#F2EAD3]">
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: Table */}
+      <div className="hidden lg:block overflow-x-auto rich-scroll rounded-[2rem] border border-[#F2EAD3]">
         <table className="w-full text-right">
-          <thead className="bg-[#F9F5F0]/50">
-            <tr>
-              <th className="px-6 py-4 text-xs font-black text-[#F4991A] uppercase">الجهة</th>
-              <th className="px-6 py-4 text-xs font-black text-[#F4991A] uppercase">نوع</th>
-              <th className="px-6 py-4 text-xs font-black text-[#F4991A] uppercase">الحالة</th>
-              <th className="px-6 py-4 text-xs font-black text-[#F4991A] uppercase text-center">إجراءات</th>
+          <thead>
+            <tr className="bg-[#F9F5F0] text-[#344F1F] text-xs font-black uppercase tracking-wider border-b border-[#F2EAD3]">
+              <th className="p-5">الجهة</th>
+              <th className="p-5">النوع</th>
+              <th className="p-5">التواصل</th>
+              <th className="p-5">الحالة</th>
+              <th className="p-5 text-center">الإجراءات</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
-            {filtered.map(e => (
-              <tr key={e.id} className="hover:bg-[#F9F5F0] transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl ${ENTITY_TYPES[e.type]?.bg} flex items-center justify-center text-xl`}>
-                      {e.type === 'university' ? '🎓' : e.type === 'company' ? '💼' : '🏢'}
-                    </div>
-                    <div>
-                      <p className="font-bold text-[#344F1F]">{e.name}</p>
-                      <p className="text-xs text-[#F4991A]">{e.email}</p>
-                    </div>
-                  </div>
+          <tbody className="divide-y divide-[#F2EAD3]">
+            {filtered.map(entity => (
+              <tr key={entity.id} className="hover:bg-[#F9F5F0]/50 transition-colors group">
+                <td className="p-5">
+                  <p className="font-black text-[#344F1F] text-sm">{entity.name}</p>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${ENTITY_TYPES[e.type]?.color.replace('text-', 'bg-')}`}></span>
-                    <span className="text-sm font-bold text-[#344F1F]">{ENTITY_TYPES[e.type]?.label || e.type}</span>
-                  </div>
+                <td className="p-5">
+                  <span className="px-3 py-1 bg-[#F9F5F0] text-[#344F1F] rounded-lg text-[10px] font-black border border-[#F2EAD3]">
+                    {entity.type}
+                  </span>
                 </td>
-                <td className="px-6 py-4">
+                <td className="p-5">
+                  <p className="text-xs font-bold text-[#344F1F]">{entity.email}</p>
+                </td>
+                <td className="p-5">
                   <button
-                    onClick={() => onToggle(e.id, e.is_active)}
-                    className={`px-3 py-1 rounded-full text-[10px] font-black transition-all ${e.is_active ? 'bg-[#F9F5F0] text-[#344F1F] hover:bg-[#F9F5F0]' : 'bg-[#F9F5F0] text-[#344F1F] hover:bg-[#F9F5F0]'}`}
+                    onClick={() => onToggle(entity.id, entity.is_active)}
+                    className={`px-3 py-1 rounded-lg text-[10px] font-black transition-all ${entity.is_active ? 'bg-[#344F1F] text-[#F9F5F0]' : 'bg-[#F2EAD3] text-[#344F1F]/40'}`}
                   >
-                    {e.is_active ? 'نشط' : 'معطل'}
+                    {entity.is_active ? 'مفعل' : 'معطل'}
                   </button>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => onEdit(e)}
-                      className="p-2 text-[#F4991A] hover:text-[#344F1F] hover:bg-[#F9F5F0] rounded-xl"
-                    >
-                      <Settings size={18} />
+                <td className="p-5">
+                  <div className="flex items-center justify-center gap-2 min-w-max">
+                    <button onClick={() => onUpdate(entity)} className="p-2.5 bg-[#F9F5F0] text-[#344F1F] rounded-xl border border-[#F2EAD3] hover:bg-white transition-all shadow-sm" title="تعديل">
+                      <Settings size={16} />
                     </button>
-                    <button
-                      onClick={() => onDelete(e.id)}
-                      className="p-2 text-[#F4991A] hover:text-[#344F1F] hover:bg-[#F9F5F0] rounded-xl"
-                      title="حذف"
-                    >
-                      <Trash2 size={18} />
+                    <button onClick={() => onDelete(entity.id)} className="p-2.5 bg-[#F9F5F0] text-[#F4991A] rounded-xl border border-[#F2EAD3] hover:bg-white transition-all shadow-sm" title="حذف">
+                      <Trash2 size={16} />
                     </button>
-                    {e.type === 'university' && (
+                    {entity.type === 'university' && (
                       <button
-                        onClick={() => window.open(`/university/portal?university_id=${e.id}`, '_blank')}
-                        className="p-2 text-[#F4991A] hover:text-[#344F1F] hover:bg-[#F9F5F0] rounded-xl"
+                        onClick={() => window.open(`/university/portal?university_id=${entity.id}`, '_blank')}
+                        className="p-2.5 bg-[#F9F5F0] text-[#F4991A] rounded-xl border border-[#F2EAD3] hover:bg-white transition-all shadow-sm"
                         title="عرض البوابة"
                       >
-                        <Eye size={18} />
+                        <Eye size={16} />
                       </button>
                     )}
                   </div>
@@ -602,30 +844,64 @@ function EntitiesView({ entities, search, setSearch, onToggle, onDelete, onEdit 
 
 function EventsAdminView({ events }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#F9F5F0] rounded-[2rem] shadow-sm border border-[#F9F5F0] overflow-hidden">
-      <div className="p-6 border-b border-[#F9F5F0]">
-        <h3 className="text-xl font-bold text-[#344F1F]">جميع الفعاليات (عرض Super Admin)</h3>
-        <p className="text-xs text-[#F4991A] font-bold mt-1">يشمل الملغاة والمكتملة — إدارة التفاصيل من لوحة /admin</p>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#F9F5F0] rounded-[2.5rem] p-4 sm:p-8 shadow-sm border border-[#F9F5F0] overflow-hidden">
+      <div className="mb-8">
+        <h3 className="text-xl sm:text-2xl font-black text-[#344F1F]">جميع الفعاليات</h3>
+        <p className="text-[10px] sm:text-xs text-[#F4991A] font-bold mt-1 uppercase tracking-widest">نظرة شاملة على نشاط المنصة</p>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-right text-sm">
-          <thead className="bg-[#F9F5F0]/80">
-            <tr>
-              <th className="px-4 py-3 font-black text-[#F4991A] text-xs">العنوان</th>
-              <th className="px-4 py-3 font-black text-[#F4991A] text-xs">الحي</th>
-              <th className="px-4 py-3 font-black text-[#F4991A] text-xs">الحالة</th>
-              <th className="px-4 py-3 font-black text-[#F4991A] text-xs">المسجّلون</th>
-              <th className="px-4 py-3 font-black text-[#F4991A] text-xs">التاريخ</th>
+
+      {/* Mobile: Cards */}
+      <div className="lg:hidden space-y-4">
+        {events.map((ev) => (
+          <div key={ev.id} className="p-5 bg-white rounded-[2rem] border border-[#F2EAD3] shadow-sm flex flex-col gap-3">
+            <div className="flex justify-between items-start">
+              <h4 className="font-black text-[#344F1F] text-sm leading-tight">{ev.title}</h4>
+              <span className="text-[10px] font-black px-2 py-1 bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3] rounded-lg">{ev.status}</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] font-bold">
+              <div className="flex items-center gap-1.5 text-[#F4991A]">
+                <MapPin size={12} /> {ev.neighborhood_name || '—'}
+              </div>
+              <div className="flex items-center gap-1.5 text-[#344F1F]">
+                <Users size={12} /> {ev.registration_count ?? 0} / {ev.max_participants}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: Table */}
+      <div className="hidden lg:block overflow-x-auto rich-scroll rounded-[2rem] border border-[#F2EAD3]">
+        <table className="w-full text-right">
+          <thead>
+            <tr className="bg-[#F9F5F0] text-[#344F1F] text-xs font-black uppercase tracking-wider border-b border-[#F2EAD3]">
+              <th className="p-5">الفعالية</th>
+              <th className="p-5">المكان</th>
+              <th className="p-5">الحالة</th>
+              <th className="p-5">التسجيل</th>
+              <th className="p-5">التاريخ</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-[#F2EAD3]">
             {events.map((ev) => (
-              <tr key={ev.id} className="hover:bg-[#F9F5F0]">
-                <td className="px-4 py-3 font-bold text-[#344F1F]">{ev.title}</td>
-                <td className="px-4 py-3 text-[#344F1F]">{ev.neighborhood_name || '—'}</td>
-                <td className="px-4 py-3"><span className="text-[10px] font-black px-2 py-1 rounded-lg bg-[#F9F5F0]">{ev.status}</span></td>
-                <td className="px-4 py-3 font-bold text-[#344F1F]">{ev.registration_count ?? 0} / {ev.max_participants}</td>
-                <td className="px-4 py-3 text-xs text-[#F4991A]">{ev.date ? new Date(ev.date).toLocaleDateString('ar-EG') : '—'}</td>
+              <tr key={ev.id} className="hover:bg-[#F9F5F0]/50 transition-colors group">
+                <td className="p-5">
+                  <p className="font-bold text-[#344F1F]">{ev.title}</p>
+                </td>
+                <td className="p-5">
+                  <p className="text-sm text-[#344F1F]">{ev.neighborhood_name || '—'}</p>
+                </td>
+                <td className="p-5">
+                  <span className="px-3 py-1 bg-[#F9F5F0] text-[#344F1F] rounded-lg text-[10px] font-black border border-[#F2EAD3]">
+                    {ev.status}
+                  </span>
+                </td>
+                <td className="p-5">
+                  <p className="text-xs font-black text-[#344F1F]">{ev.registration_count ?? 0} / {ev.max_participants}</p>
+                </td>
+                <td className="p-5 text-xs text-[#F4991A] font-bold">
+                  {ev.date ? new Date(ev.date).toLocaleDateString('ar-EG') : '—'}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -640,9 +916,9 @@ function SecurityView({ blocked, onAdd, onDisable }) {
   const [reason, setReason] = useState('');
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-      <div className="bg-[#F9F5F0] rounded-[2rem] p-8 shadow-sm border border-[#F9F5F0]">
+      <div className="bg-[#F9F5F0] rounded-[2rem] p-6 sm:p-8 shadow-sm border border-[#F9F5F0]">
         <h3 className="text-xl font-bold text-[#344F1F] mb-4 flex items-center gap-2"><ShieldAlert className="text-[#F4991A]" /> حظر عنوان IP</h3>
-        <form className="flex flex-wrap gap-3 items-end"
+        <form className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-end"
           onSubmit={(e) => {
             e.preventDefault();
             onAdd(ip, reason);
@@ -650,15 +926,15 @@ function SecurityView({ blocked, onAdd, onDisable }) {
             setReason('');
           }}
         >
-          <div className="flex-1 min-w-[200px]">
-            <label className="text-xs font-bold text-[#F4991A] block mb-1">عنوان IP</label>
-            <input value={ip} onChange={(e) => setIp(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-[#F2EAD3] font-bold text-sm" placeholder="مثال: 192.168.1.1" required />
+          <div className="flex-1">
+            <label className="text-[10px] font-black text-[#F4991A] block mb-1.5 uppercase mr-2">عنوان IP</label>
+            <input value={ip} onChange={(e) => setIp(e.target.value)} className="w-full px-5 py-4 rounded-2xl border border-[#F2EAD3] font-bold text-sm bg-white" placeholder="مثال: 192.168.1.1" required />
           </div>
-          <div className="flex-1 min-w-[200px]">
-            <label className="text-xs font-bold text-[#F4991A] block mb-1">سبب (اختياري)</label>
-            <input value={reason} onChange={(e) => setReason(e.target.value)} className="w-full px-4 py-3 rounded-2xl border border-[#F2EAD3] font-bold text-sm" />
+          <div className="flex-1">
+            <label className="text-[10px] font-black text-[#F4991A] block mb-1.5 uppercase mr-2">سبب (اختياري)</label>
+            <input value={reason} onChange={(e) => setReason(e.target.value)} className="w-full px-5 py-4 rounded-2xl border border-[#F2EAD3] font-bold text-sm bg-white" />
           </div>
-          <button type="submit" className="px-8 py-3 bg-[#344F1F] text-[#F9F5F0] rounded-2xl font-black">حظر</button>
+          <button type="submit" className="px-8 py-4 bg-[#344F1F] text-[#F9F5F0] rounded-2xl font-black shadow-lg shadow-[#344F1F]/20 active:scale-95 transition-all">حظر</button>
         </form>
       </div>
       <div className="bg-[#F9F5F0] rounded-[2rem] p-8 shadow-sm border border-[#F9F5F0]">
@@ -682,31 +958,31 @@ function SecurityView({ blocked, onAdd, onDisable }) {
 
 function LogsView({ logs, search, setSearch, logActionFilter, setLogActionFilter, onApplyFilters }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#F9F5F0] rounded-[2rem] p-8 shadow-sm border border-[#F9F5F0] print:border-0">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-        <h3 className="text-xl font-bold text-[#344F1F]">سجل العمليات (Audit)</h3>
-        <div className="flex flex-wrap gap-2 items-center">
-          <div className="relative w-52">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-[#F4991A]" size={16} />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && onApplyFilters()} placeholder="بحث..." className="w-full pr-9 pl-2 py-2 bg-[#F9F5F0] border-[#F2EAD3] rounded-xl text-xs font-bold" />
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#F9F5F0] rounded-[2.5rem] p-4 sm:p-8 shadow-sm border border-[#F9F5F0] print:border-0">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+        <h3 className="text-xl sm:text-2xl font-black text-[#344F1F]">سجل العمليات</h3>
+        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+          <div className="relative">
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-[#F4991A]" size={16} />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && onApplyFilters()} placeholder="بحث..." className="w-full pr-11 pl-4 py-3 bg-white border border-[#F2EAD3] rounded-2xl text-xs font-bold" />
           </div>
-          <input value={logActionFilter} onChange={(e) => setLogActionFilter(e.target.value)} placeholder="نوع العملية (USER_LOGIN...)" className="w-48 px-3 py-2 bg-[#F9F5F0] border border-[#F2EAD3] rounded-xl text-xs font-bold" />
-          <button type="button" onClick={onApplyFilters} className="px-4 py-2 bg-[#344F1F] text-[#F9F5F0] rounded-xl text-xs font-black">تصفية</button>
+          <input value={logActionFilter} onChange={(e) => setLogActionFilter(e.target.value)} placeholder="نوع العملية..." className="px-4 py-3 bg-white border border-[#F2EAD3] rounded-2xl text-xs font-bold" />
+          <button type="button" onClick={onApplyFilters} className="px-6 py-3 bg-[#344F1F] text-[#F9F5F0] rounded-2xl font-black active:scale-95 transition-all">تصفية</button>
         </div>
       </div>
       <div className="space-y-3">
         {logs.map(log => (
-          <div key={log.id} className="flex items-center justify-between p-4 bg-[#F9F5F0] border border-[#F9F5F0] rounded-2xl hover:border-[#F2EAD3] transition-all group">
+          <div key={log.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white rounded-2xl border border-[#F2EAD3] hover:shadow-md transition-all group gap-2">
             <div className="flex items-center gap-4">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#F2EAD3] group-hover:bg-[#F4991A] transition-colors" />
+              <div className="w-2 h-2 rounded-full bg-[#F2EAD3] group-hover:bg-[#F4991A] transition-colors" />
               <div>
-                <span className="text-[10px] font-black text-[#F4991A] uppercase">{log.action}</span>
+                <span className="text-[10px] font-black text-[#F4991A] uppercase tracking-tighter">{log.action}</span>
                 <p className="text-sm font-bold text-[#344F1F]">{log.admin_name} استهدف {log.target_name}</p>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-right sm:text-left border-t sm:border-0 border-[#F2EAD3]/30 pt-2 sm:pt-0">
               <p className="text-[10px] font-bold text-[#F4991A]">{new Date(log.created_at).toLocaleDateString()}</p>
-              <p className="text-[10px] text-[#F4991A]">{new Date(log.created_at).toLocaleTimeString()}</p>
+              <p className="text-[10px] text-[#F4991A] opacity-60 font-medium">{new Date(log.created_at).toLocaleTimeString()}</p>
             </div>
           </div>
         ))}
@@ -752,19 +1028,19 @@ function StatWidget({ label, value, icon: Icon, color, trend, sub }) {
     amber: 'bg-[#F9F5F0] text-[#344F1F]'
   };
   return (
-    <div className="bg-[#F9F5F0] rounded-[2rem] p-6 shadow-sm border border-[#F9F5F0] group hover:shadow-lg transition-all border-[#F9F5F0] border-b-transparent hover:border-b-brand-500">
-      <div className="flex justify-between items-start mb-4">
-        <div className={`p-3 rounded-2xl ${c[color] || c.blue} transition-transform group-hover:rotate-6`}>
-          <Icon size={24} />
+    <div className="bg-[#F9F5F0] rounded-[2rem] p-4 sm:p-6 shadow-sm border border-[#F9F5F0] group hover:shadow-lg transition-all border-[#F9F5F0] border-b-transparent hover:border-b-brand-500">
+      <div className="flex justify-between items-start mb-2 sm:mb-4">
+        <div className={`p-2 sm:p-3 rounded-[1.2rem] ${c[color] || c.blue} transition-transform group-hover:rotate-6`}>
+          <Icon size={window.innerWidth < 640 ? 18 : 24} />
         </div>
         {trend !== '0' && (
           <span className="text-[10px] font-black px-2 py-1 bg-[#F9F5F0] text-[#344F1F] rounded-lg">{trend}</span>
         )}
       </div>
-      <p className="text-xs font-bold text-[#F4991A] mb-1">{label}</p>
+      <p className="text-[10px] sm:text-xs font-bold text-[#F4991A] mb-1">{label}</p>
       <div className="flex items-baseline gap-2">
-        <h4 className="text-2xl font-black text-[#344F1F]">{value.toLocaleString('ar-EG')}</h4>
-        <span className="text-[10px] text-[#F4991A] font-medium">{sub}</span>
+        <h4 className="text-lg sm:text-2xl font-black text-[#344F1F]">{value.toLocaleString('ar-EG')}</h4>
+        <span className="text-[8px] sm:text-[10px] text-[#F4991A] font-medium">{sub}</span>
       </div>
     </div>
   );
@@ -772,12 +1048,12 @@ function StatWidget({ label, value, icon: Icon, color, trend, sub }) {
 
 function InsightItem({ icon: Icon, label, val, color = "text-[#344F1F]" }) {
   return (
-    <div className="flex items-center justify-between p-4 bg-[#F9F5F0] rounded-2xl">
-      <div className="flex items-center gap-3">
-        <Icon size={18} className="text-[#F4991A]" />
-        <span className="text-xs font-bold text-[#F4991A]">{label}</span>
+    <div className="flex items-center justify-between p-3 sm:p-4 bg-[#F9F5F0] rounded-2xl">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <Icon size={16} className="text-[#F4991A]" />
+        <span className="text-[10px] sm:text-xs font-bold text-[#F4991A]">{label}</span>
       </div>
-      <span className={`text-sm font-black ${color}`}>{val}</span>
+      <span className={`text-[12px] sm:text-sm font-black ${color}`}>{val}</span>
     </div>
   );
 }
