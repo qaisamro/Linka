@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
+import ScrollToTop from './components/layout/ScrollToTop';
 import ChatbotWidget from './components/chat/ChatbotWidget';
 
 // Pages
@@ -52,6 +53,7 @@ const SuperAdminRoute = ({ children }) => {
 function AppContent() {
   return (
     <>
+      <ScrollToTop />
       <Navbar />
       <Suspense fallback={<PageLoader />}>
         <Routes>
