@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import Navbar from './components/layout/Navbar';
+import Footer from './components/layout/Footer';
 import ChatbotWidget from './components/chat/ChatbotWidget';
 
 // Pages
@@ -18,6 +19,7 @@ import EventDetail from './pages/EventDetail';
 import About from './pages/About';
 import AdminDashboard from './pages/admin/Dashboard';
 import UniversityDashboard from './pages/UniversityDashboard';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 const UniversityPortal = lazy(() => import('./pages/UniversityPortal'));
 const Jobs = lazy(() => import('./pages/Jobs'));
@@ -69,9 +71,11 @@ function AppContent() {
           <Route path="/training" element={<Protected><TrainingHub /></Protected>} />
           <Route path="/super-admin" element={<SuperAdminRoute><SuperAdminDashboard /></SuperAdminRoute>} />
           <Route path="/company-portal" element={<CompanyPortal />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      <Footer />
       <ChatbotWidget />
     </>
   );

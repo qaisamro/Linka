@@ -755,52 +755,6 @@ export default function Home() {
           </div>
         </section>
       )}
-
-      {/* ═══════════════════════════════════════
-          FOOTER
-      ═══════════════════════════════════════ */}
-      <footer className="bg-[#344F1F] text-[#F9F5F0] py-12 border-t border-[#F4991A]/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-
-            {/* Logo + description */}
-            <div className="flex items-center gap-3">
-              <div className="w-25 h-16 bg-[#F9F5F0]/10 rounded-xl flex items-center justify-center p-2 border border-[#F9F5F0]/20 overflow-hidden">
-                <img src={logo} alt="Linka" className="w-full h-full object-contain" />
-              </div>
-              <div>
-                <p className="font-bold text-lg text-[#F4991A]">Linka</p>
-                <p className="text-[#F9F5F0]/70 text-xs mt-0.5">منصة الشباب التفاعلية الحديثة</p>
-              </div>
-            </div>
-
-            {/* Quick links */}
-            <div className="flex gap-6 text-[#F9F5F0]/80 text-sm">
-              {[
-                { label: 'الرئيسية', to: '/' },
-                { label: 'من نحن', to: '/about' },
-                { label: 'الفعاليات', to: '/events' },
-                // { label: 'الخريطة', to: '/map' },
-                // { label: 'المتصدرون', to: '/leaderboard' },
-              ].map(({ label, to }) => (
-                <Link key={to} to={to} className="hover:text-[#F4991A] transition-colors">
-                  {label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Credit */}
-            <p className="text-[#F9F5F0]/60 text-sm flex items-center gap-1">
-              صُنع بـ <Heart size={12} fill="currentColor" className="text-[#F4991A]" /> لمستقبل أفضل
-            </p>
-          </div>
-
-          {/* Divider + copyright */}
-          <div className="border-t border-[#F9F5F0]/10 mt-8 pt-6 text-center text-[#F9F5F0]/50 text-xs">
-            © 2026 Linka · جميع الحقوق محفوظة
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
