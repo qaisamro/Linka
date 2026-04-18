@@ -2,9 +2,32 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 const pool = require('./db/pool');
 const { checkBlockedIp } = require('./middleware/checkBlockedIp');
 const { requestMetricsMiddleware } = require('./middleware/requestMetrics');
+
+// ─── Ensure required admin accounts exist ────────────────────────
+async function seedAdminUsers() {
+  const admins = [
+    { name: 'Super Admin', email: 'admin@linka.ps', password: 'linka123', role: 'super_admin' },
+  ];
+  for (const admin of admins) {
+    try {
+      const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [admin.email]);
+      if (rows.length === 0) {
+        const hash = await bcrypt.hash(admin.password, 10);
+        await pool.query(
+          `INSERT INTO users (name, email, password_hash, role, is_active) VALUES (?, ?, ?, ?, TRUE)`,
+          [admin.name, admin.email, hash, admin.role]
+        );
+        console.log(`✅ Created admin: ${admin.email}`);
+      }
+    } catch (err) {
+      console.error(`⚠️  Could not seed admin ${admin.email}:`, err.message);
+    }
+  }
+}
 
 // ─── App Setup ───────────────────────────────────────────────────
 const app = express();
@@ -77,8 +100,9 @@ app.use((err, req, res, next) => {
 });
 
 // ─── Start Server ─────────────────────────────────────────────────
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`\n🚀 Server running on http://localhost:${PORT}`);
   console.log(`📡 API Base: http://localhost:${PORT}/api`);
   console.log(`🏥 Health: http://localhost:${PORT}/api/health\n`);
+  await seedAdminUsers();
 });
