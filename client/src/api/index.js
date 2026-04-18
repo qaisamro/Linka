@@ -1,5 +1,4 @@
 import axios from 'axios';
-import mockAPI from './mockBackend';
 
 const api = axios.create({
   baseURL: '/api',
@@ -26,94 +25,65 @@ api.interceptors.response.use(
   }
 );
 
-let backendModePromise;
-
-function shouldUseMock(err) {
-  return !err.response || err.response.status >= 500 || err.code === 'ECONNABORTED';
-}
-
-async function detectBackendMode() {
-  if (!backendModePromise) {
-    backendModePromise = api.get('/health', { timeout: 5000 })
-      .then((res) => (res.data?.database?.connected ? 'real' : 'mock'))
-      .catch(() => 'mock');
-  }
-  return backendModePromise;
-}
-
-async function requestWithFallback(realRequest, mockRequest) {
-  const mode = await detectBackendMode();
-  if (mode === 'mock') return mockRequest();
-  try {
-    return await realRequest();
-  } catch (err) {
-    if (shouldUseMock(err)) {
-      backendModePromise = Promise.resolve('mock');
-      return mockRequest();
-    }
-    throw err;
-  }
-}
-
 // ─── Auth ─────────────────────────────────────────────────────────
 export const authAPI = {
-  register: (data) => requestWithFallback(() => api.post('/auth/register', data), () => mockAPI.auth.register(data)),
-  login: (data) => requestWithFallback(() => api.post('/auth/login', data), () => mockAPI.auth.login(data)),
-  getMe: () => requestWithFallback(() => api.get('/auth/me'), () => mockAPI.auth.getMe()),
+  register: (data) => api.post('/auth/register', data),
+  login: (data) => api.post('/auth/login', data),
+  getMe: () => api.get('/auth/me'),
 };
 
 // ─── Events ───────────────────────────────────────────────────────
 export const eventsAPI = {
-  getAll: (params) => requestWithFallback(() => api.get('/events', { params }), () => mockAPI.events.getAll(params)),
-  getById: (id) => requestWithFallback(() => api.get(`/events/${id}`), () => mockAPI.events.getById(id)),
-  create: (data) => requestWithFallback(() => api.post('/events', data), () => mockAPI.events.create(data)),
-  update: (id, data) => requestWithFallback(() => api.put(`/events/${id}`, data), () => mockAPI.events.update(id, data)),
-  remove: (id) => requestWithFallback(() => api.delete(`/events/${id}`), () => mockAPI.events.remove(id)),
+  getAll: (params) => api.get('/events', { params }),
+  getById: (id) => api.get(`/events/${id}`),
+  create: (data) => api.post('/events', data),
+  update: (id, data) => api.put(`/events/${id}`, data),
+  remove: (id) => api.delete(`/events/${id}`),
 };
 
 // ─── Registrations ────────────────────────────────────────────────
 export const registrationsAPI = {
-  register: (eventId) => requestWithFallback(() => api.post(`/registrations/event/${eventId}`), () => mockAPI.registrations.register(eventId)),
-  getMy: () => requestWithFallback(() => api.get('/registrations/my'), () => mockAPI.registrations.getMy()),
-  getByEvent: (eventId) => requestWithFallback(() => api.get(`/registrations/event/${eventId}/participants`), () => mockAPI.registrations.getByEvent(eventId)),
-  confirm: (id) => requestWithFallback(() => api.patch(`/registrations/${id}/confirm`), () => mockAPI.registrations.confirm(id)),
+  register: (eventId) => api.post(`/registrations/event/${eventId}`),
+  getMy: () => api.get('/registrations/my'),
+  getByEvent: (eventId) => api.get(`/registrations/event/${eventId}/participants`),
+  confirm: (id) => api.patch(`/registrations/${id}/confirm`),
 };
 
 // ─── Users ────────────────────────────────────────────────────────
 export const usersAPI = {
-  getProfile: () => requestWithFallback(() => api.get('/users/profile'), () => mockAPI.users.getProfile()),
-  updateProfile: (updates) => requestWithFallback(() => api.patch('/users/profile', updates), () => mockAPI.users.updateProfile(updates)),
-  getCVData: () => requestWithFallback(() => api.get('/users/cv-data'), () => mockAPI.users.getCVData()),
-  getLeaderboard: () => requestWithFallback(() => api.get('/users/leaderboard'), () => mockAPI.users.getLeaderboard()),
-  getAdminStats: () => requestWithFallback(() => api.get('/users/admin/stats'), () => mockAPI.users.getAdminStats()),
+  getProfile: () => api.get('/users/profile'),
+  updateProfile: (updates) => api.patch('/users/profile', updates),
+  getCVData: () => api.get('/users/cv-data'),
+  getLeaderboard: () => api.get('/users/leaderboard'),
+  getAdminStats: () => api.get('/users/admin/stats'),
 };
 
 // ─── Neighborhoods ────────────────────────────────────────────────
 export const neighborhoodsAPI = {
-  getAll: () => requestWithFallback(() => api.get('/neighborhoods'), () => mockAPI.neighborhoods.getAll()),
+  getAll: () => api.get('/neighborhoods'),
 };
 
 // ─── Chat ─────────────────────────────────────────────────────────
 export const chatAPI = {
-  send: (message, userId) => requestWithFallback(() => api.post('/chat', { message, userId }), () => mockAPI.chat.send(message, userId)),
+  send: (message, userId) => api.post('/chat', { message, userId }),
 };
 
 // ─── Analytics ────────────────────────────────────────────────────
 export const analyticsAPI = {
-  getHeatmap: () => requestWithFallback(() => api.get('/analytics/heatmap'), () => mockAPI.analytics.getHeatmap()),
+  getHeatmap: () => api.get('/analytics/heatmap'),
 };
 
 // ─── University ───────────────────────────────────────────────────
 export const universityAPI = {
-  getReport: (params) => requestWithFallback(() => api.get('/university/report', { params }), () => mockAPI.university.getReport(params)),
-  getTranscript: (userId) => requestWithFallback(() => api.get(`/university/student/${userId}`), () => mockAPI.university.getTranscript(userId)),
-  getUniversities: () => requestWithFallback(() => api.get('/university/list'), () => mockAPI.university.getUniversities()),
-  getDashboardStats: () => requestWithFallback(() => api.get('/university/dashboard-stats'), () => mockAPI.university.getDashboardStats()),
-  getMyStudents: (params) => requestWithFallback(() => api.get('/university/my-students', { params }), () => mockAPI.university.getMyStudents(params)),
-  addStudent: (data) => requestWithFallback(() => api.post('/university/add-student', data), () => mockAPI.university.addStudent(data)),
-  verifyAttendance: (data) => requestWithFallback(() => api.post('/university/verify-attendance', data), () => mockAPI.university.verifyAttendance(data)),
-  getCertificate: (userId) => requestWithFallback(() => api.get(`/university/certificate/${userId}`), () => mockAPI.university.getCertificate(userId)),
-  generateCode: (data) => requestWithFallback(() => api.post('/university/generate-code', data), () => mockAPI.university.generateCode(data)),
+  getReport: (params) => api.get('/university/report', { params }),
+  getTranscript: (userId) => api.get(`/university/student/${userId}`),
+  getUniversities: () => api.get('/university/list'),
+  getDashboardStats: () => api.get('/university/dashboard-stats'),
+  getMyStudents: (params) => api.get('/university/my-students', { params }),
+  addStudent: (data) => api.post('/university/add-student', data),
+  verifyAttendance: (data) => api.post('/university/verify-attendance', data),
+  getCertificate: (userId) => api.get(`/university/certificate/${userId}`),
+  generateCode: (data) => api.post('/university/generate-code', data),
 };
 
 // ─── Admin Management ─────────────────────────────────────────────
@@ -133,23 +103,23 @@ export const adminAPI = {
 
 // ─── Notifications ────────────────────────────────────────────────
 export const notificationsAPI = {
-  getAll: (params) => requestWithFallback(() => api.get('/notifications', { params }), () => mockAPI.notifications.getAll(params)),
-  getCount: () => requestWithFallback(() => api.get('/notifications/count'), () => mockAPI.notifications.getCount()),
-  markAsRead: (id) => requestWithFallback(() => api.patch(`/notifications/${id}/read`), () => mockAPI.notifications.markAsRead(id)),
-  markAllAsRead: () => requestWithFallback(() => api.patch('/notifications/read-all'), () => mockAPI.notifications.markAllAsRead()),
-  delete: (id) => requestWithFallback(() => api.delete(`/notifications/${id}`), () => mockAPI.notifications.delete(id)),
-  clearRead: () => requestWithFallback(() => api.delete('/notifications/clear-read'), () => mockAPI.notifications.clearRead()),
-  broadcast: (data) => requestWithFallback(() => api.post('/notifications/broadcast', data), () => mockAPI.notifications.broadcast(data)),
-  getAdminRecent: () => requestWithFallback(() => api.get('/notifications/admin/recent'), () => mockAPI.notifications.getAdminRecent()),
+  getAll: (params) => api.get('/notifications', { params }),
+  getCount: () => api.get('/notifications/count'),
+  markAsRead: (id) => api.patch(`/notifications/${id}/read`),
+  markAllAsRead: () => api.patch('/notifications/read-all'),
+  delete: (id) => api.delete(`/notifications/${id}`),
+  clearRead: () => api.delete('/notifications/clear-read'),
+  broadcast: (data) => api.post('/notifications/broadcast', data),
+  getAdminRecent: () => api.get('/notifications/admin/recent'),
 };
 
 // ─── Jobs ─────────────────────────────────────────────────────────
 export const jobsAPI = {
-  list: (params) => requestWithFallback(() => api.get('/jobs', { params }), () => mockAPI.jobs.getAll(params)),
-  create: (data) => requestWithFallback(() => api.post('/jobs', data), () => mockAPI.jobs.create(data)),
-  getRecommend: () => requestWithFallback(() => api.get('/jobs/recommend'), () => mockAPI.jobs.getRecommend()),
-  getSkills: () => requestWithFallback(() => api.get('/jobs/skills'), () => mockAPI.jobs.getSkills()),
-  getCareerPath: () => requestWithFallback(() => api.get('/jobs/career-path'), () => mockAPI.jobs.getCareerPath()),
+  list: (params) => api.get('/jobs', { params }),
+  create: (data) => api.post('/jobs', data),
+  getRecommend: () => api.get('/jobs/recommend'),
+  getSkills: () => api.get('/jobs/skills'),
+  getCareerPath: () => api.get('/jobs/career-path'),
 };
 
 // ─── Entities (Super Admin) ───────────────────────────────────────
@@ -162,37 +132,26 @@ export const entitiesAPI = {
   getStats: () => api.get('/entities/stats'),
 };
 
-// ─── Training Field MVP ──────────────────────────────────────────
+// ─── Training ────────────────────────────────────────────────────
 export const trainingAPI = {
-  // Offers
-  listOffers: (params) => requestWithFallback(() => api.get('/training/offers', { params }), () => mockAPI.training.listOffers(params)),
-  createOffer: (data) => requestWithFallback(() => api.post('/training/offers', data), () => mockAPI.training.createOffer(data)),
-  listCompanyOffers: () => requestWithFallback(() => api.get('/training/company/offers'), () => mockAPI.training.listCompanyOffers()),
-
-  // Applications / Programs
-  applyToOffer: (offerId) => requestWithFallback(() => api.post(`/training/offers/${offerId}/apply`), () => mockAPI.training.applyToOffer(offerId)),
-  listMyApplications: () => requestWithFallback(() => api.get('/training/my-applications'), () => mockAPI.training.listMyApplications()),
-  getMyPrograms: () => requestWithFallback(() => api.get('/training/my-programs'), () => mockAPI.training.getMyPrograms()),
-  listProgramSessions: (programId) => requestWithFallback(() => api.get(`/training/programs/${programId}/sessions`), () => mockAPI.training.listProgramSessions(programId)),
-
-  // Check-in/out
-  checkIn: (programId, payload) => requestWithFallback(() => api.post(`/training/programs/${programId}/sessions/check-in`, payload), () => mockAPI.training.checkIn(programId, payload)),
-  checkOut: (programId, payload) => requestWithFallback(() => api.post(`/training/programs/${programId}/sessions/check-out`, payload), () => mockAPI.training.checkOut(programId, payload)),
-
-  // University approval
-  approveSession: (sessionId, payload) => requestWithFallback(() => api.patch(`/training/sessions/${sessionId}/approve`, payload), () => mockAPI.training.approveSession(sessionId, payload)),
-  listUniversitySessions: (params) => requestWithFallback(() => api.get('/training/university/sessions', { params }), () => mockAPI.training.listUniversitySessions(params)),
-
-  // Completion & Reviews
-  completeProgram: (programId) => requestWithFallback(() => api.post(`/training/programs/${programId}/complete`), () => mockAPI.training.completeProgram(programId)),
-  submitReview: (programId, payload) => requestWithFallback(() => api.post(`/training/programs/${programId}/reviews`, payload), () => mockAPI.training.submitReview(programId, payload)),
-  listOfferReviews: (offerId) => requestWithFallback(() => api.get(`/training/offers/${offerId}/reviews`), () => mockAPI.training.listOfferReviews(offerId)),
-
-  // Company endpoints
-  listOfferApplications: (offerId) => requestWithFallback(() => api.get(`/training/offers/${offerId}/applications`), () => mockAPI.training.listOfferApplications(offerId)),
-  acceptApplication: (applicationId) => requestWithFallback(() => api.patch(`/training/applications/${applicationId}/accept`), () => mockAPI.training.acceptApplication(applicationId)),
-  rejectApplication: (applicationId, payload) => requestWithFallback(() => api.patch(`/training/applications/${applicationId}/reject`, payload), () => mockAPI.training.rejectApplication(applicationId, payload)),
-  exportReport: (params) => requestWithFallback(() => api.get('/training/export-report', { params }), () => mockAPI.training.exportReport(params)),
+  listOffers: (params) => api.get('/training/offers', { params }),
+  createOffer: (data) => api.post('/training/offers', data),
+  listCompanyOffers: () => api.get('/training/company/offers'),
+  applyToOffer: (offerId) => api.post(`/training/offers/${offerId}/apply`),
+  listMyApplications: () => api.get('/training/my-applications'),
+  getMyPrograms: () => api.get('/training/my-programs'),
+  listProgramSessions: (programId) => api.get(`/training/programs/${programId}/sessions`),
+  checkIn: (programId, payload) => api.post(`/training/programs/${programId}/sessions/check-in`, payload),
+  checkOut: (programId, payload) => api.post(`/training/programs/${programId}/sessions/check-out`, payload),
+  approveSession: (sessionId, payload) => api.patch(`/training/sessions/${sessionId}/approve`, payload),
+  listUniversitySessions: (params) => api.get('/training/university/sessions', { params }),
+  completeProgram: (programId) => api.post(`/training/programs/${programId}/complete`),
+  submitReview: (programId, payload) => api.post(`/training/programs/${programId}/reviews`, payload),
+  listOfferReviews: (offerId) => api.get(`/training/offers/${offerId}/reviews`),
+  listOfferApplications: (offerId) => api.get(`/training/offers/${offerId}/applications`),
+  acceptApplication: (applicationId) => api.patch(`/training/applications/${applicationId}/accept`),
+  rejectApplication: (applicationId, payload) => api.patch(`/training/applications/${applicationId}/reject`, payload),
+  exportReport: (params) => api.get('/training/export-report', { params }),
 };
 
 function downloadBlob(blob, filename) {
@@ -206,7 +165,7 @@ function downloadBlob(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
-// ─── Super Admin (central command) ────────────────────────────────
+// ─── Super Admin ──────────────────────────────────────────────────
 export const superAdminAPI = {
   getOverview: () => api.get('/super-admin/overview'),
   listAlerts: (params) => api.get('/super-admin/alerts', { params }),
