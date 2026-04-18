@@ -18,7 +18,7 @@ async function checkBlockedIp(req, res, next) {
 
   try {
     const [rows] = await pool.query(
-      'SELECT id FROM blocked_ips WHERE is_active = 1 AND ip = ? LIMIT 1',
+      'SELECT id FROM blocked_ips WHERE is_active = TRUE AND ip = ? LIMIT 1',
       [ip]
     );
     if (rows.length) {

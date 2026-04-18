@@ -95,7 +95,7 @@ const registerToEvent = async (req, res) => {
     });
   } catch (err) {
     console.error('RegisterToEvent error:', err.message);
-    if (err.code === 'ER_DUP_ENTRY') {
+    if (err.code === 'ER_DUP_ENTRY' || err.code === '23505') {
       return res.status(409).json({ error: 'أنت مسجّل في هذه الفعالية مسبقاً' });
     }
     res.status(500).json({ error: 'خطأ في عملية التسجيل' });
@@ -233,10 +233,9 @@ const checkAndAwardBadges = async (userId) => {
 
       if (earned) {
         const [insertResult] = await pool.query(
-          `INSERT IGNORE INTO user_badges (user_id, badge_id) VALUES (?, ?)`,
+          `INSERT INTO user_badges (user_id, badge_id) VALUES (?, ?) ON CONFLICT (user_id, badge_id) DO NOTHING`,
           [userId, badge.id]
         );
-        // Notify only if badge was freshly awarded
         if (insertResult.affectedRows > 0) {
           await createNotificationForUser(
             userId,

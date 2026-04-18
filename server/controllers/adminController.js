@@ -30,16 +30,16 @@ const listUsers = async (req, res) => {
     params.push(role);
   }
   if (status === 'active') {
-    query += ` AND u.is_active = 1`;
+    query += ` AND u.is_active = TRUE`;
   } else if (status === 'inactive') {
-    query += ` AND u.is_active = 0`;
+    query += ` AND u.is_active = FALSE`;
   }
 
   // Total count for pagination
   const countQuery = `SELECT COUNT(*) AS total FROM users u WHERE 1=1${
     q.trim() ? ` AND (u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)` : ''
   }${role ? ` AND u.role = ?` : ''}${
-    status === 'active' ? ` AND u.is_active = 1` : status === 'inactive' ? ` AND u.is_active = 0` : ''
+    status === 'active' ? ` AND u.is_active = TRUE` : status === 'inactive' ? ` AND u.is_active = FALSE` : ''
   }`;
 
   const countParams = [...params];
@@ -48,10 +48,11 @@ const listUsers = async (req, res) => {
   params.push(parseInt(limit), offset);
 
   try {
-    const [[{ total }], [users]] = await Promise.all([
+    const [[totalRows], [users]] = await Promise.all([
       pool.query(countQuery, countParams),
       pool.query(query, params),
     ]);
+    const total = Number(totalRows[0]?.total) || 0;
 
     res.json({
       users,
@@ -400,10 +401,11 @@ const getAuditLog = async (req, res) => {
   params.push(parseInt(limit), offset);
 
   try {
-    const [[{ total }], [logs]] = await Promise.all([
+    const [[totalRows2], [logs]] = await Promise.all([
       pool.query(countQuery, countParams),
       pool.query(query, params),
     ]);
+    const total = Number(totalRows2[0]?.total) || 0;
 
     const parsed = logs.map(l => ({
       ...l,
@@ -452,8 +454,8 @@ const impersonateUser = async (req, res) => {
 const getSystemMonitoring = async (req, res) => {
   try {
     const [users] = await pool.query("SELECT COUNT(*) as count FROM users WHERE role = 'youth'");
-    const [activeUsers] = await pool.query("SELECT COUNT(DISTINCT user_id) as count FROM registrations WHERE registered_at > DATE_SUB(NOW(), INTERVAL 7 DAY)");
-    const [events] = await pool.query("SELECT COUNT(*) as count FROM events WHERE date >= CURDATE()");
+    const [activeUsers] = await pool.query("SELECT COUNT(DISTINCT user_id) as count FROM registrations WHERE registered_at > NOW() - INTERVAL '7 days'");
+    const [events] = await pool.query("SELECT COUNT(*) as count FROM events WHERE date >= CURRENT_DATE");
     const [totalHours] = await pool.query("SELECT SUM(total_hours) as total FROM users");
     
     const [recentLogs] = await pool.query("SELECT * FROM admin_audit_log ORDER BY created_at DESC LIMIT 10");
@@ -462,7 +464,7 @@ const getSystemMonitoring = async (req, res) => {
     const [topNeighborhood] = await pool.query(`
       SELECT n.name, COUNT(*) as count 
       FROM users u JOIN neighborhoods n ON u.neighborhood_id = n.id 
-      GROUP BY n.id ORDER BY count DESC LIMIT 1
+      GROUP BY n.id, n.name ORDER BY count DESC LIMIT 1
     `);
 
     res.json({

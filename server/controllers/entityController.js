@@ -27,7 +27,7 @@ const createEntity = async (req, res) => {
 
     res.status(201).json({ message: 'Entity created successfully', entityId: result.insertId });
   } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') {
+    if (err.code === 'ER_DUP_ENTRY' || err.code === '23505') {
       return res.status(400).json({ error: 'Email or Code already exists.' });
     }
     console.error(err);
@@ -157,7 +157,7 @@ const updateEntity = async (req, res) => {
 
     res.json({ message: 'Entity updated successfully' });
   } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') {
+    if (err.code === 'ER_DUP_ENTRY' || err.code === '23505') {
       return res.status(400).json({ error: 'Email or Code already exists.' });
     }
     console.error(err);
