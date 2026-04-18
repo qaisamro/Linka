@@ -49,5 +49,5 @@ externalPort = 3000
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["bash", "-c", "node server/index.js & npx serve -s client/dist -l 5000"]
+run = ["node", "server/index.js"]
 build = ["npm", "run", "build"]

@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const pool = require('./db/pool');
 const { checkBlockedIp } = require('./middleware/checkBlockedIp');
 const { requestMetricsMiddleware } = require('./middleware/requestMetrics');
@@ -57,7 +58,14 @@ app.get('/api/neighborhoods', async (req, res) => {
   }
 });
 
-// ─── 404 Handler ─────────────────────────────────────────────────
+// ─── Serve React Frontend in Production ──────────────────────────
+const clientDist = path.join(__dirname, '..', 'client', 'dist');
+app.use(express.static(clientDist));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
+});
+
+// ─── 404 Handler (API only, unreachable for non-API) ─────────────
 app.use((req, res) => {
   res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` });
 });
