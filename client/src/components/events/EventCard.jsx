@@ -28,7 +28,7 @@ const FALLBACK_IMAGES = [
 export default function EventCard({ event, onRegistered }) {
   const { isAuth } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [registered, setRegistered] = useState(!!event.is_registered);
+  const [registered, setRegistered] = useState(Number(event.is_registered) > 0);
 
   const tc = TYPE_CONFIG[event.type] || TYPE_CONFIG['ثقافية'];
   const fillPct = Math.min(100, Math.round((event.current_participants / event.max_participants) * 100));
