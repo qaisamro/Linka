@@ -457,13 +457,6 @@ CREATE TABLE training_audit_log (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- ============================================
--- Sample Admin Users
--- ============================================
-INSERT INTO users (name, email, password_hash, role) VALUES
-  ('مدير البلدية', 'admin@hebron.ps', '$2a$10$GDn7PI1X2i8mzEc7cQiNB.fjtoDCtnuAkbuIaMcJE4s3S8nlHHgx6', 'admin'),
-  ('المدير العام', 'super@hebron.ps', '$2a$10$GDn7PI1X2i8mzEc7cQiNB.fjtoDCtnuAkbuIaMcJE4s3S8nlHHgx6', 'super_admin')
-ON CONFLICT (email) DO NOTHING;
 
 -- ============================================
 -- Sample Events

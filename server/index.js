@@ -9,6 +9,14 @@ const { requestMetricsMiddleware } = require('./middleware/requestMetrics');
 
 // ─── Ensure required admin accounts exist ────────────────────────
 async function seedAdminUsers() {
+  // Remove old default accounts
+  const removedEmails = ['admin@hebron.ps', 'super@hebron.ps'];
+  try {
+    await pool.query(`DELETE FROM users WHERE email = ANY(?)`, [removedEmails]);
+  } catch (err) {
+    console.error('⚠️  Could not remove old admin accounts:', err.message);
+  }
+
   const admins = [
     { name: 'Super Admin', email: 'admin@linka.ps', password: 'linka123', role: 'super_admin' },
   ];
