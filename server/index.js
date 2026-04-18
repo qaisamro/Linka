@@ -7,6 +7,15 @@ const pool = require('./db/pool');
 const { checkBlockedIp } = require('./middleware/checkBlockedIp');
 const { requestMetricsMiddleware } = require('./middleware/requestMetrics');
 
+// ─── Run schema migrations on startup ────────────────────────────
+async function runMigrations() {
+  try {
+    await pool.query(`ALTER TABLE users ALTER COLUMN avatar_url TYPE TEXT`);
+  } catch (err) {
+    // Ignore if already TEXT or no change needed
+  }
+}
+
 // ─── Ensure required admin accounts exist ────────────────────────
 async function seedAdminUsers() {
   // Remove old default accounts
@@ -112,5 +121,6 @@ app.listen(PORT, async () => {
   console.log(`\n🚀 Server running on http://localhost:${PORT}`);
   console.log(`📡 API Base: http://localhost:${PORT}/api`);
   console.log(`🏥 Health: http://localhost:${PORT}/api/health\n`);
+  await runMigrations();
   await seedAdminUsers();
 });

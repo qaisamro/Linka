@@ -114,7 +114,7 @@ CREATE TABLE users (
   points INTEGER DEFAULT 0,
   total_hours NUMERIC(6,2) DEFAULT 0,
   role VARCHAR(20) DEFAULT 'youth' CHECK (role IN ('youth', 'admin', 'university', 'super_admin', 'entity', 'sub_admin')),
-  avatar_url VARCHAR(255),
+  avatar_url TEXT,
   bio TEXT,
   is_active BOOLEAN DEFAULT TRUE,
   entity_id INTEGER REFERENCES entities(id) ON DELETE SET NULL,
