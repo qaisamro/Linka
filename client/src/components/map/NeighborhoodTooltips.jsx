@@ -36,17 +36,17 @@ export default function NeighborhoodTooltips({ neighborhoods = [] }) {
             minWidth: '160px',
             padding: '4px 2px',
           }}>
-            <p style={{ fontWeight: 700, fontSize: '13px', margin: '0 0 6px', color: '#0f2460' }}>
+            <p style={{ fontWeight: 700, fontSize: '13px', margin: '0 0 6px', color: '#344F1F' }}>
               📍 {label}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-              <span style={{ fontSize: '11px', color: '#475569' }}>
+              <span style={{ fontSize: '11px', color: '#344F1F' }}>
                 👥 {uniq} مشارك فريد
               </span>
-              <span style={{ fontSize: '11px', color: '#475569' }}>
+              <span style={{ fontSize: '11px', color: '#344F1F' }}>
                 📋 {regs} تسجيل
               </span>
-              <span style={{ fontSize: '11px', color: '#059669', fontWeight: 600 }}>
+              <span style={{ fontSize: '11px', color: '#F4991A', fontWeight: 600 }}>
                 ⏰ {hrs} ساعة تطوع
               </span>
             </div>

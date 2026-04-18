@@ -22,8 +22,8 @@ L.Icon.Default.mergeOptions({
 });
 
 const TYPE_COLORS = {
-  'تطوعية': '#10b981', 'ثقافية': '#8b5cf6', 'رياضية': '#f97316',
-  'تعليمية': '#3b82f6', 'بيئية': '#22c55e', 'اجتماعية': '#ec4899',
+  'تطوعية': '#F4991A', 'ثقافية': '#F4991A', 'رياضية': '#F4991A',
+  'تعليمية': '#F4991A', 'بيئية': '#F4991A', 'اجتماعية': '#F4991A',
 };
 
 export default function EventDetail() {
@@ -46,8 +46,8 @@ export default function EventDetail() {
 
   if (loading) return (
     <div className="min-h-screen pt-20 flex items-center justify-center">
-      <div className="flex flex-col items-center gap-3 text-slate-400">
-        <svg className="animate-spin h-10 w-10 text-brand-500" viewBox="0 0 24 24" fill="none">
+      <div className="flex flex-col items-center gap-3 text-[#F4991A]">
+        <svg className="animate-spin h-10 w-10 text-[#F4991A]" viewBox="0 0 24 24" fill="none">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
         </svg>
@@ -60,7 +60,7 @@ export default function EventDetail() {
 
   const fillPct  = Math.round((event.current_participants / event.max_participants) * 100);
   const isFull   = event.current_participants >= event.max_participants;
-  const typeColor = TYPE_COLORS[event.type] || '#3b82f6';
+  const typeColor = TYPE_COLORS[event.type] || '#F4991A';
 
   const formattedDate = (() => {
     try { return format(new Date(event.date), "EEEE، d MMMM yyyy 'الساعة' HH:mm", { locale: ar }); }
@@ -95,10 +95,10 @@ export default function EventDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-16">
+    <div className="min-h-screen bg-[#F9F5F0] pt-16">
 
       {/* Hero Image */}
-      <div className="relative h-64 md:h-80 overflow-hidden bg-slate-900">
+      <div className="relative h-64 md:h-80 overflow-hidden bg-[#344F1F]">
         <img
           src={event.image_url || 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800'}
           alt={event.title}
@@ -109,7 +109,7 @@ export default function EventDetail() {
 
         {/* Breadcrumb */}
         <div className="absolute top-4 inset-x-4">
-          <Link to="/events" className="inline-flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-semibold bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded-full transition-colors">
+          <Link to="/events" className="inline-flex items-center gap-1.5 text-[#F9F5F0]/80 hover:text-[#F9F5F0] text-sm font-semibold bg-[#344F1F]/20 backdrop-blur-sm px-3 py-1.5 rounded-full transition-colors">
             <ChevronRight size={14} />
             الفعاليات
           </Link>
@@ -117,20 +117,20 @@ export default function EventDetail() {
 
         {/* Event title overlay */}
         <div className="absolute bottom-6 inset-x-6">
-          <span className="badge-pill text-xs mb-3 inline-flex" style={{ background: typeColor + '30', color: '#fff', borderColor: typeColor }}>
+          <span className="badge-pill text-xs mb-3 inline-flex" style={{ background: typeColor + '30', color: '#F9F5F0', borderColor: typeColor }}>
             {event.type}
           </span>
-          <h1 className="text-2xl md:text-3xl font-black text-white leading-snug">{event.title}</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-[#F9F5F0] leading-snug">{event.title}</h1>
         </div>
 
         {/* Action buttons */}
         <div className="absolute top-4 left-4 flex gap-2">
           <button onClick={() => setLiked(l => !l)}
-            className={`p-2 rounded-full backdrop-blur-sm transition-all ${liked ? 'bg-red-500 text-white' : 'bg-black/20 text-white hover:bg-black/30'}`}>
+            className={`p-2 rounded-full backdrop-blur-sm transition-all ${liked ? 'bg-[#F4991A] text-[#F9F5F0]' : 'bg-[#344F1F]/20 text-[#F9F5F0] hover:bg-[#344F1F]/30'}`}>
             <Heart size={18} fill={liked ? 'currentColor' : 'none'} />
           </button>
           <button onClick={handleShare}
-            className="p-2 rounded-full bg-black/20 text-white hover:bg-black/30 backdrop-blur-sm transition-colors">
+            className="p-2 rounded-full bg-[#344F1F]/20 text-[#F9F5F0] hover:bg-[#344F1F]/30 backdrop-blur-sm transition-colors">
             <Share2 size={18} />
           </button>
         </div>
@@ -153,8 +153,8 @@ export default function EventDetail() {
                 { icon: MapPin,   text: event.location_name },
                 { icon: Clock,    text: `${event.duration_hours} ساعة` },
               ].map(({ icon: Icon, text }, i) => (
-                <div key={i} className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 shadow-sm text-sm text-slate-600 font-medium">
-                  <Icon size={14} className="text-brand-500 flex-shrink-0" />
+                <div key={i} className="flex items-center gap-2 bg-[#F9F5F0] rounded-xl px-4 py-2 shadow-sm text-sm text-[#344F1F] font-medium">
+                  <Icon size={14} className="text-[#F4991A] flex-shrink-0" />
                   <span>{text}</span>
                 </div>
               ))}
@@ -166,8 +166,8 @@ export default function EventDetail() {
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
                 className="card p-6"
               >
-                <h2 className="font-bold text-slate-800 mb-3 text-lg">عن الفعالية</h2>
-                <p className="text-slate-600 leading-relaxed">{event.description}</p>
+                <h2 className="font-bold text-[#344F1F] mb-3 text-lg">عن الفعالية</h2>
+                <p className="text-[#344F1F] leading-relaxed">{event.description}</p>
               </motion.div>
             )}
 
@@ -177,9 +177,9 @@ export default function EventDetail() {
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                 className="card overflow-hidden"
               >
-                <div className="p-4 border-b border-slate-100 flex items-center gap-2">
-                  <MapPin size={16} className="text-brand-500" />
-                  <h2 className="font-bold text-slate-800">الموقع على الخريطة</h2>
+                <div className="p-4 border-b border-[#F9F5F0] flex items-center gap-2">
+                  <MapPin size={16} className="text-[#F4991A]" />
+                  <h2 className="font-bold text-[#344F1F]">الموقع على الخريطة</h2>
                 </div>
                 <div className="h-52">
                   <MapContainer
@@ -200,10 +200,10 @@ export default function EventDetail() {
                     </Marker>
                   </MapContainer>
                 </div>
-                <div className="p-3 bg-slate-50 flex items-center gap-2 text-sm text-slate-500">
-                  <MapPin size={13} className="text-brand-500" />
+                <div className="p-3 bg-[#F9F5F0] flex items-center gap-2 text-sm text-[#F4991A]">
+                  <MapPin size={13} className="text-[#F4991A]" />
                   <span>{event.location_name}</span>
-                  {event.neighborhood_name && <span className="text-slate-300">·</span>}
+                  {event.neighborhood_name && <span className="text-[#F2EAD3]">·</span>}
                   {event.neighborhood_name && <span>{event.neighborhood_name}</span>}
                 </div>
               </motion.div>
@@ -212,7 +212,7 @@ export default function EventDetail() {
             {/* Points Info */}
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-              className="bg-gradient-to-l from-brand-700 to-brand-900 rounded-2xl p-5 text-white"
+              className="bg-gradient-to-l from-[#344F1F] to-[#344F1F] rounded-2xl p-5 text-[#F9F5F0]"
             >
               <h3 className="font-bold mb-3 flex items-center gap-2">
                 <span className="text-xl">🏆</span> ما ستكسبه بالمشاركة
@@ -223,10 +223,10 @@ export default function EventDetail() {
                   { val: `${event.duration_hours}`, label: 'ساعة تطوع', icon: '⏰' },
                   { val: '1', label: 'مشاركة', icon: '✅' },
                 ].map((item, i) => (
-                  <div key={i} className="bg-white/15 rounded-xl p-3 text-center">
+                  <div key={i} className="bg-[#F9F5F0]/15 rounded-xl p-3 text-center">
                     <div className="text-2xl">{item.icon}</div>
                     <div className="font-black text-lg mt-1">{item.val}</div>
-                    <div className="text-white/60 text-xs">{item.label}</div>
+                    <div className="text-[#F9F5F0]/60 text-xs">{item.label}</div>
                   </div>
                 ))}
               </div>
@@ -241,28 +241,28 @@ export default function EventDetail() {
               initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}
               className="card p-5 sticky top-20"
             >
-              <h3 className="font-bold text-slate-800 mb-4">التسجيل في الفعالية</h3>
+              <h3 className="font-bold text-[#344F1F] mb-4">التسجيل في الفعالية</h3>
 
               {/* Capacity */}
               <div className="mb-4">
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="font-semibold text-slate-700 flex items-center gap-1">
-                    <Users size={14} className="text-brand-500" />
+                  <span className="font-semibold text-[#344F1F] flex items-center gap-1">
+                    <Users size={14} className="text-[#F4991A]" />
                     {event.current_participants} مشارك
                   </span>
-                  <span className={isFull ? 'text-red-500 font-bold' : 'text-slate-400'}>
+                  <span className={isFull ? 'text-[#F4991A] font-bold' : 'text-[#F4991A]'}>
                     {isFull ? 'مكتمل!' : `${event.max_participants - event.current_participants} مقعد متبقي`}
                   </span>
                 </div>
-                <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-3 bg-[#F9F5F0] rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${fillPct}%` }}
                     transition={{ duration: 1, ease: 'easeOut', delay: 0.4 }}
-                    className={`h-full rounded-full ${fillPct >= 90 ? 'bg-red-400' : fillPct >= 60 ? 'bg-amber-400' : 'bg-emerald-400'}`}
+                    className={`h-full rounded-full ${fillPct >= 90 ? 'bg-[#F4991A]' : fillPct >= 60 ? 'bg-[#F4991A]' : 'bg-[#F4991A]'}`}
                   />
                 </div>
-                <p className="text-xs text-slate-400 mt-1 text-center">{fillPct}% ممتلئ</p>
+                <p className="text-xs text-[#F4991A] mt-1 text-center">{fillPct}% ممتلئ</p>
               </div>
 
               {/* CTA Button */}
@@ -271,9 +271,9 @@ export default function EventDetail() {
                 disabled={regLoading || registered || isFull}
                 className={`w-full py-3.5 rounded-xl font-bold text-base transition-all duration-200 flex items-center justify-center gap-2 ${
                   registered
-                    ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-200'
+                    ? 'bg-[#F9F5F0] text-[#344F1F] border-2 border-[#F2EAD3]'
                     : isFull
-                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    ? 'bg-[#F9F5F0] text-[#F4991A] cursor-not-allowed'
                     : 'btn-primary shadow-lg hover:shadow-xl'
                 }`}
               >
@@ -292,24 +292,24 @@ export default function EventDetail() {
               </button>
 
               {!isAuth && !registered && !isFull && (
-                <p className="text-xs text-slate-400 text-center mt-2">
-                  <Link to="/login" className="text-brand-600 font-semibold hover:underline">سجّل دخولك</Link> للانضمام
+                <p className="text-xs text-[#F4991A] text-center mt-2">
+                  <Link to="/login" className="text-[#344F1F] font-semibold hover:underline">سجّل دخولك</Link> للانضمام
                 </p>
               )}
 
               {/* Event meta */}
-              <div className="mt-4 pt-4 border-t border-slate-100 space-y-2.5">
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Calendar size={13} className="text-brand-400 flex-shrink-0" />
+              <div className="mt-4 pt-4 border-t border-[#F9F5F0] space-y-2.5">
+                <div className="flex items-center gap-2 text-sm text-[#F4991A]">
+                  <Calendar size={13} className="text-[#F4991A] flex-shrink-0" />
                   <span className="text-xs leading-relaxed">{formattedDate}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Clock size={13} className="text-brand-400" />
+                <div className="flex items-center gap-2 text-sm text-[#F4991A]">
+                  <Clock size={13} className="text-[#F4991A]" />
                   <span>المدة: {event.duration_hours} ساعة</span>
                 </div>
                 {event.neighborhood_name && (
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <MapPin size={13} className="text-brand-400" />
+                  <div className="flex items-center gap-2 text-sm text-[#F4991A]">
+                    <MapPin size={13} className="text-[#F4991A]" />
                     <span>{event.neighborhood_name}</span>
                   </div>
                 )}

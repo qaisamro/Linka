@@ -28,13 +28,13 @@ export default function HeatmapLayer({ points = [], visible = true }) {
       max:     1.0,
       minOpacity: 0.35,
       gradient: {
-        0.00: '#1e3a8a',   // deep blue  → very low activity
-        0.20: '#3b82f6',   // blue       → low
-        0.40: '#06b6d4',   // cyan       → moderate-low
-        0.55: '#10b981',   // green      → moderate
-        0.70: '#f59e0b',   // amber      → high
-        0.85: '#f97316',   // orange     → very high
-        1.00: '#ef4444',   // red        → hotspot
+        0.00: '#344F1F',   // deep blue  → very low activity
+        0.20: '#F4991A',   // blue       → low
+        0.40: '#F4991A',   // cyan       → moderate-low
+        0.55: '#F4991A',   // green      → moderate
+        0.70: '#F4991A',   // amber      → high
+        0.85: '#F4991A',   // orange     → very high
+        1.00: '#F4991A',   // red        → hotspot
       },
     });
 

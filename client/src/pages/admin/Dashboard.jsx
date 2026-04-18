@@ -37,13 +37,13 @@ function StatCard({ icon: Icon, label, value, sub, gradient, delay = 0 }) {
     >
       <div className="absolute inset-0 dot-pattern-sm opacity-15 rounded-2xl pointer-events-none" />
       <div className="relative z-10 flex items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0 backdrop-blur-sm shadow-inner-top">
-          <Icon size={26} className="text-white" />
+        <div className="w-14 h-14 rounded-2xl bg-[#F9F5F0]/20 flex items-center justify-center flex-shrink-0 backdrop-blur-sm shadow-inner-top">
+          <Icon size={26} className="text-[#F9F5F0]" />
         </div>
         <div>
-          <p className="text-white/70 text-xs font-semibold leading-none">{label}</p>
-          <p className="text-3xl font-black text-white leading-none mt-1.5 stat-num-shadow">{value}</p>
-          {sub && <p className="text-white/60 text-xs font-medium mt-1">{sub}</p>}
+          <p className="text-[#F9F5F0]/70 text-xs font-semibold leading-none">{label}</p>
+          <p className="text-3xl font-black text-[#F9F5F0] leading-none mt-1.5 stat-num-shadow">{value}</p>
+          {sub && <p className="text-[#F9F5F0]/60 text-xs font-medium mt-1">{sub}</p>}
         </div>
       </div>
     </motion.div>
@@ -53,34 +53,34 @@ function StatCard({ icon: Icon, label, value, sub, gradient, delay = 0 }) {
 // ─── Bar Chart ────────────────────────────────────────────────────
 function TypeChart({ data }) {
   if (!data?.length) return (
-    <div className="flex flex-col items-center py-8 text-slate-300">
+    <div className="flex flex-col items-center py-8 text-[#F2EAD3]">
       <BarChart2 size={36} className="mb-2" />
       <p className="text-sm font-semibold">لا توجد بيانات بعد</p>
     </div>
   );
   const max = Math.max(...data.map(d => Number(d.count)));
   const COLORS = {
-    'تطوعية': '#10b981', 'ثقافية': '#8b5cf6', 'رياضية': '#f97316',
-    'تعليمية': '#3b82f6', 'بيئية': '#22c55e', 'اجتماعية': '#ec4899',
+    'تطوعية': '#F4991A', 'ثقافية': '#F4991A', 'رياضية': '#F4991A',
+    'تعليمية': '#F4991A', 'بيئية': '#F4991A', 'اجتماعية': '#F4991A',
   };
   return (
     <div className="space-y-4">
       {data.map((d, i) => (
         <div key={i}>
           <div className="flex justify-between items-center mb-1.5">
-            <span className="font-bold text-slate-700 text-sm">{d.type}</span>
-            <span className="text-xs font-black px-2 py-0.5 rounded-full text-white"
-              style={{ background: COLORS[d.type] || '#3b82f6' }}>
+            <span className="font-bold text-[#344F1F] text-sm">{d.type}</span>
+            <span className="text-xs font-black px-2 py-0.5 rounded-full text-[#F9F5F0]"
+              style={{ background: COLORS[d.type] || '#F4991A' }}>
               {d.count}
             </span>
           </div>
-          <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+          <div className="h-3 bg-[#F9F5F0] rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${(d.count / max) * 100}%` }}
               transition={{ delay: i * 0.1 + 0.3, duration: 0.9, ease: 'easeOut' }}
               className="h-full rounded-full relative overflow-hidden"
-              style={{ background: COLORS[d.type] || '#3b82f6' }}
+              style={{ background: COLORS[d.type] || '#F4991A' }}
             >
               <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-shimmer" />
             </motion.div>
@@ -94,25 +94,25 @@ function TypeChart({ data }) {
 // ─── Neighborhood Chart ───────────────────────────────────────────
 function NeighborhoodChart({ data }) {
   if (!data?.length) return (
-    <p className="text-slate-400 text-sm text-center py-8 font-semibold">لا توجد بيانات بعد</p>
+    <p className="text-[#F4991A] text-sm text-center py-8 font-semibold">لا توجد بيانات بعد</p>
   );
   const max = Math.max(...data.map(d => Number(d.registrations)));
   const GRADIENTS = [
-    'from-brand-600 to-brand-800', 'from-brand-500 to-brand-700',
-    'from-brand-400 to-brand-600', 'from-brand-300 to-brand-500',
-    'from-brand-200 to-brand-400',
+    'from-[#344F1F] to-[#344F1F]', 'from-[#F4991A] to-[#344F1F]',
+    'from-[#F4991A] to-[#344F1F]', 'from-[#F2EAD3] to-[#F4991A]',
+    'from-[#F2EAD3] to-[#F4991A]',
   ];
-  const COLORS = ['#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd'];
+  const COLORS = ['#344F1F', '#344F1F', '#F4991A', '#F4991A', '#F2EAD3'];
   return (
     <div className="space-y-3">
       {data.map((d, i) => (
         <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
           transition={{ delay: i * 0.08 + 0.2 }} className="flex items-center gap-3">
-          <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${GRADIENTS[i] || GRADIENTS[4]} flex items-center justify-center flex-shrink-0 text-white text-xs font-black shadow-sm`}>
+          <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${GRADIENTS[i] || GRADIENTS[4]} flex items-center justify-center flex-shrink-0 text-[#F9F5F0] text-xs font-black shadow-sm`}>
             {i + 1}
           </div>
-          <span className="text-sm text-slate-700 w-24 flex-shrink-0 font-semibold truncate">{d.name}</span>
-          <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+          <span className="text-sm text-[#344F1F] w-24 flex-shrink-0 font-semibold truncate">{d.name}</span>
+          <div className="flex-1 h-2.5 bg-[#F9F5F0] rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${(d.registrations / max) * 100}%` }}
@@ -121,7 +121,7 @@ function NeighborhoodChart({ data }) {
               style={{ background: `linear-gradient(to left, ${COLORS[i]}, ${COLORS[Math.min(i+1,4)]})` }}
             />
           </div>
-          <span className="text-xs font-black text-slate-500 w-8 text-left">{d.registrations}</span>
+          <span className="text-xs font-black text-[#F4991A] w-8 text-left">{d.registrations}</span>
         </motion.div>
       ))}
     </div>
@@ -142,9 +142,9 @@ function SectionCard({ children, className = '', delay = 0 }) {
 // ─── Status Badge (attendance) ────────────────────────────────────
 function StatusBadge({ status }) {
   const MAP = {
-    registered: { label: 'مسجّل',  cls: 'bg-blue-100 text-blue-700 border border-blue-200'      },
-    attended:   { label: 'حضر',    cls: 'bg-emerald-100 text-emerald-700 border border-emerald-200' },
-    absent:     { label: 'غائب',   cls: 'bg-red-100 text-red-600 border border-red-200'           },
+    registered: { label: 'مسجّل',  cls: 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]'      },
+    attended:   { label: 'حضر',    cls: 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]' },
+    absent:     { label: 'غائب',   cls: 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]'           },
   };
   const s = MAP[status] || MAP.registered;
   return <span className={`badge-pill text-xs ${s.cls}`}>{s.label}</span>;
@@ -220,38 +220,38 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={Users}       label="إجمالي الشباب"  value={s.total_users || 0}
-          gradient="from-brand-600 to-brand-800"    delay={0}   sub="مسجّل في المنصة" />
+          gradient="from-[#344F1F] to-[#344F1F]"    delay={0}   sub="مسجّل في المنصة" />
         <StatCard icon={Calendar}    label="فعاليات نشطة"   value={s.active_events || 0}
-          gradient="from-emerald-500 to-teal-600"   delay={0.1} sub="متاحة للتسجيل" />
+          gradient="from-[#F4991A] to-[#344F1F]"   delay={0.1} sub="متاحة للتسجيل" />
         <StatCard icon={CheckCircle} label="إجمالي الحضور"  value={s.total_attendances || 0}
-          gradient="from-violet-500 to-purple-600"  delay={0.2} sub="تأكيد حضور" />
+          gradient="from-[#F4991A] to-[#344F1F]"  delay={0.2} sub="تأكيد حضور" />
         <StatCard icon={Clock}       label="ساعات التطوع"   value={`${Math.round(s.total_volunteer_hours || 0)}h`}
-          gradient="from-amber-500 to-orange-500"   delay={0.3} sub="مجموع الساعات" />
+          gradient="from-[#F4991A] to-[#F4991A]"   delay={0.3} sub="مجموع الساعات" />
       </div>
 
       {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-6">
         <SectionCard delay={0.4}>
-          <div className="p-5 border-b border-slate-50 flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-md">
-              <BarChart2 size={16} className="text-white" />
+          <div className="p-5 border-b border-[#F9F5F0] flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#F4991A] to-[#344F1F] flex items-center justify-center shadow-md">
+              <BarChart2 size={16} className="text-[#F9F5F0]" />
             </div>
             <div>
-              <h2 className="font-bold text-slate-800 text-sm leading-none">الفعاليات حسب النوع</h2>
-              <p className="text-slate-400 text-[10px] mt-0.5">توزيع الأنشطة</p>
+              <h2 className="font-bold text-[#344F1F] text-sm leading-none">الفعاليات حسب النوع</h2>
+              <p className="text-[#F4991A] text-[10px] mt-0.5">توزيع الأنشطة</p>
             </div>
           </div>
           <div className="p-5"><TypeChart data={stats?.eventsByType} /></div>
         </SectionCard>
 
         <SectionCard delay={0.5}>
-          <div className="p-5 border-b border-slate-50 flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md">
-              <MapPin size={16} className="text-white" />
+          <div className="p-5 border-b border-[#F9F5F0] flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#F4991A] to-[#344F1F] flex items-center justify-center shadow-md">
+              <MapPin size={16} className="text-[#F9F5F0]" />
             </div>
             <div>
-              <h2 className="font-bold text-slate-800 text-sm leading-none">أكثر الأحياء تفاعلاً</h2>
-              <p className="text-slate-400 text-[10px] mt-0.5">بناءً على التسجيلات</p>
+              <h2 className="font-bold text-[#344F1F] text-sm leading-none">أكثر الأحياء تفاعلاً</h2>
+              <p className="text-[#F4991A] text-[10px] mt-0.5">بناءً على التسجيلات</p>
             </div>
           </div>
           <div className="p-5"><NeighborhoodChart data={stats?.topNeighborhoods} /></div>
@@ -260,27 +260,27 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
 
       {/* Events Table */}
       <SectionCard delay={0.6}>
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
+        <div className="p-5 border-b border-[#F9F5F0] flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md">
-              <Calendar size={16} className="text-white" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#F4991A] to-[#F4991A] flex items-center justify-center shadow-md">
+              <Calendar size={16} className="text-[#F9F5F0]" />
             </div>
             <div>
-              <h2 className="font-bold text-slate-800 text-sm leading-none">إدارة الفعاليات</h2>
-              <p className="text-slate-400 text-[10px] mt-0.5">{events.length} فعالية مسجّلة</p>
+              <h2 className="font-bold text-[#344F1F] text-sm leading-none">إدارة الفعاليات</h2>
+              <p className="text-[#F4991A] text-[10px] mt-0.5">{events.length} فعالية مسجّلة</p>
             </div>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-slate-50/80 text-slate-500 text-xs font-bold">
-                <th className="text-right px-5 py-3.5 border-b border-slate-100">الفعالية</th>
-                <th className="text-right px-5 py-3.5 hidden sm:table-cell border-b border-slate-100">النوع</th>
-                <th className="text-right px-5 py-3.5 hidden md:table-cell border-b border-slate-100">التاريخ</th>
-                <th className="text-right px-5 py-3.5 border-b border-slate-100">المشاركون</th>
-                <th className="text-right px-5 py-3.5 border-b border-slate-100">الحالة</th>
-                <th className="text-right px-5 py-3.5 border-b border-slate-100">إجراءات</th>
+              <tr className="bg-[#F9F5F0]/80 text-[#F4991A] text-xs font-bold">
+                <th className="text-right px-5 py-3.5 border-b border-[#F9F5F0]">الفعالية</th>
+                <th className="text-right px-5 py-3.5 hidden sm:table-cell border-b border-[#F9F5F0]">النوع</th>
+                <th className="text-right px-5 py-3.5 hidden md:table-cell border-b border-[#F9F5F0]">التاريخ</th>
+                <th className="text-right px-5 py-3.5 border-b border-[#F9F5F0]">المشاركون</th>
+                <th className="text-right px-5 py-3.5 border-b border-[#F9F5F0]">الحالة</th>
+                <th className="text-right px-5 py-3.5 border-b border-[#F9F5F0]">إجراءات</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -290,29 +290,29 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
                   <motion.tr key={ev.id}
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.04 + 0.6 }}
-                    className="hover:bg-brand-50/30 transition-colors group">
+                    className="hover:bg-[#F9F5F0]/30 transition-colors group">
                     <td className="px-5 py-4">
-                      <p className="font-bold text-slate-800 text-sm line-clamp-1 group-hover:text-brand-700">{ev.title}</p>
-                      <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+                      <p className="font-bold text-[#344F1F] text-sm line-clamp-1 group-hover:text-[#344F1F]">{ev.title}</p>
+                      <p className="text-xs text-[#F4991A] mt-0.5 flex items-center gap-1">
                         <MapPin size={10} />{ev.location_name}
                       </p>
                     </td>
                     <td className="px-5 py-4 hidden sm:table-cell">
-                      <span className="badge-pill bg-slate-100 text-slate-600 text-xs font-semibold border border-slate-200">{ev.type}</span>
+                      <span className="badge-pill bg-[#F9F5F0] text-[#344F1F] text-xs font-semibold border border-[#F2EAD3]">{ev.type}</span>
                     </td>
-                    <td className="px-5 py-4 hidden md:table-cell text-sm text-slate-500 font-medium">
+                    <td className="px-5 py-4 hidden md:table-cell text-sm text-[#F4991A] font-medium">
                       {(() => { try { return format(new Date(ev.date), 'd MMM', { locale: ar }); } catch { return '—'; } })()}
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                        <div className="w-16 h-2 bg-[#F2EAD3] rounded-full overflow-hidden">
                           <div className={`h-full rounded-full transition-all ${
-                            fill >= 90 ? 'bg-gradient-to-r from-red-400 to-red-500' :
-                            fill >= 60 ? 'bg-gradient-to-r from-amber-400 to-amber-500' :
-                                         'bg-gradient-to-r from-emerald-400 to-emerald-500'
+                            fill >= 90 ? 'bg-gradient-to-r from-[#F4991A] to-[#F4991A]' :
+                            fill >= 60 ? 'bg-gradient-to-r from-[#F4991A] to-[#F4991A]' :
+                                         'bg-gradient-to-r from-[#F4991A] to-[#F4991A]'
                           }`} style={{ width: `${fill}%` }} />
                         </div>
-                        <span className="text-xs text-slate-500 whitespace-nowrap font-semibold">
+                        <span className="text-xs text-[#F4991A] whitespace-nowrap font-semibold">
                           {ev.current_participants}/{ev.max_participants}
                         </span>
                       </div>
@@ -320,8 +320,8 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
                     <td className="px-5 py-4">
                       <span className={`badge-pill text-xs font-bold ${
                         ev.status === 'active'
-                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                          : 'bg-slate-100 text-slate-500 border border-slate-200'
+                          ? 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]'
+                          : 'bg-[#F9F5F0] text-[#F4991A] border border-[#F2EAD3]'
                       }`}>
                         {ev.status === 'active' ? '🟢 نشطة' : '⚪ منتهية'}
                       </span>
@@ -329,11 +329,11 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1">
                         <Link to={`/events/${ev.id}`}
-                          className="p-2 rounded-xl hover:bg-brand-50 text-slate-400 hover:text-brand-600 transition-all" title="عرض">
+                          className="p-2 rounded-xl hover:bg-[#F9F5F0] text-[#F4991A] hover:text-[#344F1F] transition-all" title="عرض">
                           <Eye size={15} />
                         </Link>
                         <button onClick={() => handleDelete(ev.id)}
-                          className="p-2 rounded-xl hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all" title="حذف">
+                          className="p-2 rounded-xl hover:bg-[#F9F5F0] text-[#F4991A] hover:text-[#F4991A] transition-all" title="حذف">
                           <Trash2 size={15} />
                         </button>
                       </div>
@@ -343,12 +343,12 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
               })}
               {events.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-center py-16 text-slate-400">
+                  <td colSpan={6} className="text-center py-16 text-[#F4991A]">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="w-16 h-16 rounded-3xl bg-slate-100 flex items-center justify-center">
-                        <Calendar size={28} className="text-slate-300" />
+                      <div className="w-16 h-16 rounded-3xl bg-[#F9F5F0] flex items-center justify-center">
+                        <Calendar size={28} className="text-[#F2EAD3]" />
                       </div>
-                      <p className="font-semibold text-slate-500">لا توجد فعاليات — أنشئ أول فعالية!</p>
+                      <p className="font-semibold text-[#F4991A]">لا توجد فعاليات — أنشئ أول فعالية!</p>
                       <button onClick={onCreateEvent} className="btn-primary text-sm"><Plus size={15} /> أنشئ فعالية</button>
                     </div>
                   </td>
@@ -363,12 +363,12 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
       {events.length > 0 && (
         <SectionCard delay={0.7} className="p-6">
           <div className="flex items-center gap-2 mb-5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-md">
-              <CheckCircle size={16} className="text-white" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#F4991A] to-[#344F1F] flex items-center justify-center shadow-md">
+              <CheckCircle size={16} className="text-[#F9F5F0]" />
             </div>
             <div>
-              <h2 className="font-bold text-slate-800 text-sm leading-none">تأكيد الحضور</h2>
-              <p className="text-slate-400 text-[10px] mt-0.5">مراجعة المسجّلين ومنح النقاط</p>
+              <h2 className="font-bold text-[#344F1F] text-sm leading-none">تأكيد الحضور</h2>
+              <p className="text-[#F4991A] text-[10px] mt-0.5">مراجعة المسجّلين ومنح النقاط</p>
             </div>
           </div>
           <select onChange={e => loadEventRegs(e.target.value)} className="input-field mb-5 text-sm" defaultValue="">
@@ -382,13 +382,13 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
                   <motion.div key={r.id}
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                    <div className="w-10 h-10 rounded-xl bg-hero-gradient text-white flex items-center justify-center font-black text-sm flex-shrink-0 shadow-md">
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F9F5F0] transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-hero-gradient text-[#F9F5F0] flex items-center justify-center font-black text-sm flex-shrink-0 shadow-md">
                       {r.user_name?.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-slate-800 text-sm leading-none">{r.user_name}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{r.email}</p>
+                      <p className="font-bold text-[#344F1F] text-sm leading-none">{r.user_name}</p>
+                      <p className="text-xs text-[#F4991A] mt-0.5">{r.email}</p>
                     </div>
                     <StatusBadge status={r.status} />
                     {r.status === 'registered' && (
@@ -408,9 +408,9 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
               </AnimatePresence>
             </div>
           ) : (
-            <div className="flex flex-col items-center py-10 text-slate-400 gap-2">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
-                <Users size={20} className="text-slate-300" />
+            <div className="flex flex-col items-center py-10 text-[#F4991A] gap-2">
+              <div className="w-12 h-12 rounded-2xl bg-[#F9F5F0] flex items-center justify-center">
+                <Users size={20} className="text-[#F2EAD3]" />
               </div>
               <p className="text-sm font-semibold">اختر فعالية لعرض المسجّلين</p>
             </div>
@@ -421,31 +421,31 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
       {/* Broadcast Notification */}
       <SectionCard delay={0.8} className="p-6">
         <div className="flex items-center gap-2 mb-5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center shadow-md">
-            <Megaphone size={16} className="text-white" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#F4991A] to-[#F4991A] flex items-center justify-center shadow-md">
+            <Megaphone size={16} className="text-[#F9F5F0]" />
           </div>
           <div>
-            <h2 className="font-bold text-slate-800 text-sm leading-none">إرسال إشعار جماعي</h2>
-            <p className="text-slate-400 text-[10px] mt-0.5">أرسل إشعاراً لجميع المستخدمين أو شريحة محددة</p>
+            <h2 className="font-bold text-[#344F1F] text-sm leading-none">إرسال إشعار جماعي</h2>
+            <p className="text-[#F4991A] text-[10px] mt-0.5">أرسل إشعاراً لجميع المستخدمين أو شريحة محددة</p>
           </div>
         </div>
         <form onSubmit={handleBroadcast} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5">عنوان الإشعار *</label>
+            <label className="block text-xs font-bold text-[#344F1F] mb-1.5">عنوان الإشعار *</label>
             <input type="text" value={broadcast.title}
               onChange={e => setBroadcast(p => ({ ...p, title: e.target.value }))}
               placeholder="مثال: إعلان هام للشباب..."
               className="input-field text-sm" maxLength={200} />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5">نص الإشعار (اختياري)</label>
+            <label className="block text-xs font-bold text-[#344F1F] mb-1.5">نص الإشعار (اختياري)</label>
             <textarea value={broadcast.message}
               onChange={e => setBroadcast(p => ({ ...p, message: e.target.value }))}
               placeholder="تفاصيل إضافية..." className="input-field text-sm resize-none" rows={3} maxLength={500} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1.5">نوع الإشعار</label>
+              <label className="block text-xs font-bold text-[#344F1F] mb-1.5">نوع الإشعار</label>
               <select value={broadcast.type}
                 onChange={e => setBroadcast(p => ({ ...p, type: e.target.value }))} className="input-field text-sm">
                 <option value="announcement">📢 إعلان</option>
@@ -455,7 +455,7 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1.5">الجمهور المستهدف</label>
+              <label className="block text-xs font-bold text-[#344F1F] mb-1.5">الجمهور المستهدف</label>
               <select value={broadcast.target}
                 onChange={e => setBroadcast(p => ({ ...p, target: e.target.value }))} className="input-field text-sm">
                 <option value="youth">الشباب فقط</option>
@@ -464,7 +464,7 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1.5">الحي (اختياري)</label>
+              <label className="block text-xs font-bold text-[#344F1F] mb-1.5">الحي (اختياري)</label>
               <select value={broadcast.neighborhood_id}
                 onChange={e => setBroadcast(p => ({ ...p, neighborhood_id: e.target.value }))} className="input-field text-sm">
                 <option value="">جميع الأحياء</option>
@@ -529,11 +529,11 @@ export default function AdminDashboard() {
   };
 
   if (loading) return (
-    <div className="min-h-screen pt-20 flex items-center justify-center bg-slate-50">
-      <div className="flex flex-col items-center gap-4 text-slate-400">
+    <div className="min-h-screen pt-20 flex items-center justify-center bg-[#F9F5F0]">
+      <div className="flex flex-col items-center gap-4 text-[#F4991A]">
         <div className="relative">
-          <div className="w-14 h-14 rounded-full border-4 border-brand-100 border-t-brand-600 animate-spin" />
-          <Activity size={20} className="absolute inset-0 m-auto text-brand-500" />
+          <div className="w-14 h-14 rounded-full border-4 border-[#F9F5F0] border-t-brand-600 animate-spin" />
+          <Activity size={20} className="absolute inset-0 m-auto text-[#F4991A]" />
         </div>
         <p className="font-semibold text-sm">جاري تحميل لوحة التحكم...</p>
       </div>
@@ -541,26 +541,26 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-16">
+    <div className="min-h-screen bg-[#F9F5F0] pt-16">
 
       {/* ── Admin Header Banner ────────────────────────── */}
-      <div className="bg-white border-b border-slate-100 shadow-sm">
+      <div className="bg-[#F9F5F0] border-b border-[#F9F5F0] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
-                <BarChart2 size={22} className="text-white" />
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#F4991A] to-[#F4991A] flex items-center justify-center shadow-md">
+                <BarChart2 size={22} className="text-[#F9F5F0]" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-800 leading-none">لوحة التحكم</h1>
-                <p className="text-slate-400 text-xs mt-0.5">
-                  مرحباً {user?.name} · <span className="text-amber-500 font-bold">مدير النظام</span>
+                <h1 className="text-xl sm:text-2xl font-black text-[#344F1F] leading-none">لوحة التحكم</h1>
+                <p className="text-[#F4991A] text-xs mt-0.5">
+                  مرحباً {user?.name} · <span className="text-[#F4991A] font-bold">مدير النظام</span>
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <motion.button whileTap={{ scale: 0.95, rotate: 180 }} onClick={handleRefresh}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-slate-200 text-slate-600 hover:border-brand-300 hover:text-brand-700 hover:bg-brand-50 text-sm font-semibold transition-all">
+                className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-[#F2EAD3] text-[#344F1F] hover:border-[#F2EAD3] hover:text-[#344F1F] hover:bg-[#F9F5F0] text-sm font-semibold transition-all">
                 <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
                 تحديث
               </motion.button>
@@ -580,17 +580,17 @@ export default function AdminDashboard() {
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`relative flex items-center gap-2 px-5 py-3.5 text-sm font-bold whitespace-nowrap transition-all duration-200 border-b-2 flex-shrink-0 ${
+                className={`relative flex items-center gap-2 px-5 py-3.5 text-sm font-bold whitespace-nowrap transition-all duration-200 border-[#F9F5F0] flex-shrink-0 ${
                   activeTab === key
-                    ? 'border-brand-700 text-brand-700'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-200'
+                    ? 'border-[#344F1F] text-[#344F1F]'
+                    : 'border-transparent text-[#F4991A] hover:text-[#344F1F] hover:border-[#F2EAD3]'
                 }`}
               >
                 <Icon size={15} />
                 {label}
                 {activeTab === key && (
                   <motion.div layoutId="tab-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-700 rounded-t-full"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#344F1F] rounded-t-full"
                   />
                 )}
               </button>

@@ -12,10 +12,10 @@ import toast from 'react-hot-toast';
 
 // ── Status config ──────────────────────────────────────────────────
 const STATUS_META = {
-  registered: { label: 'مسجّل',   icon: Clock,        cls: 'bg-blue-100 text-blue-700 border-blue-200'     },
-  attended:   { label: 'حضر',     icon: CheckCircle,  cls: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  cancelled:  { label: 'ملغى',    icon: XCircle,      cls: 'bg-red-100 text-red-600 border-red-200'         },
-  absent:     { label: 'لم يحضر', icon: UserMinus,    cls: 'bg-slate-100 text-slate-500 border-slate-200'   },
+  registered: { label: 'مسجّل',   icon: Clock,        cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]'     },
+  attended:   { label: 'حضر',     icon: CheckCircle,  cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' },
+  cancelled:  { label: 'ملغى',    icon: XCircle,      cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]'         },
+  absent:     { label: 'لم يحضر', icon: UserMinus,    cls: 'bg-[#F9F5F0] text-[#F4991A] border-[#F2EAD3]'   },
 };
 
 const StatusBadge = ({ status }) => {
@@ -38,7 +38,7 @@ function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] flex items-center justify-center p-4"
+        className="fixed inset-0 bg-[#344F1F]/40 backdrop-blur-sm z-[80] flex items-center justify-center p-4"
         onClick={onCancel}
       >
         <motion.div
@@ -46,20 +46,20 @@ function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.9 }}
           onClick={e => e.stopPropagation()}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
+          className="bg-[#F9F5F0] rounded-2xl shadow-2xl w-full max-w-sm p-6"
         >
-          <div className="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle size={22} className="text-red-500" />
+          <div className="w-12 h-12 rounded-2xl bg-[#F9F5F0] flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle size={22} className="text-[#F4991A]" />
           </div>
-          <h3 className="font-black text-slate-800 text-center text-base mb-2">{title}</h3>
-          <p className="text-slate-500 text-sm text-center mb-6">{message}</p>
+          <h3 className="font-black text-[#344F1F] text-center text-base mb-2">{title}</h3>
+          <p className="text-[#F4991A] text-sm text-center mb-6">{message}</p>
           <div className="flex gap-3">
             <button onClick={onCancel}
-              className="flex-1 px-4 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50">
+              className="flex-1 px-4 py-2.5 rounded-xl border-2 border-[#F2EAD3] text-[#344F1F] font-semibold text-sm hover:bg-[#F9F5F0]">
               إلغاء
             </button>
             <button onClick={onConfirm}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm transition-colors">
+              className="flex-1 px-4 py-2.5 rounded-xl bg-[#F4991A] hover:bg-[#344F1F] text-[#F9F5F0] font-bold text-sm transition-colors">
               تأكيد الإلغاء
             </button>
           </div>
@@ -163,7 +163,7 @@ export default function EventRegistrationsTab() {
 
       {/* ── Event Selector ───────────────────────────────── */}
       <div className="card p-4">
-        <label className="block text-xs font-bold text-slate-600 mb-2">اختر فعالية لإدارة مشاركيها</label>
+        <label className="block text-xs font-bold text-[#344F1F] mb-2">اختر فعالية لإدارة مشاركيها</label>
         {eventsLoading ? (
           <div className="skeleton h-10 rounded-xl" />
         ) : (
@@ -186,16 +186,16 @@ export default function EventRegistrationsTab() {
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-3 pt-3 border-t border-slate-50 flex items-center gap-4 flex-wrap"
+            className="mt-3 pt-3 border-t border-[#F9F5F0] flex items-center gap-4 flex-wrap"
           >
-            <span className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
-              <Users size={12} className="text-brand-400" />
+            <span className="flex items-center gap-1.5 text-xs text-[#F4991A] font-semibold">
+              <Users size={12} className="text-[#F4991A]" />
               {eventInfo.current_participants}/{eventInfo.max_participants} مشارك
             </span>
             {Object.entries(counts).map(([st, cnt]) => (
               <StatusBadge key={st} status={st} />
             ))}
-            <span className="mr-auto text-xs font-bold text-slate-600">
+            <span className="mr-auto text-xs font-bold text-[#344F1F]">
               {regs.length} تسجيل
             </span>
           </motion.div>
@@ -211,8 +211,8 @@ export default function EventRegistrationsTab() {
               onClick={() => setStatusFilter(f.key)}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
                 statusFilter === f.key
-                  ? 'bg-brand-700 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                  ? 'bg-[#344F1F] text-[#F9F5F0] shadow-sm'
+                  : 'bg-[#F9F5F0] text-[#F4991A] hover:bg-[#F2EAD3]'
               }`}
             >
               {f.label}
@@ -221,7 +221,7 @@ export default function EventRegistrationsTab() {
               )}
             </button>
           ))}
-          <button onClick={loadRegistrations} className="flex-shrink-0 mr-auto p-1.5 rounded-lg text-brand-600 hover:bg-brand-50 transition-colors">
+          <button onClick={loadRegistrations} className="flex-shrink-0 mr-auto p-1.5 rounded-lg text-[#344F1F] hover:bg-[#F9F5F0] transition-colors">
             <RefreshCw size={13} />
           </button>
         </div>
@@ -229,11 +229,11 @@ export default function EventRegistrationsTab() {
 
       {/* ── Registrations Table ──────────────────────────── */}
       {!selectedEvent ? (
-        <div className="card flex flex-col items-center py-16 text-slate-400 gap-3">
-          <div className="w-16 h-16 rounded-3xl bg-slate-100 flex items-center justify-center">
-            <Calendar size={28} className="text-slate-300" />
+        <div className="card flex flex-col items-center py-16 text-[#F4991A] gap-3">
+          <div className="w-16 h-16 rounded-3xl bg-[#F9F5F0] flex items-center justify-center">
+            <Calendar size={28} className="text-[#F2EAD3]" />
           </div>
-          <p className="font-semibold text-slate-500">اختر فعالية من القائمة أعلاه</p>
+          <p className="font-semibold text-[#F4991A]">اختر فعالية من القائمة أعلاه</p>
         </div>
       ) : loading ? (
         <div className="card space-y-0 divide-y divide-slate-50">
@@ -250,16 +250,16 @@ export default function EventRegistrationsTab() {
           ))}
         </div>
       ) : regs.length === 0 ? (
-        <div className="card flex flex-col items-center py-14 text-slate-400 gap-3">
-          <Users size={36} className="text-slate-300" />
-          <p className="font-semibold text-slate-500">لا توجد تسجيلات مطابقة</p>
+        <div className="card flex flex-col items-center py-14 text-[#F4991A] gap-3">
+          <Users size={36} className="text-[#F2EAD3]" />
+          <p className="font-semibold text-[#F4991A]">لا توجد تسجيلات مطابقة</p>
         </div>
       ) : (
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-slate-50/80 text-slate-500 text-xs font-bold border-b border-slate-100">
+                <tr className="bg-[#F9F5F0]/80 text-[#F4991A] text-xs font-bold border-b border-[#F9F5F0]">
                   <th className="text-right px-5 py-3.5">المشارك</th>
                   <th className="text-right px-5 py-3.5 hidden md:table-cell">معلومات الاتصال</th>
                   <th className="text-right px-5 py-3.5 hidden sm:table-cell">وقت التسجيل</th>
@@ -279,20 +279,20 @@ export default function EventRegistrationsTab() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ delay: idx * 0.03 }}
-                        className="group hover:bg-brand-50/20 transition-colors"
+                        className="group hover:bg-[#F9F5F0]/20 transition-colors"
                       >
                         {/* Participant */}
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0 ${
-                              r.is_active ? 'bg-hero-gradient' : 'bg-slate-300'
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[#F9F5F0] font-black text-sm flex-shrink-0 ${
+                              r.is_active ? 'bg-hero-gradient' : 'bg-[#F2EAD3]'
                             }`}>
                               {r.user_name?.charAt(0)}
                             </div>
                             <div>
-                              <p className="font-bold text-slate-800 text-sm leading-none">{r.user_name}</p>
+                              <p className="font-bold text-[#344F1F] text-sm leading-none">{r.user_name}</p>
                               {r.neighborhood_name && (
-                                <p className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
+                                <p className="flex items-center gap-1 text-[11px] text-[#F4991A] mt-0.5">
                                   <MapPin size={9} /> {r.neighborhood_name}
                                 </p>
                               )}
@@ -303,19 +303,19 @@ export default function EventRegistrationsTab() {
                         {/* Contact */}
                         <td className="px-5 py-3.5 hidden md:table-cell">
                           <div className="space-y-0.5">
-                            <p className="flex items-center gap-1.5 text-xs text-slate-500">
-                              <Mail size={10} className="text-slate-300" /> {r.email}
+                            <p className="flex items-center gap-1.5 text-xs text-[#F4991A]">
+                              <Mail size={10} className="text-[#F2EAD3]" /> {r.email}
                             </p>
                             {r.phone && (
-                              <p className="flex items-center gap-1.5 text-xs text-slate-400">
-                                <Phone size={10} className="text-slate-300" /> {r.phone}
+                              <p className="flex items-center gap-1.5 text-xs text-[#F4991A]">
+                                <Phone size={10} className="text-[#F2EAD3]" /> {r.phone}
                               </p>
                             )}
                           </div>
                         </td>
 
                         {/* Registered at */}
-                        <td className="px-5 py-3.5 hidden sm:table-cell text-xs text-slate-400 font-medium">
+                        <td className="px-5 py-3.5 hidden sm:table-cell text-xs text-[#F4991A] font-medium">
                           {timeAgo(r.registered_at)}
                         </td>
 
@@ -330,7 +330,7 @@ export default function EventRegistrationsTab() {
                             value={r.status}
                             disabled={busy}
                             onChange={e => handleStatusChange(r.id, e.target.value)}
-                            className="text-xs rounded-lg border border-slate-200 px-2 py-1.5 bg-white text-slate-600 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:opacity-50 cursor-pointer hover:border-brand-300 transition-colors"
+                            className="text-xs rounded-lg border border-[#F2EAD3] px-2 py-1.5 bg-[#F9F5F0] text-[#344F1F] font-semibold focus:outline-none focus:ring-2 focus:ring-[#F2EAD3] disabled:opacity-50 cursor-pointer hover:border-[#F2EAD3] transition-colors"
                           >
                             {Object.entries(STATUS_META).map(([key, m]) => (
                               <option key={key} value={key}>{m.label}</option>
@@ -345,7 +345,7 @@ export default function EventRegistrationsTab() {
                             disabled={busy || r.status === 'cancelled'}
                             onClick={() => setConfirmCancel(r)}
                             title="إلغاء التسجيل وحذفه"
-                            className="p-2 rounded-xl hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="p-2 rounded-xl hover:bg-[#F9F5F0] text-[#F4991A] hover:text-[#F4991A] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             <UserMinus size={15} />
                           </motion.button>

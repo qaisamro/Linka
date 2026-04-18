@@ -11,10 +11,10 @@ import { ar } from 'date-fns/locale';
 
 // ── Filter tabs ────────────────────────────────────────────────
 const FILTERS = [
-  { key: 'all',          label: 'الكل',    icon: Bell      },
-  { key: 'new_event',    label: 'فعاليات', icon: Calendar  },
-  { key: 'registration', label: 'تسجيل',   icon: CheckCircle },
-  { key: 'badge',        label: 'شارات',   icon: Award     },
+  { key: 'all', label: 'الكل', icon: Bell },
+  { key: 'new_event', label: 'فعاليات', icon: Calendar },
+  { key: 'registration', label: 'تسجيل', icon: CheckCircle },
+  { key: 'badge', label: 'شارات', icon: Award },
   { key: 'announcement', label: 'إعلانات', icon: Megaphone },
 ];
 
@@ -55,11 +55,10 @@ function NotifItem({ notif, onRead, onDelete, onClose }) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -10, height: 0 }}
       transition={{ duration: 0.2 }}
-      className={`relative flex items-start gap-3 px-4 py-3 rounded-xl mx-2 mb-1 cursor-pointer transition-all duration-200 group ${
-        isUnread
-          ? 'bg-brand-50 hover:bg-brand-100'
-          : 'hover:bg-slate-50'
-      }`}
+      className={`relative flex items-start gap-3 px-4 py-3 rounded-xl mx-2 mb-1 cursor-pointer transition-all duration-200 group ${isUnread
+        ? 'bg-[#F9F5F0] hover:bg-[#F9F5F0]'
+        : 'hover:bg-[#F9F5F0]'
+        }`}
     >
       {/* Unread dot */}
       {isUnread && (
@@ -74,16 +73,16 @@ function NotifItem({ notif, onRead, onDelete, onClose }) {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <p className={`text-sm leading-snug line-clamp-2 ${isUnread ? 'font-bold text-slate-800' : 'font-medium text-slate-700'}`}>
+          <p className={`text-sm leading-snug line-clamp-2 ${isUnread ? 'font-bold text-[#344F1F]' : 'font-medium text-[#344F1F]'}`}>
             {notif.title}
           </p>
           {notif.message && (
-            <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{notif.message}</p>
+            <p className="text-xs text-[#F4991A] mt-0.5 line-clamp-1">{notif.message}</p>
           )}
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-[10px] text-slate-400">{timeAgo(notif.created_at)}</span>
+            <span className="text-[10px] text-[#F4991A]">{timeAgo(notif.created_at)}</span>
             {link && (
-              <span className="text-[10px] text-brand-500 font-semibold">← عرض التفاصيل</span>
+              <span className="text-[10px] text-[#F4991A] font-semibold">← عرض التفاصيل</span>
             )}
           </div>
         </div>
@@ -93,7 +92,7 @@ function NotifItem({ notif, onRead, onDelete, onClose }) {
       <motion.button
         whileTap={{ scale: 0.9 }}
         onClick={(e) => { e.stopPropagation(); onDelete(notif.id); }}
-        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-100 text-slate-300 hover:text-red-500 transition-all duration-200 flex-shrink-0 mt-0.5"
+        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-[#F9F5F0] text-[#F2EAD3] hover:text-[#F4991A] transition-all duration-200 flex-shrink-0 mt-0.5"
         title="حذف"
       >
         <X size={12} />
@@ -120,20 +119,20 @@ export default function NotificationPanel({ onClose }) {
 
   return (
     <div
-      className="w-[340px] sm:w-[380px] bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden"
-      style={{ maxHeight: '80vh' }}
+      onMouseDown={(e) => e.stopPropagation()}
+      className="w-full h-full sm:w-[420px] bg-[#F9F5F0] rounded-none sm:rounded-3xl shadow-2xl sm:border-2 border-[#F2EAD3] overflow-hidden flex flex-col sm:max-h-[600px] sm:origin-top-left"
     >
 
       {/* ── Header ─────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-gradient-to-l from-brand-50 to-white">
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#F9F5F0] bg-gradient-to-l from-[#F9F5F0] to-[#F2EAD3]">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-xl bg-hero-gradient flex items-center justify-center shadow-sm">
-            <Bell size={13} className="text-white" />
+          <div className="w-8 h-8 rounded-xl bg-[#344F1F] flex items-center justify-center shadow-lg">
+            <Bell size={14} className="text-[#F4991A]" />
           </div>
           <div>
-            <p className="font-bold text-slate-800 text-sm leading-none">الإشعارات</p>
+            <p className="font-bold text-[#344F1F] text-sm leading-none">الإشعارات</p>
             {unreadCount > 0 && (
-              <p className="text-[10px] text-brand-600 font-semibold mt-0.5">
+              <p className="text-[10px] text-[#344F1F] font-semibold mt-0.5">
                 {unreadCount} غير مقروء
               </p>
             )}
@@ -145,7 +144,7 @@ export default function NotificationPanel({ onClose }) {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={markAllAsRead}
-              className="flex items-center gap-1 text-xs text-brand-600 hover:text-brand-800 font-semibold px-2.5 py-1.5 rounded-lg hover:bg-brand-50 transition-colors"
+              className="flex items-center gap-1 text-xs text-[#344F1F] hover:text-[#344F1F] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-[#F9F5F0] transition-colors"
               title="تحديد الكل كمقروء"
             >
               <CheckCheck size={13} />
@@ -156,7 +155,7 @@ export default function NotificationPanel({ onClose }) {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={clearRead}
-              className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-500 font-semibold px-2 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+              className="flex items-center gap-1 text-xs text-[#F4991A] hover:text-[#F4991A] font-semibold px-2 py-1.5 rounded-lg hover:bg-[#F9F5F0] transition-colors"
               title="حذف المقروءة"
             >
               <Trash2 size={12} />
@@ -164,7 +163,7 @@ export default function NotificationPanel({ onClose }) {
           )}
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-[#F9F5F0] text-[#F4991A] hover:text-[#344F1F] transition-colors"
           >
             <X size={14} />
           </button>
@@ -172,7 +171,7 @@ export default function NotificationPanel({ onClose }) {
       </div>
 
       {/* ── Filter Tabs ─────────────────────────────────────── */}
-      <div className="flex gap-1 px-3 py-2 border-b border-slate-50 overflow-x-auto custom-scroll">
+      <div className="flex gap-1 px-3 py-2 border-b border-[#F9F5F0] overflow-x-auto custom-scroll">
         {FILTERS.map(({ key, label, icon: Icon }) => {
           const count = key === 'all'
             ? unreadCount
@@ -182,18 +181,16 @@ export default function NotificationPanel({ onClose }) {
             <button
               key={key}
               onClick={() => setFilter(key)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 flex-shrink-0 ${
-                filter === key
-                  ? 'bg-brand-700 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 flex-shrink-0 ${filter === key
+                ? 'bg-[#344F1F] text-[#F9F5F0] shadow-sm'
+                : 'bg-[#F9F5F0] text-[#F4991A] hover:bg-[#F2EAD3]'
+                }`}
             >
               <Icon size={11} />
               {label}
               {count > 0 && (
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
-                  filter === key ? 'bg-white/30' : 'bg-white text-brand-600'
-                }`}>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${filter === key ? 'bg-[#F9F5F0]/30' : 'bg-[#F9F5F0] text-[#344F1F]'
+                  }`}>
                   {count}
                 </span>
               )}
@@ -203,10 +200,10 @@ export default function NotificationPanel({ onClose }) {
       </div>
 
       {/* ── Notification List ────────────────────────────────── */}
-      <div className="overflow-y-auto custom-scroll py-2" style={{ maxHeight: 'calc(80vh - 140px)' }}>
+      <div className="flex-1 overflow-y-auto custom-scroll py-2">
         {loading ? (
           <div className="space-y-2 px-2 py-3">
-            {[1,2,3].map(i => (
+            {[1, 2, 3].map(i => (
               <div key={i} className="flex gap-3 px-2">
                 <div className="skeleton w-9 h-9 rounded-xl flex-shrink-0" />
                 <div className="flex-1 space-y-2">
@@ -220,13 +217,13 @@ export default function NotificationPanel({ onClose }) {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center py-12 text-slate-400 gap-3"
+            className="flex flex-col items-center py-12 text-[#F4991A] gap-3"
           >
-            <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center">
-              <Bell size={24} className="text-slate-300" />
+            <div className="w-14 h-14 rounded-2xl bg-[#F9F5F0] flex items-center justify-center">
+              <Bell size={24} className="text-[#F2EAD3]" />
             </div>
             <div className="text-center">
-              <p className="font-semibold text-slate-500 text-sm">لا توجد إشعارات</p>
+              <p className="font-semibold text-[#F4991A] text-sm">لا توجد إشعارات</p>
               <p className="text-xs mt-0.5">ستظهر الإشعارات هنا عند وصولها</p>
             </div>
           </motion.div>
@@ -247,11 +244,11 @@ export default function NotificationPanel({ onClose }) {
 
       {/* ── Footer ──────────────────────────────────────────── */}
       {notifications.length > 0 && (
-        <div className="border-t border-slate-100 px-4 py-2.5 bg-slate-50/50 flex items-center justify-between">
-          <span className="text-xs text-slate-400 font-medium">
+        <div className="border-t border-[#F9F5F0] px-4 py-2.5 bg-[#F9F5F0]/50 flex items-center justify-between">
+          <span className="text-xs text-[#F4991A] font-medium">
             {notifications.length} إشعار إجمالي
           </span>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-[#F4991A]">
             يتجدد كل 30 ثانية
           </span>
         </div>

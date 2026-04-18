@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, LogIn, Sparkles, Shield, Users, Star } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, Sparkles, Shield, Users, Star, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -41,174 +41,124 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="h-screen overflow-hidden flex flex-col lg:flex-row bg-[#F9F5F0]">
+      {/* ── Left Panel: Branding & Stats ───────────────────────────── */}
+      <div className="hidden lg:flex lg:w-[45%] bg-[#344F1F] animated-gradient-rich relative overflow-hidden flex-col items-center justify-center p-12">
+        <div className="absolute inset-0 bg-[#344F1F]/40 pointer-events-none" />
+        <div className="absolute inset-0 dot-pattern opacity-10" />
 
-      {/* ── Left Panel: Branding ─────────────────────────── */}
-      <div className="hidden lg:flex lg:w-1/2 bg-brand-900 animated-gradient dot-pattern relative overflow-hidden flex-col items-center justify-center p-12">
-        {/* Dark overlay for text contrast */}
-        <div className="absolute inset-0 bg-black/40 pointer-events-none" />
-        {/* Orbs */}
-        <div className="hero-glow-orb w-80 h-80 top-1/4 -left-20 bg-blue-400/20" style={{ animationDuration: '7s' }} />
-        <div className="hero-glow-orb w-64 h-64 bottom-1/4 -right-10 bg-emerald-400/15" style={{ animationDuration: '9s', animationDelay: '2s' }} />
+        <div className="hero-glow-orb w-[400px] h-[400px] -top-20 -right-20 bg-[#F4991A]/20" />
+        <div className="hero-glow-orb w-[300px] h-[300px] bottom-0 -left-20 bg-[#344F1F]/20" style={{ animationDelay: '1s' }} />
 
         <motion.div
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7 }}
-          className="relative z-10 text-center text-white"
+          transition={{ duration: 0.8 }}
+          className="relative z-10 w-full max-w-sm text-center"
         >
-          {/* Logo */}
           <motion.div
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 3, repeat: Infinity }}
-            className="w-24 h-24 bg-white/15 backdrop-blur-sm border border-white/25 rounded-3xl flex items-center justify-center mx-auto mb-8 text-5xl shadow-2xl"
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="w-24 h-24 bg-[#F9F5F0] rounded-[2rem] p-4 shadow-2xl mx-auto mb-8 border-4 border-white/10"
           >
-            🗺️
+            <img src="/favicon.png" alt="Linka" className="w-full h-full object-contain" />
           </motion.div>
 
-          <h1 className="text-4xl font-black mb-3">Linka</h1>
-          <p className="text-white text-lg max-w-sm mx-auto leading-relaxed mb-12 drop-shadow-sm font-medium">
-            أهلاً بك في Linka. المنصة التفاعلية والفرص التطوعية في مكان واحد.
-          </p>
+          <h1 className="text-3xl font-black text-[#F9F5F0] mb-3 drop-shadow-lg">أهلاً بك في Linka</h1>
+          <p className="text-[#F9F5F0]/80 text-base font-bold mb-10 italic">المنصة التفاعلية والفرص التطوعية في مكان واحد</p>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
-            {STATS.map(({ icon: Icon, value, label }, i) => (
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { label: 'شاب مسجّل', val: '1,200+', color: 'bg-[#F4991A]' },
+              { label: 'فعالية منجزة', val: '85+', color: 'bg-white/10' },
+              { label: 'آمن وموثوق', val: '100%', color: 'bg-white/10' },
+              { label: 'شريك مجتمعي', val: '30+', color: 'bg-white/10' }
+            ].map((stat, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 0.1 }}
-                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4"
+                transition={{ delay: 0.4 + i * 0.1 }}
+                className={`${stat.color} backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-white/30 transition-all group`}
               >
-                <Icon size={20} className="text-emerald-300 mx-auto mb-2" />
-                <p className="text-2xl font-black text-white">{value}</p>
-                <p className="text-white/90 text-[11px] mt-0.5 font-bold">{label}</p>
+                <p className="text-[#F9F5F0] text-xl font-black group-hover:scale-110 transition-transform">{stat.val}</p>
+                <p className="text-[#F9F5F0]/70 text-[10px] font-bold mt-1 uppercase tracking-wider">{stat.label}</p>
               </motion.div>
             ))}
           </div>
         </motion.div>
       </div>
 
-      {/* ── Right Panel: Form ──────────────────────────────── */}
-      <div className="w-full lg:w-1/2 flex items-start justify-center bg-premium-mesh p-6 sm:p-12 pt-32 lg:pt-24 overflow-y-auto">
-        <div className="w-full max-w-md">
-
-          {/* Mobile logo */}
+      {/* ── Right Panel: Login Form ──────────────────────────────── */}
+      <div className="w-full lg:w-[55%] flex items-center justify-center bg-premium-mesh p-6 sm:p-12 overflow-hidden">
+        <div className="w-full max-w-md pt-20 lg:pt-0">
+          {/* Mobile-only Branding */}
           <div className="lg:hidden text-center mb-8">
-            <div className="w-16 h-16 bg-hero-gradient rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-brand-500/30 text-3xl">🗺️</div>
-            <h1 className="text-2xl font-black text-slate-800">Linka</h1>
+            <div className="w-20 h-20 bg-[#344F1F] rounded-[2rem] flex items-center justify-center mx-auto mb-4 shadow-2xl border-4 border-[#F2EAD3]">
+              <img src="/favicon.png" alt="Linka" className="w-12 h-12 object-contain invert" />
+            </div>
+            <h1 className="text-3xl font-black text-[#344F1F] mb-1">Linka</h1>
           </div>
 
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="mb-8">
-              {/* Login type toggle */}
-              <div className="flex bg-slate-100 rounded-2xl p-1 mb-6">
-                <button
-                  type="button"
-                  onClick={() => setLoginType('youth')}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${loginType === 'youth' ? 'bg-white shadow-md text-brand-700' : 'text-slate-500 hover:text-slate-700'
-                    }`}>
-                  👤 شباب
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLoginType('university')}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${loginType === 'university' ? 'bg-white shadow-md text-violet-700' : 'text-slate-500 hover:text-slate-700'
-                    }`}>
-                  🏢 جهة / جامعة
-                </button>
-              </div>
-              <h2 className="text-3xl font-black text-slate-800">
-                {loginType === 'university' ? 'بوابة الجهات 🏛️' : 'أهلاً بك مجدداً 👋'}
-              </h2>
-              <p className="text-slate-500 mt-1.5">
-                {loginType === 'university' ? 'سجّل دخول جهتك (جامعة/شركة/بلدية)' : 'سجّل دخولك لمتابعة رحلتك التطوعية'}
-              </p>
-            </div>
+            <header className="mb-6 lg:mb-8">
+              <h2 className="text-3xl font-black text-[#344F1F]">تسجيل الدخول 👋</h2>
+              <p className="text-[#344F1F]/60 text-lg font-medium mt-1">سعداء برؤيتك مرة أخرى!</p>
+            </header>
 
-            <div className="bg-white rounded-3xl shadow-card p-8 space-y-5">
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">البريد الإلكتروني</label>
+            <div className="bg-white rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(52,79,31,0.12)] p-8 lg:p-10 border border-[#F2EAD3]/50">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-[#344F1F] px-1">البريد الإلكتروني</label>
                   <div className="relative">
-                    <Mail size={16} className="absolute top-1/2 -translate-y-1/2 right-3.5 text-slate-400" />
+                    <Mail size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#F4991A]" />
                     <input
-                      type="email" name="email"
-                      value={form.email} onChange={handleChange}
-                      className="input-field pr-10" placeholder="your@email.com"
-                      required style={{ direction: 'ltr', textAlign: 'right' }}
+                      type="email" name="email" value={form.email} onChange={handleChange}
+                      className="w-full bg-[#F9F5F0] border-2 border-transparent focus:border-[#F4991A] rounded-2xl py-3.5 pr-12 pl-4 text-[#344F1F] font-bold outline-none transition-all placeholder-[#344F1F]/30"
+                      placeholder="name@example.com" required style={{ direction: 'ltr', textAlign: 'right' }}
                     />
                   </div>
                 </div>
 
-                {/* Password */}
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">كلمة المرور</label>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center px-1">
+                    <label className="text-sm font-bold text-[#344F1F]">كلمة المرور</label>
+                    <Link to="/forgot-password" title="استعادة كلمة المرور" className="text-xs text-[#F4991A] font-black hover:underline">نسيت الكلمة؟</Link>
+                  </div>
                   <div className="relative">
-                    <Lock size={16} className="absolute top-1/2 -translate-y-1/2 right-3.5 text-slate-400" />
+                    <Lock size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#F4991A]" />
                     <input
-                      type={showPass ? 'text' : 'password'} name="password"
-                      value={form.password} onChange={handleChange}
-                      className="input-field pr-10 pl-10" placeholder="••••••••"
-                      required style={{ direction: 'ltr', textAlign: 'right' }}
+                      type={showPass ? 'text' : 'password'} name="password" value={form.password} onChange={handleChange}
+                      className="w-full bg-[#F9F5F0] border-2 border-transparent focus:border-[#F4991A] rounded-2xl py-3.5 pr-12 pl-12 text-[#344F1F] font-bold outline-none transition-all placeholder-[#344F1F]/30"
+                      placeholder="كلمة المرور الخاصة بك" required style={{ direction: 'ltr', textAlign: 'right' }}
                     />
                     <button type="button" onClick={() => setShowPass(p => !p)}
-                      className="absolute top-1/2 -translate-y-1/2 left-3.5 text-slate-400 hover:text-slate-600 transition-colors">
-                      {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-[#F4991A] hover:text-[#344F1F] p-1">
+                      {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                 </div>
 
-                {/* Submit */}
                 <motion.button
                   type="submit" disabled={loading}
                   whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
-                  className="btn-primary w-full py-3.5 text-base rounded-2xl"
+                  className="w-full bg-[#344F1F] text-[#F9F5F0] font-black text-lg py-4 rounded-2xl shadow-xl shadow-[#344F1F]/20 hover:bg-[#2a4019] transition-all flex items-center justify-center gap-3 mt-4"
                 >
                   {loading ? (
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                    </svg>
+                    <div className="w-6 h-6 border-3 border-[#F9F5F0]/20 border-t-[#F9F5F0] rounded-full animate-spin" />
                   ) : (
-                    <><LogIn size={18} /> تسجيل الدخول</>
+                    <><Zap size={20} /> دخول آمن</>
                   )}
                 </motion.button>
               </form>
-
-              {/* Divider */}
-              <div className="pt-5 border-t border-slate-100 text-center">
-                <p className="text-slate-500 text-sm">
-                  ليس لديك حساب؟{' '}
-                  <Link to="/register" className="text-brand-700 font-bold hover:underline">
-                    انضم الآن مجاناً
-                  </Link>
-                </p>
+              <div className="mt-8 pt-6 border-t border-[#F2EAD3]/50 text-center text-[#344F1F]/60 font-bold">
+                ليس لديك حساب؟{' '}
+                <Link to="/register" className="text-[#F4991A] hover:underline decoration-2 underline-offset-4">ابدأ الآن مجاناً</Link>
               </div>
-
-              {/* Demo hint */}
-              <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl flex items-center gap-2">
-                <Sparkles size={14} className="text-amber-500 flex-shrink-0" />
-                <p className="text-amber-700 text-xs font-semibold">
-                  {loginType === 'university'
-                    ? '🏛️ جهة: hu@hebron.ps / uni123'
-                    : '👤 سوبر أدمن: super@hebron.ps / super123'}
-                </p>
-              </div>
-
-              {loginType === 'university' && (
-                <div className="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                  <p className="text-xs text-slate-500 leading-relaxed text-center">
-                    للحصول على حساب جهة (جامعة، شركة، بلدية)، يرجى التواصل مع إدارة المنصة.
-                  </p>
-                </div>
-              )}
             </div>
           </motion.div>
         </div>

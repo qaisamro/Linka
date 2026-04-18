@@ -21,21 +21,21 @@ function getCurrentPosition() {
 
 function StatusPill({ status }) {
   const map = {
-    pending: { label: 'قيد المراجعة', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
-    accepted: { label: 'مقبول', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    rejected: { label: 'مرفوض', cls: 'bg-red-50 text-red-700 border-red-200' },
-    withdrawn: { label: 'منسحب', cls: 'bg-slate-50 text-slate-700 border-slate-200' },
-    in_progress: { label: 'جاري', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
-    completed: { label: 'مكتمل', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    pending: { label: 'قيد المراجعة', cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' },
+    accepted: { label: 'مقبول', cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' },
+    rejected: { label: 'مرفوض', cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' },
+    withdrawn: { label: 'منسحب', cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' },
+    in_progress: { label: 'جاري', cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' },
+    completed: { label: 'مكتمل', cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' },
   };
-  const v = map[status] || { label: status, cls: 'bg-slate-50 text-slate-700 border-slate-200' };
+  const v = map[status] || { label: status, cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' };
   return <span className={`text-[10px] font-black px-3 py-1 rounded-full border ${v.cls}`}>{v.label}</span>;
 }
 
 function MatchBadge({ score }) {
-  const cls = score >= 75 ? 'bg-emerald-600' : score >= 50 ? 'bg-amber-500' : 'bg-slate-500';
+  const cls = score >= 75 ? 'bg-[#344F1F]' : score >= 50 ? 'bg-[#F4991A]' : 'bg-[#F4991A]';
   return (
-    <span className={`inline-flex items-center gap-1 text-white text-[10px] font-black px-2.5 py-1 rounded-xl ${cls}`}>
+    <span className={`inline-flex items-center gap-1 text-[#F9F5F0] text-[10px] font-black px-2.5 py-1 rounded-xl ${cls}`}>
       <Target size={11} />
       <span dir="ltr">{score}%</span>
     </span>
@@ -212,11 +212,11 @@ export default function TrainingHub() {
 
   if (!isAuth) {
     return (
-      <div className="min-h-screen bg-slate-50 pt-20 pb-12">
+      <div className="min-h-screen bg-[#F9F5F0] pt-20 pb-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="bg-white rounded-[2rem] p-10 border border-slate-100 text-center">
-            <h1 className="text-2xl font-black text-slate-900 mb-2">التدريب الميداني الذكي</h1>
-            <p className="text-slate-500 font-bold">سجّل دخولك لمشاهدة عروض التدريب والتقديم وإدارة حضورك.</p>
+          <div className="bg-[#F9F5F0] rounded-[2rem] p-10 border border-[#F9F5F0] text-center">
+            <h1 className="text-2xl font-black text-[#344F1F] mb-2">التدريب الميداني الذكي</h1>
+            <p className="text-[#F4991A] font-bold">سجّل دخولك لمشاهدة عروض التدريب والتقديم وإدارة حضورك.</p>
           </div>
         </div>
       </div>
@@ -224,63 +224,99 @@ export default function TrainingHub() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-20 pb-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 mb-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-black text-slate-900">بوابة التدريب الميداني</h1>
-              <p className="text-slate-500 font-bold mt-1">مرحباً {user?.name?.split(' ')[0]} — قدّم، سجّل حضورك، واطبع تقييماتك.</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-2xl flex flex-col items-center">
-                <span className="text-[10px] text-emerald-600 font-black uppercase tracking-wider">ساعات منجزة</span>
-                <span className="text-xl font-black text-emerald-700 leading-none">{totalHours}</span>
+    <div className="min-h-screen bg-[#F9F5F0] pt-16">
+      {/* ── Hero ──────────────────────────────────────────────────── */}
+      <div className="animated-gradient dot-pattern relative overflow-hidden">
+        <div className="absolute inset-0 bg-[#344F1F]/65" />
+        <div className="hero-glow-orb w-80 h-80 -top-20 -right-20 bg-[#F4991A]/20" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 relative z-10">
+          <div className="max-w-2xl text-center sm:text-right">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              className="flex items-center gap-2 mb-4 justify-center sm:justify-start"
+            >
+              <span className="w-8 h-px bg-[#F4991A]" />
+              <span className="text-[#F4991A] text-sm font-black uppercase tracking-widest">التدريب الميداني والاعتماد</span>
+            </motion.div>
+            <h1 className="text-4xl sm:text-6xl font-black text-[#F9F5F0] mb-6 leading-tight drop-shadow-2xl">
+              وثّق <span className="text-[#F4991A]">مهاراتك</span><br /> تحت إشراف الجامعة
+            </h1>
+            <p className="text-[#F9F5F0] text-lg sm:text-xl leading-relaxed mb-8 drop-shadow-xl font-bold">
+              حوّل ساعاتك الميدانية إلى رصيد أكاديمي معتمد. نظام التتبع الذكي يضمن حقوقك ويسهل تواصلك مع الجهات التدريبية والجامعة.
+            </p>
+
+            <div className="flex items-center gap-4 justify-center sm:justify-start">
+              <div className="bg-[#F9F5F0]/10 backdrop-blur-md border border-[#F9F5F0]/20 px-6 py-3 rounded-2xl flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#F4991A] flex items-center justify-center shadow-lg">
+                  <Clock size={20} className="text-[#344F1F]" />
+                </div>
+                <div className="text-right">
+                  <p className="text-[#F9F5F0]/70 text-xs font-black leading-none mb-1">إجمالي الساعات</p>
+                  <p className="text-[#F9F5F0] text-2xl font-black leading-none">{totalHours}</p>
+                </div>
               </div>
-              <div className="relative w-64">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="بحث..." className="w-full pr-9 pl-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
-              </div>
-              <button onClick={handleExportReport} className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-black text-sm flex items-center gap-2">
-                <BadgeCheck size={16} className="text-emerald-400" /> تقرير (Excel)
-              </button>
-              <button onClick={refreshAll} className="px-5 py-2.5 rounded-xl bg-brand-700 text-white font-black text-sm">تحديث</button>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="flex gap-2 mt-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+        <div className="card p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border-t-4 border-[#F4991A]">
+          <div className="flex items-center gap-4 overflow-x-auto pb-1 w-full md:w-auto">
             {[
-              { key: 'offers', label: 'عروض التدريب' },
-              { key: 'apps', label: 'طلباتي' },
-              { key: 'programs', label: 'مساراتي' },
+              { key: 'offers', label: 'عروض التدريب', icon: <Target size={16} /> },
+              { key: 'apps', label: 'طلباتي', icon: <Send size={16} /> },
+              { key: 'programs', label: 'مساراتي', icon: <Navigation size={16} /> },
             ].map((t) => (
               <button
                 key={t.key}
                 onClick={() => { setSelectedProgram(null); setActiveTab(t.key); }}
-                className={`px-4 py-2 rounded-xl font-black text-sm border ${activeTab === t.key ? 'bg-brand-50 text-brand-700 border-brand-200' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}`}
+                className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-sm transition-all whitespace-nowrap ${activeTab === t.key
+                  ? 'bg-[#344F1F] text-[#F9F5F0] shadow-lg shadow-[#344F1F]/20 translate-y-[-2px]'
+                  : 'bg-[#F2EAD3] text-[#344F1F] hover:bg-[#F2EAD3]/70'
+                  }`}
               >
+                {t.icon}
                 {t.label}
               </button>
             ))}
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="relative flex-1 md:w-64">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-[#F4991A]" size={16} />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="ابحث عن تدريب..."
+                className="input-field pr-10"
+              />
+            </div>
+            <button onClick={handleExportReport} className="btn-primary py-3 flex items-center gap-2 shadow-lg shadow-[#F4991A]/20">
+              <BadgeCheck size={18} /> تقرير Excel
+            </button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             {loading ? (
-              <div className="bg-white rounded-[2rem] p-10 border border-slate-100 text-center text-slate-400 font-bold">جاري التحميل...</div>
+              <div className="bg-[#F9F5F0] rounded-[2rem] p-10 border border-[#F9F5F0] text-center text-[#F4991A] font-bold">جاري التحميل...</div>
             ) : (
               <AnimatePresence mode="wait">
                 {activeTab === 'offers' && (
                   <motion.div key="offers" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="space-y-4">
                     {filteredOffers.length === 0 ? (
-                      <div className="bg-white rounded-[2rem] p-10 border border-slate-100 text-center text-slate-400 font-bold">لا توجد عروض حالياً.</div>
+                      <div className="bg-[#F9F5F0] rounded-[2rem] p-10 border border-[#F9F5F0] text-center text-[#F4991A] font-bold">لا توجد عروض حالياً.</div>
                     ) : filteredOffers.map((o) => (
-                      <div key={o.id} className="bg-white rounded-[2rem] p-6 border border-slate-100 hover:border-brand-200 transition-all">
+                      <div key={o.id} className="bg-[#F9F5F0] rounded-[2rem] p-6 border border-[#F9F5F0] hover:border-[#F2EAD3] transition-all">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <h3 className="text-lg font-black text-slate-900">{o.title}</h3>
-                            <p className="text-slate-500 font-bold text-sm">{o.company_name || 'شركة'}</p>
+                            <h3 className="text-lg font-black text-[#344F1F]">{o.title}</h3>
+                            <p className="text-[#F4991A] font-bold text-sm">{o.company_name || 'شركة'}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <MatchBadge score={o.match_score || 0} />
@@ -288,8 +324,8 @@ export default function TrainingHub() {
                               disabled={o.is_applied}
                               onClick={() => apply(o.id)}
                               className={`px-4 py-2 rounded-xl font-black text-sm flex items-center gap-2 transition-all ${o.is_applied
-                                  ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-default'
-                                  : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                ? 'bg-[#F9F5F0] text-[#F4991A] border border-[#F2EAD3] cursor-default'
+                                : 'bg-[#344F1F] text-[#F9F5F0] hover:bg-[#344F1F]'
                                 }`}
                             >
                               {o.is_applied ? <CheckCircle2 size={16} /> : <Send size={16} />}
@@ -297,12 +333,12 @@ export default function TrainingHub() {
                             </button>
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-3 mt-3 text-xs text-slate-500 font-bold">
+                        <div className="flex flex-wrap gap-3 mt-3 text-xs text-[#F4991A] font-bold">
                           {o.location_name && <span className="inline-flex items-center gap-1"><MapPin size={12} /> {o.location_name}</span>}
                           {(o.start_date || o.end_date) && <span className="inline-flex items-center gap-1"><Calendar size={12} /> {o.start_date || '—'} → {o.end_date || '—'}</span>}
                           <span className="inline-flex items-center gap-1"><Target size={12} /> مهارات مطلوبة: {Array.isArray(o.required_skills) ? o.required_skills.length : 0}</span>
                         </div>
-                        {o.description && <p className="text-sm text-slate-600 mt-3 leading-relaxed">{o.description}</p>}
+                        {o.description && <p className="text-sm text-[#344F1F] mt-3 leading-relaxed">{o.description}</p>}
                       </div>
                     ))}
                   </motion.div>
@@ -311,13 +347,13 @@ export default function TrainingHub() {
                 {activeTab === 'apps' && (
                   <motion.div key="apps" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="space-y-3">
                     {apps.length === 0 ? (
-                      <div className="bg-white rounded-[2rem] p-10 border border-slate-100 text-center text-slate-400 font-bold">لا يوجد طلبات.</div>
+                      <div className="bg-[#F9F5F0] rounded-[2rem] p-10 border border-[#F9F5F0] text-center text-[#F4991A] font-bold">لا يوجد طلبات.</div>
                     ) : apps.map((a) => (
-                      <div key={a.id} className="bg-white rounded-[2rem] p-6 border border-slate-100">
+                      <div key={a.id} className="bg-[#F9F5F0] rounded-[2rem] p-6 border border-[#F9F5F0]">
                         <div className="flex items-center justify-between gap-2">
                           <div>
-                            <p className="text-sm font-black text-slate-900">{a.offer_title}</p>
-                            <p className="text-xs text-slate-500 font-bold">{a.company_name || 'شركة'}</p>
+                            <p className="text-sm font-black text-[#344F1F]">{a.offer_title}</p>
+                            <p className="text-xs text-[#F4991A] font-bold">{a.company_name || 'شركة'}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <StatusPill status={a.status} />
@@ -332,20 +368,20 @@ export default function TrainingHub() {
                 {activeTab === 'programs' && (
                   <motion.div key="programs" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="space-y-3">
                     {programs.length === 0 ? (
-                      <div className="bg-white rounded-[2rem] p-10 border border-slate-100 text-center text-slate-400 font-bold">لا يوجد مسارات تدريب.</div>
+                      <div className="bg-[#F9F5F0] rounded-[2rem] p-10 border border-[#F9F5F0] text-center text-[#F4991A] font-bold">لا يوجد مسارات تدريب.</div>
                     ) : programs.map((p) => (
-                      <button key={p.id} onClick={() => openProgram(p)} className="w-full text-right bg-white rounded-[2rem] p-6 border border-slate-100 hover:border-brand-200 transition-all">
+                      <button key={p.id} onClick={() => openProgram(p)} className="w-full text-right bg-[#F9F5F0] rounded-[2rem] p-6 border border-[#F9F5F0] hover:border-[#F2EAD3] transition-all">
                         <div className="flex items-center justify-between gap-2">
                           <div>
-                            <p className="text-sm font-black text-slate-900">{p.offer_title}</p>
-                            <p className="text-xs text-slate-500 font-bold">{p.company_name || 'شركة'}</p>
+                            <p className="text-sm font-black text-[#344F1F]">{p.offer_title}</p>
+                            <p className="text-xs text-[#F4991A] font-bold">{p.company_name || 'شركة'}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <StatusPill status={p.status} />
                             <MatchBadge score={p.match_score || 0} />
                           </div>
                         </div>
-                        <p className="text-xs text-slate-400 font-bold mt-2">اضغط لفتح الجلسات والحضور</p>
+                        <p className="text-xs text-[#F4991A] font-bold mt-2">اضغط لفتح الجلسات والحضور</p>
                       </button>
                     ))}
                   </motion.div>
@@ -354,60 +390,60 @@ export default function TrainingHub() {
             )}
           </div>
 
-          <div className="bg-white rounded-[2rem] p-6 border border-slate-100">
-            <h3 className="text-lg font-black text-slate-900 mb-3 flex items-center gap-2">
-              <BadgeCheck className="text-emerald-600" size={18} /> إدارة الحضور
+          <div className="bg-[#F9F5F0] rounded-[2rem] p-6 border border-[#F9F5F0]">
+            <h3 className="text-lg font-black text-[#344F1F] mb-3 flex items-center gap-2">
+              <BadgeCheck className="text-[#344F1F]" size={18} /> إدارة الحضور
             </h3>
 
             {!selectedProgram ? (
-              <p className="text-sm text-slate-500 font-bold">اختر مساراً من “مساراتي” لتسجيل الدخول/الخروج ومتابعة الاعتماد.</p>
+              <p className="text-sm text-[#F4991A] font-bold">اختر مساراً من “مساراتي” لتسجيل الدخول/الخروج ومتابعة الاعتماد.</p>
             ) : (
               <>
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-4">
-                  <p className="font-black text-slate-900 text-sm">{selectedProgram.offer_title}</p>
-                  <p className="text-xs text-slate-500 font-bold">{selectedProgram.company_name || 'شركة'}</p>
+                <div className="p-4 bg-[#F9F5F0] rounded-2xl border border-[#F9F5F0] mb-4">
+                  <p className="font-black text-[#344F1F] text-sm">{selectedProgram.offer_title}</p>
+                  <p className="text-xs text-[#F4991A] font-bold">{selectedProgram.company_name || 'شركة'}</p>
                   <div className="mt-2"><StatusPill status={selectedProgram.status} /></div>
                 </div>
 
                 <div className="flex gap-2 mb-4">
-                  <button onClick={() => doCheckIn(selectedProgram.id)} className="flex-1 px-4 py-3 rounded-2xl bg-brand-700 text-white font-black text-sm flex items-center justify-center gap-2">
+                  <button onClick={() => doCheckIn(selectedProgram.id)} className="flex-1 px-4 py-3 rounded-2xl bg-[#344F1F] text-[#F9F5F0] font-black text-sm flex items-center justify-center gap-2">
                     <LogIn size={16} /> Check-in
                   </button>
-                  <button onClick={() => doCheckOut(selectedProgram.id)} className="flex-1 px-4 py-3 rounded-2xl bg-slate-900 text-white font-black text-sm flex items-center justify-center gap-2">
+                  <button onClick={() => doCheckOut(selectedProgram.id)} className="flex-1 px-4 py-3 rounded-2xl bg-[#344F1F] text-[#F9F5F0] font-black text-sm flex items-center justify-center gap-2">
                     <LogOut size={16} /> Check-out
                   </button>
                 </div>
 
                 <div className="mb-4">
-                  <button onClick={() => complete(selectedProgram.id)} className="w-full px-4 py-3 rounded-2xl bg-emerald-600 text-white font-black text-sm flex items-center justify-center gap-2">
+                  <button onClick={() => complete(selectedProgram.id)} className="w-full px-4 py-3 rounded-2xl bg-[#344F1F] text-[#F9F5F0] font-black text-sm flex items-center justify-center gap-2">
                     <CheckCircle2 size={16} /> إنهاء التدريب (بعد الاعتماد)
                   </button>
-                  <p className="text-[10px] text-slate-400 font-bold mt-2">يُسمح بالإنهاء فقط عندما يتم اعتماد جميع الجلسات من الجامعة.</p>
+                  <p className="text-[10px] text-[#F4991A] font-bold mt-2">يُسمح بالإنهاء فقط عندما يتم اعتماد جميع الجلسات من الجامعة.</p>
                 </div>
 
-                <div className="border-t border-slate-100 pt-4">
-                  <h4 className="font-black text-slate-900 text-sm mb-2 flex items-center gap-2">
-                    <Clock size={16} className="text-slate-500" /> الجلسات
+                <div className="border-t border-[#F9F5F0] pt-4">
+                  <h4 className="font-black text-[#344F1F] text-sm mb-2 flex items-center gap-2">
+                    <Clock size={16} className="text-[#F4991A]" /> الجلسات
                   </h4>
                   {sessionLoading ? (
-                    <p className="text-sm text-slate-400 font-bold">جاري تحميل الجلسات...</p>
+                    <p className="text-sm text-[#F4991A] font-bold">جاري تحميل الجلسات...</p>
                   ) : sessions.length === 0 ? (
-                    <p className="text-sm text-slate-400 font-bold">لا توجد جلسات بعد.</p>
+                    <p className="text-sm text-[#F4991A] font-bold">لا توجد جلسات بعد.</p>
                   ) : (
                     <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
                       {sessions.map((s) => (
-                        <div key={s.id} className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div key={s.id} className="p-3 rounded-2xl bg-[#F9F5F0] border border-[#F9F5F0]">
                           <div className="flex items-center justify-between">
-                            <p className="text-xs font-black text-slate-800">#{s.id}</p>
-                            <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${s.status === 'university_approved' ? 'bg-emerald-100 text-emerald-700' : s.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                            <p className="text-xs font-black text-[#344F1F]">#{s.id}</p>
+                            <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${s.status === 'university_approved' ? 'bg-[#F9F5F0] text-[#344F1F]' : s.status === 'rejected' ? 'bg-[#F9F5F0] text-[#344F1F]' : 'bg-[#F9F5F0] text-[#344F1F]'}`}>
                               {s.status}
                             </span>
                           </div>
-                          <div className="text-[11px] text-slate-600 font-bold mt-2 space-y-1">
-                            <div className="flex items-center gap-1"><Navigation size={12} /> تحقق مكاني: {Number(s.geo_verified) === 1 ? <span className="text-emerald-700">نعم</span> : <span className="text-red-700">لا</span>}</div>
+                          <div className="text-[11px] text-[#344F1F] font-bold mt-2 space-y-1">
+                            <div className="flex items-center gap-1"><Navigation size={12} /> تحقق مكاني: {Number(s.geo_verified) === 1 ? <span className="text-[#344F1F]">نعم</span> : <span className="text-[#344F1F]">لا</span>}</div>
                             <div>ساعات: <span dir="ltr">{s.computed_hours}</span></div>
-                            <div className="text-[10px] text-slate-400">دخول: {new Date(s.check_in_at).toLocaleString('ar-EG')}</div>
-                            {s.check_out_at && <div className="text-[10px] text-slate-400">خروج: {new Date(s.check_out_at).toLocaleString('ar-EG')}</div>}
+                            <div className="text-[10px] text-[#F4991A]">دخول: {new Date(s.check_in_at).toLocaleString('ar-EG')}</div>
+                            {s.check_out_at && <div className="text-[10px] text-[#F4991A]">خروج: {new Date(s.check_out_at).toLocaleString('ar-EG')}</div>}
                           </div>
                         </div>
                       ))}
@@ -415,17 +451,17 @@ export default function TrainingHub() {
                   )}
                 </div>
 
-                <div className="border-t border-slate-100 pt-4 mt-4">
-                  <h4 className="font-black text-slate-900 text-sm mb-2 flex items-center gap-2"><Star size={16} className="text-amber-500" /> تقييم الشركة</h4>
+                <div className="border-t border-[#F9F5F0] pt-4 mt-4">
+                  <h4 className="font-black text-[#344F1F] text-sm mb-2 flex items-center gap-2"><Star size={16} className="text-[#F4991A]" /> تقييم الشركة</h4>
                   <div className="flex items-center gap-2 mb-2">
                     {[1, 2, 3, 4, 5].map((n) => (
-                      <button key={n} type="button" onClick={() => setReview((r) => ({ ...r, rating: n }))} className={`w-9 h-9 rounded-xl border font-black ${review.rating >= n ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
+                      <button key={n} type="button" onClick={() => setReview((r) => ({ ...r, rating: n }))} className={`w-9 h-9 rounded-xl border font-black ${review.rating >= n ? 'bg-[#F9F5F0] border-[#F2EAD3] text-[#344F1F]' : 'bg-[#F9F5F0] border-[#F2EAD3] text-[#F4991A]'}`}>
                         {n}
                       </button>
                     ))}
                   </div>
-                  <textarea value={review.comment} onChange={(e) => setReview((r) => ({ ...r, comment: e.target.value }))} rows={3} placeholder="اكتب مراجعة مختصرة (اختياري)..." className="w-full p-3 rounded-2xl border border-slate-200 bg-slate-50 font-bold text-sm" />
-                  <button onClick={() => submitReview(selectedProgram.id)} className="w-full mt-2 px-4 py-3 rounded-2xl bg-amber-500 text-white font-black text-sm flex items-center justify-center gap-2">
+                  <textarea value={review.comment} onChange={(e) => setReview((r) => ({ ...r, comment: e.target.value }))} rows={3} placeholder="اكتب مراجعة مختصرة (اختياري)..." className="w-full p-3 rounded-2xl border border-[#F2EAD3] bg-[#F9F5F0] font-bold text-sm" />
+                  <button onClick={() => submitReview(selectedProgram.id)} className="w-full mt-2 px-4 py-3 rounded-2xl bg-[#F4991A] text-[#F9F5F0] font-black text-sm flex items-center justify-center gap-2">
                     <Send size={16} /> إرسال التقييم
                   </button>
                 </div>

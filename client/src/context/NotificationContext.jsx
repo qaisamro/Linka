@@ -10,12 +10,12 @@ const playNotificationSound = () => {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = ctx.createOscillator();
-    const gainNode   = ctx.createGain();
+    const gainNode = ctx.createGain();
 
     oscillator.connect(gainNode);
     gainNode.connect(ctx.destination);
 
-    oscillator.type      = 'sine';
+    oscillator.type = 'sine';
     oscillator.frequency.setValueAtTime(880, ctx.currentTime);           // A5
     oscillator.frequency.setValueAtTime(1108.73, ctx.currentTime + 0.08); // C#6
     oscillator.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.15); // E6
@@ -32,22 +32,22 @@ const playNotificationSound = () => {
 
 // ─── Type meta (icon + colors) ───────────────────────────────────────────────
 export const NOTIF_META = {
-  registration: { emoji: '📋', label: 'تسجيل',    color: 'bg-blue-100 text-blue-700',    dot: 'bg-blue-500'   },
-  new_event:    { emoji: '🎉', label: 'فعالية',   color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
-  attendance:   { emoji: '✅', label: 'حضور',     color: 'bg-green-100 text-green-700',  dot: 'bg-green-500'  },
-  badge:        { emoji: '🏅', label: 'شارة',     color: 'bg-amber-100 text-amber-700',  dot: 'bg-amber-500'  },
-  system:       { emoji: '🔔', label: 'نظام',     color: 'bg-slate-100 text-slate-700',  dot: 'bg-slate-500'  },
-  announcement: { emoji: '📢', label: 'إعلان',   color: 'bg-violet-100 text-violet-700', dot: 'bg-violet-500' },
+  registration: { emoji: '📋', label: 'تسجيل', color: 'bg-[#F9F5F0] text-[#344F1F]', dot: 'bg-[#F4991A]' },
+  new_event: { emoji: '🎉', label: 'فعالية', color: 'bg-[#F9F5F0] text-[#344F1F]', dot: 'bg-[#F4991A]' },
+  attendance: { emoji: '✅', label: 'حضور', color: 'bg-[#F9F5F0] text-[#344F1F]', dot: 'bg-[#F4991A]' },
+  badge: { emoji: '🏅', label: 'شارة', color: 'bg-[#F9F5F0] text-[#F4991A]', dot: 'bg-[#F4991A]' },
+  system: { emoji: '🔔', label: 'نظام', color: 'bg-[#F9F5F0] text-[#344F1F]', dot: 'bg-[#F4991A]' },
+  announcement: { emoji: '📢', label: 'إعلان', color: 'bg-[#F9F5F0] text-[#344F1F]', dot: 'bg-[#F4991A]' },
 };
 
 // ─── Provider ────────────────────────────────────────────────────────────────
 export function NotificationProvider({ children }) {
-  const { isAuth }              = useAuth();
+  const { isAuth } = useAuth();
   const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount]     = useState(0);
-  const [loading, setLoading]             = useState(false);
-  const [panelOpen, setPanelOpen]         = useState(false);
-  const prevIdsRef  = useRef(new Set());
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const prevIdsRef = useRef(new Set());
   const isFirstFetch = useRef(true);
 
   // ── Fetch notifications from server ──────────────────────────────────────
@@ -56,7 +56,7 @@ export function NotificationProvider({ children }) {
     if (showLoader) setLoading(true);
 
     try {
-      const res  = await notificationsAPI.getAll({ limit: 40 });
+      const res = await notificationsAPI.getAll({ limit: 40 });
       const list = res.data.notifications || [];
       const unread = res.data.unread || 0;
 

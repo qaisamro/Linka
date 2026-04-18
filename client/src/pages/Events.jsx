@@ -74,33 +74,33 @@ export default function Events() {
 
       {/* ── Hero Header ──────────────────────────────────── */}
       <div className="animated-gradient dot-pattern relative overflow-hidden">
-        {/* Dark overlay to guarantee text contrast at all gradient phases */}
-        <div className="absolute inset-0 bg-black/35 pointer-events-none" />
-        <div className="absolute top-0 left-1/4 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-cyan-400/10 rounded-full blur-3xl pointer-events-none" />
+        {/* Deep dark overlay to guarantee text contrast at all gradient phases */}
+        <div className="absolute inset-0 bg-[#344F1F]/65 pointer-events-none" />
+        <div className="absolute top-0 left-1/4 w-64 h-64 bg-[#F9F5F0]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-[#F4991A]/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 text-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 text-center">
           <motion.div
-            initial={{ opacity: 0, y: -16 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <span className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 text-xs font-bold text-white mb-4">
-              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-              فعاليات نشطة
+            <span className="inline-flex items-center gap-2 bg-[#F9F5F0]/15 backdrop-blur-md border border-[#F9F5F0]/20 rounded-full px-5 py-2 text-sm font-bold text-[#F9F5F0] mb-6 shadow-xl">
+              <span className="w-2.5 h-2.5 bg-[#F4991A] rounded-full animate-ping" />
+              فعاليات نشطة الآن
             </span>
-            <h1 className="text-3xl sm:text-4xl font-black text-white mb-2">
-              الفعاليات القادمة
+            <h1 className="text-4xl sm:text-6xl font-black text-[#F9F5F0] mb-4 tracking-tight drop-shadow-2xl">
+              الفعاليات القادمة <span className="text-[#F4991A]">في مدينتك</span>
             </h1>
-            <p className="text-white/90 text-base max-w-md mx-auto drop-shadow-sm">
-              اكتشف الفعاليات وانضم لمجتمع Linka في صنع التغيير
+            <p className="text-[#F9F5F0] text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed drop-shadow-xl font-bold">
+              اكتشف الفرص التطوعية الأكثر تأثيراً وانضم لمجتمع <span className="text-[#F4991A] font-black">Linka</span> في صناعة مستقبل أفضل لمدينتنا.
             </p>
           </motion.div>
         </div>
 
         {/* Wave */}
         <div className="absolute bottom-0 inset-x-0">
-          <svg viewBox="0 0 1440 40" className="w-full fill-slate-50">
+          <svg viewBox="0 0 1440 40" className="w-full fill-[#F9F5F0]">
             <path d="M0,20 C480,40 960,0 1440,20 L1440,40 L0,40 Z" />
           </svg>
         </div>
@@ -119,7 +119,7 @@ export default function Events() {
             {/* Search row */}
             <div className="flex gap-3 mb-3">
               <div className="relative flex-1">
-                <Search size={16} className="absolute top-1/2 -translate-y-1/2 right-3.5 text-slate-400 pointer-events-none" />
+                <Search size={16} className="absolute top-1/2 -translate-y-1/2 right-3.5 text-[#F4991A] pointer-events-none" />
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
@@ -130,7 +130,7 @@ export default function Events() {
 
               {/* Neighborhood select – desktop */}
               <div className="relative hidden sm:flex items-center">
-                <MapPin size={14} className="absolute right-3 text-slate-400 pointer-events-none" />
+                <MapPin size={14} className="absolute right-3 text-[#F4991A] pointer-events-none" />
                 <select
                   value={neighborFilter}
                   onChange={e => setNeighborFilter(e.target.value)}
@@ -146,7 +146,7 @@ export default function Events() {
               {/* Mobile filter toggle */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`sm:hidden flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 font-semibold text-sm transition-all ${showFilters ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-600'
+                className={`sm:hidden flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 font-semibold text-sm transition-all ${showFilters ? 'border-[#F4991A] bg-[#F9F5F0] text-[#344F1F]' : 'border-[#F2EAD3] text-[#344F1F]'
                   }`}
               >
                 <SlidersHorizontal size={15} />
@@ -164,7 +164,7 @@ export default function Events() {
                   className="overflow-hidden sm:hidden mb-3"
                 >
                   <div className="relative">
-                    <MapPin size={14} className="absolute top-1/2 -translate-y-1/2 right-3 text-slate-400 pointer-events-none" />
+                    <MapPin size={14} className="absolute top-1/2 -translate-y-1/2 right-3 text-[#F4991A] pointer-events-none" />
                     <select
                       value={neighborFilter}
                       onChange={e => setNeighborFilter(e.target.value)}
@@ -200,12 +200,12 @@ export default function Events() {
                 {hasFilters && (
                   <button
                     onClick={clearFilters}
-                    className="flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-600 transition-colors whitespace-nowrap"
+                    className="flex items-center gap-1 text-xs font-semibold text-[#F4991A] hover:text-[#344F1F] transition-colors whitespace-nowrap"
                   >
                     <X size={12} /> مسح
                   </button>
                 )}
-                <span className="text-slate-400 text-xs font-medium whitespace-nowrap bg-slate-100 px-3 py-1 rounded-full">
+                <span className="text-[#F4991A] text-xs font-medium whitespace-nowrap bg-[#F9F5F0] px-3 py-1 rounded-full">
                   {loading ? '...' : `${filtered.length} فعالية`}
                 </span>
               </div>
@@ -243,11 +243,11 @@ export default function Events() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center justify-center py-24 text-center"
           >
-            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center mb-6 shadow-inner">
-              <Calendar size={44} className="text-brand-400" />
+            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[#F9F5F0] to-[#F2EAD3] flex items-center justify-center mb-6 shadow-inner">
+              <Calendar size={44} className="text-[#F4991A]" />
             </div>
-            <h3 className="text-xl font-bold text-slate-700 mb-2">لا توجد فعاليات مطابقة</h3>
-            <p className="text-slate-400 text-sm mb-6 max-w-xs">
+            <h3 className="text-xl font-bold text-[#344F1F] mb-2">لا توجد فعاليات مطابقة</h3>
+            <p className="text-[#F4991A] text-sm mb-6 max-w-xs">
               جرّب تغيير فلاتر البحث أو استعرض جميع الفعاليات
             </p>
             <button onClick={clearFilters} className="btn-primary">

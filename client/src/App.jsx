@@ -15,6 +15,7 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
 import EventDetail from './pages/EventDetail';
+import About from './pages/About';
 import AdminDashboard from './pages/admin/Dashboard';
 import UniversityDashboard from './pages/UniversityDashboard';
 
@@ -26,7 +27,7 @@ const TrainingHub = lazy(() => import('./pages/TrainingHub'));
 
 // Loading component
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-slate-50">
+  <div className="min-h-screen flex items-center justify-center bg-[#F9F5F0]">
     <div className="w-10 h-10 border-4 border-brand-200 border-t-brand-700 rounded-full animate-spin" />
   </div>
 );
@@ -53,6 +54,7 @@ function AppContent() {
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
           <Route path="/events" element={<Events />} />
           <Route path="/map" element={<MapView />} />
           <Route path="/login" element={<Login />} />

@@ -15,12 +15,12 @@ import toast from 'react-hot-toast';
 
 // ── Badge gradient map ─────────────────────────────────────────
 const BADGE_CONFIG = {
-  '🌱': { gradient: 'from-emerald-400 to-green-500', glow: 'shadow-emerald-300', label: 'مبادر' },
-  '⭐': { gradient: 'from-yellow-400 to-amber-500', glow: 'shadow-amber-300', label: 'نجم' },
-  '🏆': { gradient: 'from-amber-400 to-orange-500', glow: 'shadow-orange-300', label: 'بطل' },
-  '🤝': { gradient: 'from-blue-400 to-cyan-500', glow: 'shadow-blue-300', label: 'متعاون' },
-  '🎖️': { gradient: 'from-violet-400 to-purple-500', glow: 'shadow-purple-300', label: 'متميز' },
-  '👑': { gradient: 'from-pink-400 to-rose-500', glow: 'shadow-pink-300', label: 'قائد' },
+  '🌱': { gradient: 'from-[#F4991A] to-[#F4991A]', glow: 'shadow-[#F2EAD3]', label: 'مبادر' },
+  '⭐': { gradient: 'from-[#F4991A] to-[#F4991A]', glow: 'shadow-[#F2EAD3]', label: 'نجم' },
+  '🏆': { gradient: 'from-[#F4991A] to-[#F4991A]', glow: 'shadow-[#F2EAD3]', label: 'بطل' },
+  '🤝': { gradient: 'from-[#F4991A] to-[#F4991A]', glow: 'shadow-[#F2EAD3]', label: 'متعاون' },
+  '🎖️': { gradient: 'from-[#F4991A] to-[#F4991A]', glow: 'shadow-[#F2EAD3]', label: 'متميز' },
+  '👑': { gradient: 'from-[#F4991A] to-[#F4991A]', glow: 'shadow-[#F2EAD3]', label: 'قائد' },
 };
 
 // ── Circular Progress Ring ─────────────────────────────────────
@@ -32,7 +32,7 @@ function RingProgress({ percent, size = 80, stroke = 7, children }) {
   return (
     <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className="stroke-slate-100" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className="stroke-[#F9F5F0]" />
         <motion.circle
           cx={size / 2} cy={size / 2} r={r}
           fill="none" strokeWidth={stroke}
@@ -45,8 +45,8 @@ function RingProgress({ percent, size = 80, stroke = 7, children }) {
         />
         <defs>
           <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#1d4ed8" />
-            <stop offset="100%" stopColor="#10b981" />
+            <stop offset="0%" stopColor="#344F1F" />
+            <stop offset="100%" stopColor="#F4991A" />
           </linearGradient>
         </defs>
       </svg>
@@ -69,13 +69,13 @@ function StatCard({ icon: Icon, value, label, gradient, delay = 0 }) {
     >
       <div className="absolute inset-0 dot-pattern-sm opacity-15 rounded-2xl pointer-events-none" />
       <div className="relative z-10">
-        <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center mb-3 backdrop-blur-sm">
-          <Icon size={18} className="text-white" />
+        <div className="w-9 h-9 rounded-xl bg-[#F9F5F0]/20 flex items-center justify-center mb-3 backdrop-blur-sm">
+          <Icon size={18} className="text-[#F9F5F0]" />
         </div>
-        <p className="text-2xl sm:text-3xl font-black text-white leading-none stat-num-shadow" dir="ltr">
+        <p className="text-2xl sm:text-3xl font-black text-[#F9F5F0] leading-none stat-num-shadow" dir="ltr">
           {typeof value === 'number' ? value.toLocaleString('en-US') : value}
         </p>
-        <p className="text-white/75 text-xs font-semibold mt-1.5">{label}</p>
+        <p className="text-[#F9F5F0]/75 text-xs font-semibold mt-1.5">{label}</p>
       </div>
     </motion.div>
   );
@@ -84,11 +84,11 @@ function StatCard({ icon: Icon, value, label, gradient, delay = 0 }) {
 // ── Loading spinner ────────────────────────────────────────────
 function Spinner() {
   return (
-    <div className="min-h-screen pt-20 flex items-center justify-center bg-slate-50">
-      <div className="flex flex-col items-center gap-4 text-slate-400">
+    <div className="min-h-screen pt-20 flex items-center justify-center bg-[#F9F5F0]">
+      <div className="flex flex-col items-center gap-4 text-[#F4991A]">
         <div className="relative">
-          <div className="w-14 h-14 rounded-full border-4 border-brand-100 border-t-brand-600 animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center text-brand-600 text-lg">🗺️</div>
+          <div className="w-14 h-14 rounded-full border-4 border-[#F9F5F0] border-t-brand-600 animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center text-[#344F1F] text-lg">🗺️</div>
         </div>
         <p className="font-semibold text-sm">جاري تحميل ملفك الشخصي...</p>
       </div>
@@ -143,12 +143,12 @@ export default function Profile() {
   const p = profile || user;
   const pts = p?.points || 0;
   const levelName = pts >= 100 ? 'قائد 👑' : pts >= 50 ? 'ناشط ⭐' : 'مبتدئ 🌱';
-  const levelClr = pts >= 100 ? 'from-amber-400 to-orange-500' :
-    pts >= 50 ? 'from-brand-500 to-brand-700' :
-      'from-emerald-400 to-teal-500';
-  const levelBadge = pts >= 100 ? 'bg-amber-100 text-amber-700' :
-    pts >= 50 ? 'bg-brand-100 text-brand-700' :
-      'bg-emerald-100 text-emerald-700';
+  const levelClr = pts >= 100 ? 'from-[#F4991A] to-[#F4991A]' :
+    pts >= 50 ? 'from-[#F4991A] to-[#344F1F]' :
+      'from-[#F4991A] to-[#F4991A]';
+  const levelBadge = pts >= 100 ? 'bg-[#F9F5F0] text-[#344F1F]' :
+    pts >= 50 ? 'bg-[#F9F5F0] text-[#344F1F]' :
+      'bg-[#F9F5F0] text-[#344F1F]';
   const nextLevel = pts >= 100 ? 200 : pts >= 50 ? 100 : 50;
   const progress = Math.min(100, Math.round((pts / nextLevel) * 100));
 
@@ -156,20 +156,20 @@ export default function Profile() {
   const upcomingRegs = registrations.filter(r => r.status === 'registered');
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-16">
+    <div className="min-h-screen bg-[#F9F5F0] pt-16">
 
       {/* ── Cover Banner ─────────────────────────────────── */}
       <div className="h-48 animated-gradient dot-pattern relative overflow-hidden">
         {/* Orbs */}
-        <div className="hero-glow-orb w-48 h-48 top-2 right-8 bg-white/10" style={{ animationDuration: '6s' }} />
-        <div className="hero-glow-orb w-32 h-32 bottom-0 left-12 bg-cyan-400/20" style={{ animationDuration: '8s', animationDelay: '1s' }} />
+        <div className="hero-glow-orb w-48 h-48 top-2 right-8 bg-[#F9F5F0]/10" style={{ animationDuration: '6s' }} />
+        <div className="hero-glow-orb w-32 h-32 bottom-0 left-12 bg-[#F4991A]/20" style={{ animationDuration: '8s', animationDelay: '1s' }} />
 
         {/* Profile Image Overlay in Header */}
         {(profile?.avatar_url || user?.avatar_url) && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="absolute top-4 right-4 sm:right-6 md:right-8 bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 shadow-xl hidden sm:block"
+            className="absolute top-4 right-4 sm:right-6 md:right-8 bg-[#F9F5F0]/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 shadow-xl hidden sm:block"
           >
             <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/30">
               <img src={profile?.avatar_url || user?.avatar_url} alt="User Profile" className="w-full h-full object-cover" />
@@ -178,7 +178,7 @@ export default function Profile() {
         )}
 
         {/* Bottom fade */}
-        <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-slate-50/20 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-[#F9F5F0]/20 to-transparent" />
       </div>
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 -mt-20 pb-24">
@@ -193,7 +193,7 @@ export default function Profile() {
           {/* Top-right logout */}
           <button
             onClick={handleLogout}
-            className="absolute top-4 left-4 p-2.5 rounded-xl hover:bg-red-50 text-slate-300 hover:text-red-500 transition-all duration-200"
+            className="absolute top-4 left-4 p-2.5 rounded-xl hover:bg-[#F9F5F0] text-[#F2EAD3] hover:text-[#F4991A] transition-all duration-200"
             title="تسجيل الخروج"
           >
             <LogOut size={17} />
@@ -203,7 +203,7 @@ export default function Profile() {
             {/* Avatar with ring progress */}
             <div className="flex-shrink-0 relative group">
               <RingProgress percent={progress} size={88} stroke={5}>
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${levelClr} flex items-center justify-center text-2xl font-black text-white shadow-lg overflow-hidden`}>
+                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${levelClr} flex items-center justify-center text-2xl font-black text-[#F9F5F0] shadow-lg overflow-hidden`}>
                   {p?.avatar_url ? (
                     <img src={p.avatar_url} alt={p.name} className="w-full h-full object-cover" />
                   ) : (
@@ -212,12 +212,12 @@ export default function Profile() {
                 </div>
               </RingProgress>
               {/* Online indicator */}
-              <span className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
+              <span className="absolute bottom-1 right-1 w-4 h-4 bg-[#F4991A] border-2 border-white rounded-full shadow-sm" />
 
               {/* Upload overlay */}
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-x-0 bottom-0 top-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white rounded-2xl"
+                className="absolute inset-x-0 bottom-0 top-0 bg-[#344F1F]/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-[#F9F5F0] rounded-2xl"
               >
                 <Camera size={20} />
               </button>
@@ -233,21 +233,21 @@ export default function Profile() {
             {/* Info */}
             <div className="flex-1 min-w-0 mt-1">
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h1 className="text-lg sm:text-xl font-black text-slate-800 leading-tight">{p?.name}</h1>
+                <h1 className="text-lg sm:text-xl font-black text-[#344F1F] leading-tight">{p?.name}</h1>
                 <span className={`badge-pill text-xs ${levelBadge}`}>{levelName}</span>
               </div>
 
-              <p className="text-slate-400 text-xs sm:text-sm">{p?.email}</p>
+              <p className="text-[#F4991A] text-xs sm:text-sm">{p?.email}</p>
 
               {p?.neighborhood_name && (
-                <p className="text-slate-400 text-xs mt-1 flex items-center gap-1">
-                  <MapPin size={11} className="text-brand-400" />
-                  {p.neighborhood_name} · الخليل
+                <p className="text-[#F4991A] text-xs mt-1 flex items-center gap-1">
+                  <MapPin size={11} className="text-[#F4991A]" />
+                  {p.neighborhood_name} · متاح حالياً
                 </p>
               )}
 
               {p?.is_university_student && (
-                <div className="mt-2 flex items-center gap-1.5 bg-brand-50 text-brand-700 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-brand-100 w-fit">
+                <div className="mt-2 flex items-center gap-1.5 bg-[#F9F5F0] text-[#344F1F] text-xs font-bold px-2.5 py-1.5 rounded-xl border border-[#F9F5F0] w-fit">
                   <GraduationCap size={12} />
                   {p.university} {p.student_id ? `(${p.student_id})` : ''}
                 </div>
@@ -258,11 +258,11 @@ export default function Profile() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setShowCV(true)}
-                  className="btn-primary flex items-center gap-2 py-2 px-4 text-xs shadow-lg shadow-brand-700/20"
+                  className="btn-primary flex items-center gap-2 py-2 px-4 text-xs shadow-lg shadow-[#344F1F]/20"
                 >
                   <FileText size={14} /> توليد السيرة الذاتية (CV)
                 </motion.button>
-                <button className="p-2 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">
+                <button className="p-2 rounded-xl bg-[#F9F5F0] text-[#F4991A] hover:bg-[#F2EAD3] transition-colors">
                   <Share2 size={14} />
                 </button>
               </div>
@@ -270,29 +270,29 @@ export default function Profile() {
           </div>
 
           {/* XP Progress bar */}
-          <div className="mt-5 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <div className="mt-5 p-4 bg-[#F9F5F0] rounded-2xl border border-[#F9F5F0]">
             <div className="flex justify-between items-center mb-2">
               <div className="flex items-center gap-1.5">
                 <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${levelClr} flex items-center justify-center`}>
-                  <Zap size={12} className="text-white" />
+                  <Zap size={12} className="text-[#F9F5F0]" />
                 </div>
-                <span className="font-black text-slate-800 text-sm">{pts} نقطة</span>
+                <span className="font-black text-[#344F1F] text-sm">{pts} نقطة</span>
               </div>
-              <span className="text-xs text-slate-400 bg-white px-2 py-1 rounded-lg border border-slate-200 font-medium">
+              <span className="text-xs text-[#F4991A] bg-[#F9F5F0] px-2 py-1 rounded-lg border border-[#F2EAD3] font-medium">
                 {progress}% · الهدف: {nextLevel}
               </span>
             </div>
-            <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
+            <div className="h-3 bg-[#F2EAD3] rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 1.4, ease: 'easeOut', delay: 0.4 }}
-                className={`h-full bg-gradient-to-l from-brand-600 to-emerald-400 rounded-full relative overflow-hidden`}
+                className={`h-full bg-gradient-to-l from-[#344F1F] to-[#F4991A] rounded-full relative overflow-hidden`}
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer rounded-full" />
               </motion.div>
             </div>
-            <p className="text-[10px] text-slate-400 mt-1.5 text-left font-medium">
+            <p className="text-[10px] text-[#F4991A] mt-1.5 text-left font-medium">
               {nextLevel - pts} نقطة للمستوى التالي
             </p>
           </div>
@@ -300,16 +300,16 @@ export default function Profile() {
 
         {/* ── Colored Stat Cards ─────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          <StatCard icon={Star} value={pts} label="النقاط" gradient="from-amber-500 to-orange-500" delay={0.1} />
+          <StatCard icon={Star} value={pts} label="النقاط" gradient="from-[#F4991A] to-[#F4991A]" delay={0.1} />
           <StatCard
             icon={p?.is_university_student ? GraduationCap : Clock}
             value={`${p?.is_university_student ? p?.external_hours : (p?.total_hours || 0)}h`}
             label={p?.is_university_student ? "ساعات تطوع خارجي" : "ساعات"}
-            gradient={p?.is_university_student ? "from-violet-600 to-purple-800" : "from-brand-600 to-brand-800"}
+            gradient={p?.is_university_student ? "from-[#344F1F] to-[#344F1F]" : "from-[#344F1F] to-[#344F1F]"}
             delay={0.15}
           />
-          <StatCard icon={Users} value={p?.participations || 0} label="مشاركة" gradient="from-emerald-500 to-teal-600" delay={0.2} />
-          <StatCard icon={Trophy} value={badges.length} label="شارة" gradient="from-violet-500 to-purple-600" delay={0.25} />
+          <StatCard icon={Users} value={p?.participations || 0} label="مشاركة" gradient="from-[#F4991A] to-[#344F1F]" delay={0.2} />
+          <StatCard icon={Trophy} value={badges.length} label="شارة" gradient="from-[#F4991A] to-[#344F1F]" delay={0.25} />
         </div>
 
         {/* ── Badges Section ─────────────────────────────── */}
@@ -322,22 +322,22 @@ export default function Profile() {
           >
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
-                  <Trophy size={16} className="text-white" />
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#F4991A] to-[#F4991A] flex items-center justify-center shadow-md">
+                  <Trophy size={16} className="text-[#F9F5F0]" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-slate-800 text-sm leading-none">شاراتي</h2>
-                  <p className="text-slate-400 text-[10px] mt-0.5">الإنجازات المكتسبة</p>
+                  <h2 className="font-bold text-[#344F1F] text-sm leading-none">شاراتي</h2>
+                  <p className="text-[#F4991A] text-[10px] mt-0.5">الإنجازات المكتسبة</p>
                 </div>
               </div>
-              <span className="badge-pill bg-amber-100 text-amber-600 font-black">
+              <span className="badge-pill bg-[#F9F5F0] text-[#344F1F] font-black">
                 {badges.length} شارة
               </span>
             </div>
 
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
               {badges.map((badge, i) => {
-                const cfg = BADGE_CONFIG[badge.icon] || { gradient: 'from-slate-400 to-slate-500', glow: 'shadow-slate-200', label: '' };
+                const cfg = BADGE_CONFIG[badge.icon] || { gradient: 'from-[#F4991A] to-[#F4991A]', glow: 'shadow-[#F2EAD3]', label: '' };
                 return (
                   <motion.div
                     key={badge.id}
@@ -351,7 +351,7 @@ export default function Profile() {
                     <div className={`w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center text-2xl shadow-lg ${cfg.glow} group-hover:shadow-xl transition-all duration-300 badge-shine relative overflow-hidden`}>
                       {badge.icon}
                     </div>
-                    <p className="text-xs font-bold text-slate-600 mt-2 leading-tight line-clamp-1">{badge.name}</p>
+                    <p className="text-xs font-bold text-[#344F1F] mt-2 leading-tight line-clamp-1">{badge.name}</p>
                   </motion.div>
                 );
               })}
@@ -367,23 +367,23 @@ export default function Profile() {
           className="card overflow-hidden"
         >
           {/* Tab header */}
-          <div className="flex border-b border-slate-100 bg-slate-50/50">
+          <div className="flex border-b border-[#F9F5F0] bg-[#F9F5F0]/50">
             {[
-              { key: 'activity', label: 'نشاطاتي', icon: CheckCircle, count: activityRegs.length, color: 'text-emerald-600' },
-              { key: 'upcoming', label: 'القادمة', icon: Calendar, count: upcomingRegs.length, color: 'text-brand-600' },
+              { key: 'activity', label: 'نشاطاتي', icon: CheckCircle, count: activityRegs.length, color: 'text-[#344F1F]' },
+              { key: 'upcoming', label: 'القادمة', icon: Calendar, count: upcomingRegs.length, color: 'text-[#344F1F]' },
             ].map(({ key, label, icon: Icon, count, color }) => (
               <button
                 key={key}
                 onClick={() => setTab(key)}
                 className={`flex-1 flex items-center justify-center gap-2 py-4 font-bold text-sm transition-all duration-200 relative ${tab === key
-                  ? 'text-brand-700 bg-white'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'
+                  ? 'text-[#344F1F] bg-[#F9F5F0]'
+                  : 'text-[#F4991A] hover:text-[#344F1F] hover:bg-[#F9F5F0]/50'
                   }`}
               >
                 <Icon size={15} className={tab === key ? color : ''} />
                 {label}
                 {count > 0 && (
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-black ${tab === key ? 'bg-brand-700 text-white' : 'bg-slate-200 text-slate-500'
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-black ${tab === key ? 'bg-[#344F1F] text-[#F9F5F0]' : 'bg-[#F2EAD3] text-[#F4991A]'
                     }`}>
                     {count}
                   </span>
@@ -392,7 +392,7 @@ export default function Profile() {
                 {tab === key && (
                   <motion.div
                     layoutId="tab-indicator"
-                    className="absolute bottom-0 inset-x-4 h-0.5 bg-gradient-to-r from-brand-600 to-emerald-500 rounded-full"
+                    className="absolute bottom-0 inset-x-4 h-0.5 bg-gradient-to-r from-[#344F1F] to-[#F4991A] rounded-full"
                   />
                 )}
               </button>
@@ -474,36 +474,36 @@ function ActivityItem({ reg, index, type }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group cursor-default"
+      className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F9F5F0] transition-colors group cursor-default"
     >
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-base shadow-sm ${type === 'attended'
-        ? 'bg-emerald-100 border border-emerald-200'
-        : 'bg-brand-100 border border-brand-200'
+        ? 'bg-[#F9F5F0] border border-[#F2EAD3]'
+        : 'bg-[#F9F5F0] border border-[#F2EAD3]'
         }`}>
         {type === 'attended' ? '✅' : '⏳'}
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-slate-800 text-sm line-clamp-1 group-hover:text-brand-700 transition-colors">
+        <p className="font-semibold text-[#344F1F] text-sm line-clamp-1 group-hover:text-[#344F1F] transition-colors">
           {reg.title}
         </p>
-        <p className="text-slate-400 text-xs mt-0.5 flex items-center gap-1">
+        <p className="text-[#F4991A] text-xs mt-0.5 flex items-center gap-1">
           <MapPin size={9} />
           {reg.location_name}
-          <span className="text-slate-200 mx-1">·</span>
+          <span className="text-[#F2EAD3] mx-1">·</span>
           {formatDate(reg.date)}
         </p>
       </div>
 
       {type === 'attended' && (
         <div className="flex-shrink-0">
-          <span className="text-xs font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg" dir="ltr">
+          <span className="text-xs font-black text-[#344F1F] bg-[#F9F5F0] border border-[#F2EAD3] px-2.5 py-1 rounded-lg" dir="ltr">
             +{reg.duration_hours}h
           </span>
         </div>
       )}
       {type === 'registered' && (
-        <ChevronRight size={14} className="text-slate-300 group-hover:text-brand-400 transition-colors flex-shrink-0" />
+        <ChevronRight size={14} className="text-[#F2EAD3] group-hover:text-[#F4991A] transition-colors flex-shrink-0" />
       )}
     </motion.div>
   );
@@ -512,11 +512,11 @@ function ActivityItem({ reg, index, type }) {
 function EmptyState({ icon: Icon, title, sub }) {
   return (
     <div className="flex flex-col items-center py-14 text-center">
-      <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center mb-4 shadow-inner">
-        <Icon size={28} className="text-slate-300" />
+      <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#F9F5F0] to-[#F2EAD3] flex items-center justify-center mb-4 shadow-inner">
+        <Icon size={28} className="text-[#F2EAD3]" />
       </div>
-      <p className="font-bold text-slate-600 mb-1">{title}</p>
-      <p className="text-xs text-slate-400 max-w-xs">{sub}</p>
+      <p className="font-bold text-[#344F1F] mb-1">{title}</p>
+      <p className="text-xs text-[#F4991A] max-w-xs">{sub}</p>
     </div>
   );
 }

@@ -71,42 +71,40 @@ export default function ChatbotWidget() {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.85, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.85, y: 20 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="fixed bottom-24 left-4 sm:left-6 z-50 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
-            style={{ maxHeight: '520px' }}
+            className="fixed inset-0 sm:inset-auto sm:bottom-24 sm:left-6 z-[100] sm:w-96 bg-[#F9F5F0] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col sm:max-h-[600px]"
           >
-            {/* Header */}
-            <div className="bg-hero-gradient p-4 flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center">
-                <Bot size={22} className="text-white" />
+            <div className="bg-[#344F1F] p-4 sm:p-5 flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#F9F5F0]/20 rounded-2xl flex items-center justify-center">
+                <Bot size={22} className="text-[#F9F5F0]" />
               </div>
               <div className="flex-1">
-                <p className="text-white font-bold text-sm">مساعد Linka الذكي</p>
+                <p className="text-[#F9F5F0] font-black text-sm sm:text-base">مساعد Linka الذكي</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                  <span className="text-white/70 text-xs">متاح الآن</span>
+                  <span className="w-2 h-2 bg-[#F4991A] rounded-full animate-pulse" />
+                  <span className="text-[#F9F5F0]/70 text-xs font-bold">متاح الآن للإجابة على استفساراتك</span>
                 </div>
               </div>
-              <button onClick={() => setOpen(false)} className="text-white/70 hover:text-white transition-colors">
-                <X size={20} />
+              <button onClick={() => setOpen(false)} className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-xl text-[#F9F5F0] hover:bg-white/20 transition-all">
+                <X size={24} />
               </button>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scroll bg-slate-50">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scroll bg-[#F9F5F0]">
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                   {msg.role === 'bot' && (
-                    <div className="w-7 h-7 rounded-full bg-brand-700 flex items-center justify-center flex-shrink-0 mt-1">
-                      <Bot size={13} className="text-white" />
+                    <div className="w-7 h-7 rounded-full bg-[#344F1F] flex items-center justify-center flex-shrink-0 mt-1">
+                      <Bot size={13} className="text-[#F9F5F0]" />
                     </div>
                   )}
                   <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-line ${msg.role === 'user'
-                      ? 'bg-brand-700 text-white rounded-tr-sm'
-                      : 'bg-white text-slate-700 shadow-sm rounded-tl-sm border border-slate-100'
+                    ? 'bg-[#344F1F] text-[#F9F5F0] rounded-tr-sm'
+                    : 'bg-[#F9F5F0] text-[#344F1F] shadow-sm rounded-tl-sm border border-[#F2EAD3]'
                     }`}>
                     {msg.text}
                   </div>
@@ -115,13 +113,13 @@ export default function ChatbotWidget() {
 
               {loading && (
                 <div className="flex gap-2 items-center">
-                  <div className="w-7 h-7 rounded-full bg-brand-700 flex items-center justify-center">
-                    <Bot size={13} className="text-white" />
+                  <div className="w-7 h-7 rounded-full bg-[#344F1F] flex items-center justify-center">
+                    <Bot size={13} className="text-[#F9F5F0]" />
                   </div>
-                  <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm border border-slate-100">
+                  <div className="bg-[#F9F5F0] px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm border border-[#F9F5F0]">
                     <div className="flex gap-1">
                       {[0, 1, 2].map(i => (
-                        <span key={i} className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"
+                        <span key={i} className="w-1.5 h-1.5 bg-[#F4991A] rounded-full animate-bounce"
                           style={{ animationDelay: `${i * 0.15}s` }} />
                       ))}
                     </div>
@@ -133,12 +131,12 @@ export default function ChatbotWidget() {
 
             {/* Suggestions */}
             {messages.length <= 2 && (
-              <div className="px-4 py-2 border-t border-slate-100 bg-white">
-                <p className="text-xs text-slate-400 mb-2 font-medium">اقتراحات سريعة:</p>
+              <div className="px-4 py-2 border-t border-[#F9F5F0] bg-[#F9F5F0]">
+                <p className="text-xs text-[#F4991A] mb-2 font-medium">اقتراحات سريعة:</p>
                 <div className="flex flex-wrap gap-1.5">
                   {SUGGESTIONS.map(s => (
                     <button key={s} onClick={() => sendMessage(s)}
-                      className="text-xs bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-200 px-3 py-1.5 rounded-full font-semibold transition-colors">
+                      className="text-xs bg-[#F9F5F0] text-[#344F1F] hover:bg-[#F9F5F0] border border-[#F2EAD3] px-3 py-1.5 rounded-full font-semibold transition-colors">
                       {s}
                     </button>
                   ))}
@@ -147,7 +145,7 @@ export default function ChatbotWidget() {
             )}
 
             {/* Input */}
-            <div className="p-3 bg-white border-t border-slate-100">
+            <div className="p-3 bg-[#F9F5F0] border-t border-[#F9F5F0]">
               <div className="flex gap-2 items-end">
                 <textarea
                   ref={inputRef}
@@ -163,8 +161,8 @@ export default function ChatbotWidget() {
                   onClick={() => sendMessage()}
                   disabled={!input.trim() || loading}
                   className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${input.trim() && !loading
-                      ? 'bg-brand-700 hover:bg-brand-800 text-white shadow-md hover:-translate-y-0.5'
-                      : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    ? 'bg-[#344F1F] hover:bg-[#F4991A] text-[#F9F5F0] shadow-md hover:-translate-y-0.5'
+                    : 'bg-[#F2EAD3] text-[#344F1F]/50 cursor-not-allowed'
                     }`}
                 >
                   {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
@@ -180,16 +178,16 @@ export default function ChatbotWidget() {
         onClick={() => setOpen(o => !o)}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        className="fixed bottom-6 left-4 sm:left-6 z-50 w-14 h-14 bg-hero-gradient rounded-2xl flex items-center justify-center shadow-xl shadow-brand-500/40 hover:shadow-2xl transition-shadow"
+        className={`fixed bottom-6 left-4 sm:left-6 z-50 w-14 h-14 bg-[#F4991A] rounded-2xl flex items-center justify-center shadow-xl hover:shadow-2xl transition-all ${open ? 'hidden sm:flex' : 'flex'}`}
       >
         <AnimatePresence mode="wait">
           {open ? (
             <motion.div key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
-              <X size={24} className="text-white" />
+              <X size={24} className="text-[#F9F5F0]" />
             </motion.div>
           ) : (
             <motion.div key="msg" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
-              <MessageCircle size={24} className="text-white" />
+              <MessageCircle size={24} className="text-[#F9F5F0]" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -198,7 +196,7 @@ export default function ChatbotWidget() {
         {unread > 0 && !open && (
           <motion.span
             initial={{ scale: 0 }} animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+            className="absolute -top-1 -right-1 w-5 h-5 bg-[#F4991A] text-[#F9F5F0] text-xs font-bold rounded-full flex items-center justify-center"
           >
             {unread}
           </motion.span>

@@ -23,21 +23,20 @@ const HEBRON_CENTER = [31.5290, 35.1010];
 const HEBRON_ZOOM = 14;
 
 const TYPE_COLORS = {
-  'تطوعية': '#10b981',
-  'ثقافية': '#8b5cf6',
-  'رياضية': '#f97316',
-  'تعليمية': '#3b82f6',
-  'بيئية': '#22c55e',
-  'اجتماعية': '#ec4899',
+  'تطوعية': '#F4991A',
+  'ثقافية': '#F4991A',
+  'رياضية': '#F4991A',
+  'تعليمية': '#F4991A',
+  'بيئية': '#F4991A',
+  'اجتماعية': '#F4991A',
 };
 
 // ─── Heatmap Legend config ────────────────────────────────────────
 const LEGEND_STOPS = [
-  { color: '#1e3a8a', label: 'منخفض جداً' },
-  { color: '#3b82f6', label: 'منخفض' },
-  { color: '#10b981', label: 'متوسط' },
-  { color: '#f59e0b', label: 'مرتفع' },
-  { color: '#ef4444', label: 'نشاط عالٍ' },
+  { color: '#F2EAD3', label: 'هادئ' },
+  { color: '#344F1F', label: 'نشاط متزايد' },
+  { color: '#F4991A', label: 'تفاعل عالٍ' },
+  { color: '#F4991A', label: 'مركز النشاط' },
 ];
 
 // ─── Custom pin icon ─────────────────────────────────────────────
@@ -96,18 +95,18 @@ export default function MapView() {
   }, []);
 
   return (
-    <div className="h-screen pt-16 flex flex-col bg-slate-900 overflow-hidden">
+    <div className="h-screen pt-16 flex flex-col bg-[#344F1F] overflow-hidden">
 
       {/* ── Top Bar ──────────────────────────────────────────────── */}
-      <div className="bg-white/95 backdrop-blur-sm shadow-sm px-4 py-2.5 flex items-center gap-3 z-10 flex-shrink-0">
-        <h1 className="font-bold text-slate-800 text-base flex items-center gap-2">
+      <div className="bg-[#F9F5F0]/95 backdrop-blur-sm shadow-sm px-4 py-2.5 flex items-center gap-3 z-10 flex-shrink-0">
+        <h1 className="font-bold text-[#344F1F] text-base flex items-center gap-2">
           {viewMode === 'heatmap'
-            ? <><Flame size={16} className="text-orange-500" /> الخريطة الحرارية</>
-            : <><MapPin size={16} className="text-brand-500" /> خريطة الفعاليات</>
+            ? <><Flame size={16} className="text-[#F4991A]" /> الخريطة الحرارية</>
+            : <><MapPin size={16} className="text-[#F4991A]" /> خريطة الفعاليات</>
           }
         </h1>
 
-        <span className="text-xs bg-brand-100 text-brand-700 font-bold px-2 py-0.5 rounded-full">
+        <span className="text-xs bg-[#F9F5F0] text-[#344F1F] font-bold px-2 py-0.5 rounded-full">
           {viewMode === 'heatmap' ? `${heatData.points.length} نقطة` : `${events.length} فعالية`}
         </span>
 
@@ -115,7 +114,7 @@ export default function MapView() {
         {viewMode === 'markers' && (
           <div className="mr-auto hidden sm:flex flex-wrap gap-x-3 gap-y-1">
             {Object.entries(TYPE_COLORS).slice(0, 4).map(([type, color]) => (
-              <span key={type} className="flex items-center gap-1 text-xs text-slate-500">
+              <span key={type} className="flex items-center gap-1 text-xs text-[#F4991A]">
                 <span className="w-2 h-2 rounded-full inline-block" style={{ background: color }} />
                 {type}
               </span>
@@ -125,7 +124,7 @@ export default function MapView() {
 
         {/* Stats (heatmap mode) */}
         {viewMode === 'heatmap' && !loadingHeat && (
-          <div className="mr-auto hidden sm:flex items-center gap-4 text-xs text-slate-500">
+          <div className="mr-auto hidden sm:flex items-center gap-4 text-xs text-[#F4991A]">
             <span>📊 {heatData.neighborhoods.length} حي مرصود</span>
             <span>
               🕐 {heatData.neighborhoods.reduce((s, n) => s + parseFloat(n.total_hours || 0), 0).toFixed(0)} ساعة تطوع
@@ -134,7 +133,7 @@ export default function MapView() {
         )}
 
         <button onClick={() => setShowInfo(v => !v)}
-          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+          className="p-1.5 rounded-lg hover:bg-[#F9F5F0] text-[#F4991A] hover:text-[#344F1F] transition-colors">
           <Info size={16} />
         </button>
       </div>
@@ -144,8 +143,8 @@ export default function MapView() {
 
         {/* Loading overlay */}
         {(loadingEvents || loadingHeat) && (
-          <div className="absolute inset-0 bg-slate-900/60 z-30 flex items-center justify-center">
-            <div className="glass rounded-2xl px-6 py-4 flex items-center gap-3 text-white">
+          <div className="absolute inset-0 bg-[#344F1F]/60 z-30 flex items-center justify-center">
+            <div className="glass rounded-2xl px-6 py-4 flex items-center gap-3 text-[#F9F5F0]">
               <Loader2 size={20} className="animate-spin" />
               <span className="font-semibold text-sm">
                 {loadingHeat ? 'جاري تحليل البيانات...' : 'جاري تحميل الخريطة...'}
@@ -173,16 +172,16 @@ export default function MapView() {
             <Marker
               key={e.id}
               position={[parseFloat(e.lat), parseFloat(e.lng)]}
-              icon={makeIcon(TYPE_COLORS[e.type] || '#3b82f6')}
+              icon={makeIcon(TYPE_COLORS[e.type] || '#F4991A')}
               eventHandlers={{ click: () => setSelected(e) }}
             >
               <Popup>
                 <div style={{ fontFamily: 'Cairo', direction: 'rtl', minWidth: '180px', padding: '2px' }}>
                   <strong style={{ fontSize: '13px' }}>{e.title}</strong>
-                  <p style={{ fontSize: '11px', color: '#64748b', margin: '4px 0 0' }}>
+                  <p style={{ fontSize: '11px', color: '#F4991A', margin: '4px 0 0' }}>
                     📍 {e.location_name}
                   </p>
-                  <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0' }}>
+                  <p style={{ fontSize: '11px', color: '#F4991A', margin: '2px 0 0' }}>
                     👥 {e.current_participants} / {e.max_participants}
                   </p>
                 </div>
@@ -196,8 +195,8 @@ export default function MapView() {
               center={[parseFloat(e.lat), parseFloat(e.lng)]}
               radius={180}
               pathOptions={{
-                color: TYPE_COLORS[e.type] || '#3b82f6',
-                fillColor: TYPE_COLORS[e.type] || '#3b82f6',
+                color: TYPE_COLORS[e.type] || '#F4991A',
+                fillColor: TYPE_COLORS[e.type] || '#F4991A',
                 fillOpacity: 0.07,
                 weight: 1,
                 opacity: 0.3,
@@ -226,8 +225,8 @@ export default function MapView() {
             <button
               onClick={() => switchMode('markers')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${viewMode === 'markers'
-                ? 'bg-white text-brand-700 shadow-md'
-                : 'text-white/80 hover:text-white hover:bg-white/10'
+                ? 'bg-[#F9F5F0] text-[#344F1F] shadow-md'
+                : 'text-[#F9F5F0]/80 hover:text-[#F9F5F0] hover:bg-[#F9F5F0]/10'
                 }`}
             >
               <MapIcon size={14} />
@@ -237,8 +236,8 @@ export default function MapView() {
             <button
               onClick={() => switchMode('heatmap')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${viewMode === 'heatmap'
-                ? 'bg-white text-orange-600 shadow-md'
-                : 'text-white/80 hover:text-white hover:bg-white/10'
+                ? 'bg-[#F9F5F0] text-[#344F1F] shadow-md'
+                : 'text-[#F9F5F0]/80 hover:text-[#F9F5F0] hover:bg-[#F9F5F0]/10'
                 }`}
             >
               <Flame size={14} />
@@ -258,21 +257,21 @@ export default function MapView() {
               transition={{ duration: 0.25 }}
               className="absolute bottom-24 right-3 z-[1000]"
             >
-              <div className="bg-white/90 rounded-2xl p-3 shadow-xl backdrop-blur-md border border-slate-200 min-w-[150px]">
+              <div className="bg-[#F9F5F0]/90 rounded-2xl p-3 shadow-xl backdrop-blur-md border border-[#F2EAD3] min-w-[150px]">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-slate-900 text-xs font-black flex items-center gap-1">
-                    <Flame size={11} className="text-orange-600" />
+                  <p className="text-[#344F1F] text-xs font-black flex items-center gap-1">
+                    <Flame size={11} className="text-[#344F1F]" />
                     مستوى النشاط
                   </p>
                   <button onClick={() => setShowLegend(false)}
-                    className="text-slate-400 hover:text-slate-700 transition-colors">
+                    className="text-[#F4991A] hover:text-[#344F1F] transition-colors">
                     <X size={12} />
                   </button>
                 </div>
 
                 {/* Gradient bar */}
                 <div className="h-2.5 rounded-full mb-2"
-                  style={{ background: 'linear-gradient(to right, #1e3a8a, #3b82f6, #10b981, #f59e0b, #ef4444)' }}
+                  style={{ background: 'linear-gradient(to right, #F2EAD3, #344F1F, #F4991A)' }}
                 />
 
                 <div className="flex justify-between">
@@ -280,7 +279,7 @@ export default function MapView() {
                     <div key={i} className="flex flex-col items-center gap-1">
                       <div className="w-2 h-2 rounded-full" style={{ background: s.color }} />
                       {(i === 0 || i === LEGEND_STOPS.length - 1) && (
-                        <span className="text-slate-900 text-[9px] text-center leading-none font-black">
+                        <span className="text-[#344F1F] text-[9px] text-center leading-none font-black">
                           {s.label}
                         </span>
                       )}
@@ -289,7 +288,7 @@ export default function MapView() {
                 </div>
 
                 {/* Hover hint */}
-                <p className="text-slate-500 text-[10px] mt-2 text-center font-bold">
+                <p className="text-[#F4991A] text-[10px] mt-2 text-center font-bold">
                   مرر على الأحياء للتفاصيل
                 </p>
               </div>
@@ -305,14 +304,14 @@ export default function MapView() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute top-14 right-3 z-[1000] glass rounded-2xl p-4 text-white text-xs max-w-[220px] shadow-xl border border-white/25"
+              className="absolute top-14 right-3 z-[1000] glass rounded-2xl p-4 text-[#F9F5F0] text-xs max-w-[220px] shadow-xl border border-white/25"
             >
               <button onClick={() => setShowInfo(false)}
-                className="absolute top-2 left-2 text-white/50 hover:text-white">
+                className="absolute top-2 left-2 text-[#F9F5F0]/50 hover:text-[#F9F5F0]">
                 <X size={12} />
               </button>
               <p className="font-bold mb-2 text-sm">كيف تقرأ الخريطة؟</p>
-              <div className="space-y-1.5 text-white/80">
+              <div className="space-y-1.5 text-[#F9F5F0]/80">
                 <p>🔵 <strong>وضع الفعاليات:</strong> كل Pin فعالية قادمة</p>
                 <p>🔥 <strong>وضع التفاعل:</strong> الخريطة الحرارية تُظهر كثافة المشاركة بالألوان</p>
                 <p>👆 <strong>Hover</strong> على أي منطقة لرؤية إحصائيات الحي</p>
@@ -332,7 +331,7 @@ export default function MapView() {
               transition={{ type: 'spring', stiffness: 320, damping: 28 }}
               className="absolute bottom-4 inset-x-3 sm:inset-x-auto sm:left-3 sm:w-80 z-[1000]"
             >
-              <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+              <div className="bg-[#F9F5F0] rounded-3xl shadow-2xl overflow-hidden">
                 {/* Image strip */}
                 {selected.image_url && (
                   <div className="h-28 overflow-hidden relative">
@@ -343,20 +342,20 @@ export default function MapView() {
 
                 <div className="p-4">
                   <button onClick={() => setSelected(null)}
-                    className="absolute top-3 left-3 bg-white/80 backdrop-blur-sm rounded-full p-1 text-slate-500 hover:text-slate-800 shadow-sm transition-colors">
+                    className="absolute top-3 left-3 bg-[#F9F5F0]/80 backdrop-blur-sm rounded-full p-1 text-[#F4991A] hover:text-[#344F1F] shadow-sm transition-colors">
                     <X size={14} />
                   </button>
 
                   {/* Type badge */}
                   <span className="badge-pill text-xs mb-2 inline-flex"
                     style={{
-                      background: (TYPE_COLORS[selected.type] || '#3b82f6') + '18',
-                      color: TYPE_COLORS[selected.type] || '#3b82f6'
+                      background: (TYPE_COLORS[selected.type] || '#F4991A') + '18',
+                      color: TYPE_COLORS[selected.type] || '#F4991A'
                     }}>
                     {selected.type}
                   </span>
 
-                  <h3 className="font-bold text-slate-800 text-sm leading-snug mb-3">
+                  <h3 className="font-bold text-[#344F1F] text-sm leading-snug mb-3">
                     {selected.title}
                   </h3>
 
@@ -366,8 +365,8 @@ export default function MapView() {
                       { Icon: Calendar, text: (() => { try { return format(new Date(selected.date), 'd MMMM', { locale: ar }); } catch { return '—'; } })() },
                       { Icon: Users, text: `${selected.current_participants} / ${selected.max_participants} مشارك` },
                     ].map(({ Icon, text }, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-slate-500">
-                        <Icon size={11} className="text-brand-400 flex-shrink-0" />
+                      <div key={i} className="flex items-center gap-2 text-xs text-[#F4991A]">
+                        <Icon size={11} className="text-[#F4991A] flex-shrink-0" />
                         <span>{text}</span>
                       </div>
                     ))}
@@ -375,8 +374,8 @@ export default function MapView() {
 
                   {/* Capacity bar */}
                   <div className="mb-4">
-                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-brand-500 transition-all duration-700"
+                    <div className="h-1.5 bg-[#F9F5F0] rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-[#F4991A] transition-all duration-700"
                         style={{ width: `${Math.min(100, Math.round((selected.current_participants / selected.max_participants) * 100))}%` }} />
                     </div>
                   </div>
@@ -400,8 +399,8 @@ export default function MapView() {
               exit={{ opacity: 0, y: 20 }}
               className="absolute bottom-4 inset-x-3 z-[1000]"
             >
-              <div className="bg-white/90 rounded-2xl px-4 py-3 border border-slate-200 shadow-xl backdrop-blur-md">
-                <p className="text-slate-900 text-[10px] font-black mb-2 uppercase tracking-wide">
+              <div className="bg-[#F9F5F0]/90 rounded-2xl px-4 py-3 border border-[#F2EAD3] shadow-xl backdrop-blur-md">
+                <p className="text-[#344F1F] text-[10px] font-black mb-2 uppercase tracking-wide">
                   أكثر الأحياء نشاطاً
                 </p>
                 <div className="flex gap-3 overflow-x-auto custom-scroll pb-1">
@@ -413,20 +412,20 @@ export default function MapView() {
                       const pct = Math.round((n.total_registrations / maxRegs) * 100);
                       return (
                         <div key={i} className="flex-shrink-0 text-center min-w-[64px]">
-                          <div className="relative h-10 bg-white/10 rounded-lg overflow-hidden mb-1">
+                          <div className="relative h-10 bg-[#F9F5F0]/10 rounded-lg overflow-hidden mb-1">
                             <div
                               className="absolute bottom-0 inset-x-0 rounded-lg transition-all duration-700"
                               style={{
                                 height: `${Math.max(15, pct)}%`,
-                                background: i === 0 ? '#ef4444' : i === 1 ? '#f97316' : i === 2 ? '#f59e0b' : '#10b981',
+                                background: i === 0 ? '#F4991A' : i === 1 ? '#F4991A' : i === 2 ? '#F4991A' : '#F4991A',
                                 opacity: 0.85,
                               }}
                             />
-                            <span className="absolute inset-0 flex items-center justify-center text-slate-900 text-xs font-black">
+                            <span className="absolute inset-0 flex items-center justify-center text-[#344F1F] text-xs font-black">
                               {n.total_registrations}
                             </span>
                           </div>
-                          <p className="text-slate-800 text-[9px] leading-tight font-black truncate max-w-[64px]">
+                          <p className="text-[#344F1F] text-[9px] leading-tight font-black truncate max-w-[64px]">
                             {n.name?.replace('حي ', '')}
                           </p>
                         </div>
@@ -442,7 +441,7 @@ export default function MapView() {
         {viewMode === 'heatmap' && !showLegend && (
           <button
             onClick={() => setShowLegend(true)}
-            className="absolute bottom-[130px] right-3 z-[1000] glass text-white text-xs font-semibold px-3 py-1.5 rounded-xl border border-white/25 hover:bg-white/20 transition-colors"
+            className="absolute bottom-[130px] right-3 z-[1000] glass text-[#F9F5F0] text-xs font-semibold px-3 py-1.5 rounded-xl border border-white/25 hover:bg-[#F9F5F0]/20 transition-colors"
           >
             🎨 دليل الألوان
           </button>

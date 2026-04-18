@@ -15,8 +15,8 @@ import toast from 'react-hot-toast';
 const RoleBadge = ({ role }) => (
   <span className={`badge-pill text-[10px] font-black px-2 py-0.5 ${
     role === 'admin'
-      ? 'bg-amber-100 text-amber-700 border border-amber-200'
-      : 'bg-brand-100 text-brand-700 border border-brand-200'
+      ? 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]'
+      : 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]'
   }`}>
     {role === 'admin' ? '👑 مدير' : '🙋 شاب'}
   </span>
@@ -25,8 +25,8 @@ const RoleBadge = ({ role }) => (
 const StatusBadge = ({ isActive }) => (
   <span className={`badge-pill text-[10px] font-bold px-2 py-0.5 ${
     isActive
-      ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-      : 'bg-red-100 text-red-600 border border-red-200'
+      ? 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]'
+      : 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]'
   }`}>
     {isActive ? '🟢 نشط' : '🔴 معطّل'}
   </span>
@@ -41,7 +41,7 @@ function ConfirmModal({ open, title, message, confirmLabel, danger, onConfirm, o
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] flex items-center justify-center p-4"
+        className="fixed inset-0 bg-[#344F1F]/40 backdrop-blur-sm z-[80] flex items-center justify-center p-4"
         onClick={onCancel}
       >
         <motion.div
@@ -49,26 +49,26 @@ function ConfirmModal({ open, title, message, confirmLabel, danger, onConfirm, o
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0 }}
           onClick={e => e.stopPropagation()}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
+          className="bg-[#F9F5F0] rounded-2xl shadow-2xl w-full max-w-sm p-6"
         >
           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
-            danger ? 'bg-red-100' : 'bg-amber-100'
+            danger ? 'bg-[#F9F5F0]' : 'bg-[#F9F5F0]'
           }`}>
-            <AlertTriangle size={22} className={danger ? 'text-red-500' : 'text-amber-500'} />
+            <AlertTriangle size={22} className={danger ? 'text-[#F4991A]' : 'text-[#F4991A]'} />
           </div>
-          <h3 className="font-black text-slate-800 text-center text-base mb-2">{title}</h3>
-          <p className="text-slate-500 text-sm text-center mb-6 leading-relaxed">{message}</p>
+          <h3 className="font-black text-[#344F1F] text-center text-base mb-2">{title}</h3>
+          <p className="text-[#F4991A] text-sm text-center mb-6 leading-relaxed">{message}</p>
           <div className="flex gap-3">
             <button
               onClick={onCancel}
-              className="flex-1 px-4 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition-colors"
+              className="flex-1 px-4 py-2.5 rounded-xl border-2 border-[#F2EAD3] text-[#344F1F] font-semibold text-sm hover:bg-[#F9F5F0] transition-colors"
             >
               إلغاء
             </button>
             <button
               onClick={onConfirm}
-              className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-sm text-white transition-colors ${
-                danger ? 'bg-red-500 hover:bg-red-600' : 'bg-amber-500 hover:bg-amber-600'
+              className={`flex-1 px-4 py-2.5 rounded-xl font-bold text-sm text-[#F9F5F0] transition-colors ${
+                danger ? 'bg-[#F4991A] hover:bg-[#344F1F]' : 'bg-[#F4991A] hover:bg-[#344F1F]'
               }`}
             >
               {confirmLabel}
@@ -151,7 +151,7 @@ export default function UsersTab() {
       <div className="card p-4">
         <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search size={15} className="absolute top-1/2 -translate-y-1/2 right-3 text-slate-400" />
+            <Search size={15} className="absolute top-1/2 -translate-y-1/2 right-3 text-[#F4991A]" />
             <input
               type="text"
               value={search}
@@ -186,13 +186,13 @@ export default function UsersTab() {
           </button>
         </form>
 
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
-          <p className="text-xs text-slate-400 font-medium">
-            إجمالي النتائج: <span className="font-black text-slate-600">{pagination.total}</span> مستخدم
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#F9F5F0]">
+          <p className="text-xs text-[#F4991A] font-medium">
+            إجمالي النتائج: <span className="font-black text-[#344F1F]">{pagination.total}</span> مستخدم
           </p>
           <button
             onClick={() => load(pagination.page)}
-            className="flex items-center gap-1.5 text-xs text-brand-600 hover:text-brand-800 font-semibold"
+            className="flex items-center gap-1.5 text-xs text-[#344F1F] hover:text-[#344F1F] font-semibold"
           >
             <RefreshCw size={12} />
             تحديث
@@ -218,17 +218,17 @@ export default function UsersTab() {
             ))}
           </div>
         ) : users.length === 0 ? (
-          <div className="flex flex-col items-center py-16 text-slate-400 gap-3">
-            <div className="w-16 h-16 rounded-3xl bg-slate-100 flex items-center justify-center">
-              <Users size={28} className="text-slate-300" />
+          <div className="flex flex-col items-center py-16 text-[#F4991A] gap-3">
+            <div className="w-16 h-16 rounded-3xl bg-[#F9F5F0] flex items-center justify-center">
+              <Users size={28} className="text-[#F2EAD3]" />
             </div>
-            <p className="font-semibold text-slate-500">لا يوجد مستخدمون مطابقون</p>
+            <p className="font-semibold text-[#F4991A]">لا يوجد مستخدمون مطابقون</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-slate-50/80 text-slate-500 text-xs font-bold border-b border-slate-100">
+                <tr className="bg-[#F9F5F0]/80 text-[#F4991A] text-xs font-bold border-b border-[#F9F5F0]">
                   <th className="text-right px-5 py-3.5">المستخدم</th>
                   <th className="text-right px-5 py-3.5 hidden md:table-cell">التواصل</th>
                   <th className="text-right px-5 py-3.5 hidden sm:table-cell">النشاط</th>
@@ -252,23 +252,23 @@ export default function UsersTab() {
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ delay: idx * 0.03 }}
                         className={`group transition-colors ${
-                          u.is_active ? 'hover:bg-brand-50/30' : 'bg-red-50/30 hover:bg-red-50/60'
+                          u.is_active ? 'hover:bg-[#F9F5F0]/30' : 'bg-[#F9F5F0]/30 hover:bg-[#F9F5F0]/60'
                         }`}
                       >
                         {/* User identity */}
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-sm ${
-                              u.is_active ? 'bg-hero-gradient' : 'bg-slate-300'
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-[#F9F5F0] font-black text-sm flex-shrink-0 shadow-sm ${
+                              u.is_active ? 'bg-hero-gradient' : 'bg-[#F2EAD3]'
                             }`}>
                               {u.name?.charAt(0)}
                             </div>
                             <div>
-                              <p className={`font-bold text-sm leading-none ${u.is_active ? 'text-slate-800' : 'text-slate-400 line-through'}`}>
+                              <p className={`font-bold text-sm leading-none ${u.is_active ? 'text-[#344F1F]' : 'text-[#F4991A] line-through'}`}>
                                 {u.name}
-                                {isSelf && <span className="mr-1 text-[10px] text-brand-500">(أنت)</span>}
+                                {isSelf && <span className="mr-1 text-[10px] text-[#F4991A]">(أنت)</span>}
                               </p>
-                              <p className="text-[11px] text-slate-400 mt-0.5">{timeAgo(u.created_at)}</p>
+                              <p className="text-[11px] text-[#F4991A] mt-0.5">{timeAgo(u.created_at)}</p>
                             </div>
                           </div>
                         </td>
@@ -276,19 +276,19 @@ export default function UsersTab() {
                         {/* Contact */}
                         <td className="px-5 py-3.5 hidden md:table-cell">
                           <div className="space-y-1">
-                            <p className="flex items-center gap-1.5 text-xs text-slate-500">
-                              <Mail size={10} className="text-slate-300" />
+                            <p className="flex items-center gap-1.5 text-xs text-[#F4991A]">
+                              <Mail size={10} className="text-[#F2EAD3]" />
                               {u.email}
                             </p>
                             {u.phone && (
-                              <p className="flex items-center gap-1.5 text-xs text-slate-400">
-                                <Phone size={10} className="text-slate-300" />
+                              <p className="flex items-center gap-1.5 text-xs text-[#F4991A]">
+                                <Phone size={10} className="text-[#F2EAD3]" />
                                 {u.phone}
                               </p>
                             )}
                             {u.neighborhood_name && (
-                              <p className="flex items-center gap-1.5 text-xs text-slate-400">
-                                <MapPin size={10} className="text-slate-300" />
+                              <p className="flex items-center gap-1.5 text-xs text-[#F4991A]">
+                                <MapPin size={10} className="text-[#F2EAD3]" />
                                 {u.neighborhood_name}
                               </p>
                             )}
@@ -298,11 +298,11 @@ export default function UsersTab() {
                         {/* Activity */}
                         <td className="px-5 py-3.5 hidden sm:table-cell">
                           <div className="space-y-1">
-                            <p className="flex items-center gap-1.5 text-xs text-slate-600 font-semibold">
-                              <Star size={10} className="text-amber-400" />
+                            <p className="flex items-center gap-1.5 text-xs text-[#344F1F] font-semibold">
+                              <Star size={10} className="text-[#F4991A]" />
                               {u.points} نقطة
                             </p>
-                            <p className="flex items-center gap-1.5 text-xs text-slate-400">
+                            <p className="flex items-center gap-1.5 text-xs text-[#F4991A]">
                               <Clock size={10} />
                               {u.attended_count}/{u.total_regs} فعالية
                             </p>
@@ -332,8 +332,8 @@ export default function UsersTab() {
                                   title={u.is_active ? 'تعطيل الحساب' : 'تفعيل الحساب'}
                                   className={`p-2 rounded-xl transition-all duration-200 ${
                                     u.is_active
-                                      ? 'hover:bg-amber-50 text-slate-400 hover:text-amber-600'
-                                      : 'hover:bg-emerald-50 text-slate-400 hover:text-emerald-600'
+                                      ? 'hover:bg-[#F9F5F0] text-[#F4991A] hover:text-[#344F1F]'
+                                      : 'hover:bg-[#F9F5F0] text-[#F4991A] hover:text-[#344F1F]'
                                   }`}
                                 >
                                   {u.is_active ? <UserX size={15} /> : <UserCheck size={15} />}
@@ -345,15 +345,15 @@ export default function UsersTab() {
                                   disabled={busy}
                                   onClick={() => openConfirm('delete', u)}
                                   title="حذف نهائي"
-                                  className="p-2 rounded-xl hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all duration-200"
+                                  className="p-2 rounded-xl hover:bg-[#F9F5F0] text-[#F4991A] hover:text-[#F4991A] transition-all duration-200"
                                 >
                                   <Trash2 size={15} />
                                 </motion.button>
                               </>
                             )}
                             {(isSelf || isAdmin) && (
-                              <span className="text-[10px] text-slate-300 px-2">
-                                <Shield size={13} className="text-amber-300" />
+                              <span className="text-[10px] text-[#F2EAD3] px-2">
+                                <Shield size={13} className="text-[#F2EAD3]" />
                               </span>
                             )}
                           </div>
@@ -374,17 +374,17 @@ export default function UsersTab() {
           <button
             disabled={pagination.page <= 1}
             onClick={() => load(pagination.page - 1)}
-            className="p-2 rounded-xl border border-slate-200 hover:border-brand-300 hover:bg-brand-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="p-2 rounded-xl border border-[#F2EAD3] hover:border-[#F2EAD3] hover:bg-[#F9F5F0] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <ChevronRight size={16} />
           </button>
-          <span className="text-sm font-semibold text-slate-600 px-2">
+          <span className="text-sm font-semibold text-[#344F1F] px-2">
             {pagination.page} / {pagination.pages}
           </span>
           <button
             disabled={pagination.page >= pagination.pages}
             onClick={() => load(pagination.page + 1)}
-            className="p-2 rounded-xl border border-slate-200 hover:border-brand-300 hover:bg-brand-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="p-2 rounded-xl border border-[#F2EAD3] hover:border-[#F2EAD3] hover:bg-[#F9F5F0] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <ChevronLeft size={16} />
           </button>
