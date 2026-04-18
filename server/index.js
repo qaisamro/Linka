@@ -1,0 +1,76 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const pool = require('./db/pool');
+const { checkBlockedIp } = require('./middleware/checkBlockedIp');
+const { requestMetricsMiddleware } = require('./middleware/requestMetrics');
+
+// ─── App Setup ───────────────────────────────────────────────────
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// ─── Middleware ───────────────────────────────────────────────────
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5173'], // React dev servers
+  credentials: true,
+}));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(requestMetricsMiddleware);
+app.use(checkBlockedIp);
+
+// ─── Health Check ─────────────────────────────────────────────────
+app.get('/api/health', async (req, res) => {
+  const dbStatus = await pool.checkDatabaseHealth();
+  res.json({
+    status: dbStatus.connected ? 'ok' : 'degraded',
+    message: dbStatus.connected
+      ? 'Hebron Youth Platform API is running ✅'
+      : 'API is running, but database is unavailable.',
+    timestamp: new Date().toISOString(),
+    database: dbStatus
+  });
+});
+
+// ─── Routes ───────────────────────────────────────────────────────
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/events', require('./routes/events'));
+app.use('/api/registrations', require('./routes/registrations'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/chat', require('./routes/chat'));
+app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/university', require('./routes/university'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/admin', require('./routes/admin'));
+app.use('/api/super-admin', require('./routes/superAdmin'));
+app.use('/api/jobs', require('./routes/jobs'));
+app.use('/api/entities', require('./routes/entities'));
+app.use('/api/training', require('./routes/training'));
+
+// ─── Neighborhoods (simple, no controller needed) ─────────────────
+app.get('/api/neighborhoods', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM neighborhoods ORDER BY id');
+    res.json({ neighborhoods: rows });
+  } catch (err) {
+    res.status(500).json({ error: 'خطأ في جلب الأحياء' });
+  }
+});
+
+// ─── 404 Handler ─────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` });
+});
+
+// ─── Global Error Handler ─────────────────────────────────────────
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.stack);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// ─── Start Server ─────────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log(`\n🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📡 API Base: http://localhost:${PORT}/api`);
+  console.log(`🏥 Health: http://localhost:${PORT}/api/health\n`);
+});
