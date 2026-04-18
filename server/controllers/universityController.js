@@ -47,7 +47,7 @@ const getReport = async (req, res) => {
           COUNT(*) AS total_participations,
           SUM(e2.duration_hours) AS volunteer_hours,
           SUM(e2.duration_hours * ${MULTIPLIER_SQL.replace(/e\./g, 'e2.')}) AS academic_hours,
-          GROUP_CONCAT(CONCAT(COALESCE(e2.type, 'أخرى'), ':', type_counts.cnt) SEPARATOR '|') AS activities_raw
+          STRING_AGG(COALESCE(e2.type, 'أخرى') || ':' || type_counts.cnt::text, '|') AS activities_raw
         FROM registrations r2
         JOIN events e2 ON r2.event_id = e2.id
         JOIN (
@@ -428,8 +428,8 @@ const verifyAttendance = async (req, res) => {
 
     // Insert approval (ignore duplicate)
     await pool.query(
-      `INSERT IGNORE INTO hour_approvals (user_id, university_id, event_id, approved_hours)
-       VALUES (?, ?, ?, ?)`,
+      `INSERT INTO hour_approvals (user_id, university_id, event_id, approved_hours)
+       VALUES (?, ?, ?, ?) ON CONFLICT (user_id, university_id, event_id) DO NOTHING`,
       [student.id, universityId, codeData.event_id, approvedHours]
     );
 

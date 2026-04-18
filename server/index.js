@@ -1,9 +1,50 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const bcrypt = require('bcryptjs');
 const pool = require('./db/pool');
 const { checkBlockedIp } = require('./middleware/checkBlockedIp');
 const { requestMetricsMiddleware } = require('./middleware/requestMetrics');
+
+// ─── Run schema migrations on startup ────────────────────────────
+async function runMigrations() {
+  try {
+    await pool.query(`ALTER TABLE users ALTER COLUMN avatar_url TYPE TEXT`);
+  } catch (err) {
+    // Ignore if already TEXT or no change needed
+  }
+}
+
+// ─── Ensure required admin accounts exist ────────────────────────
+async function seedAdminUsers() {
+  // Remove old default accounts
+  const removedEmails = ['admin@hebron.ps', 'super@hebron.ps'];
+  try {
+    await pool.query(`DELETE FROM users WHERE email = ANY(?)`, [removedEmails]);
+  } catch (err) {
+    console.error('⚠️  Could not remove old admin accounts:', err.message);
+  }
+
+  const admins = [
+    { name: 'Super Admin', email: 'admin@linka.ps', password: 'linka123', role: 'super_admin' },
+  ];
+  for (const admin of admins) {
+    try {
+      const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [admin.email]);
+      if (rows.length === 0) {
+        const hash = await bcrypt.hash(admin.password, 10);
+        await pool.query(
+          `INSERT INTO users (name, email, password_hash, role, is_active) VALUES (?, ?, ?, ?, TRUE)`,
+          [admin.name, admin.email, hash, admin.role]
+        );
+        console.log(`✅ Created admin: ${admin.email}`);
+      }
+    } catch (err) {
+      console.error(`⚠️  Could not seed admin ${admin.email}:`, err.message);
+    }
+  }
+}
 
 // ─── App Setup ───────────────────────────────────────────────────
 const app = express();
@@ -11,7 +52,7 @@ const PORT = process.env.PORT || 3001;
 
 // ─── Middleware ───────────────────────────────────────────────────
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'], // React dev servers
+  origin: true,
   credentials: true,
 }));
 app.use(express.json({ limit: '50mb' }));
@@ -57,7 +98,14 @@ app.get('/api/neighborhoods', async (req, res) => {
   }
 });
 
-// ─── 404 Handler ─────────────────────────────────────────────────
+// ─── Serve React Frontend in Production ──────────────────────────
+const clientDist = path.join(__dirname, '..', 'client', 'dist');
+app.use(express.static(clientDist));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
+});
+
+// ─── 404 Handler (API only, unreachable for non-API) ─────────────
 app.use((req, res) => {
   res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` });
 });
@@ -69,8 +117,10 @@ app.use((err, req, res, next) => {
 });
 
 // ─── Start Server ─────────────────────────────────────────────────
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`\n🚀 Server running on http://localhost:${PORT}`);
   console.log(`📡 API Base: http://localhost:${PORT}/api`);
   console.log(`🏥 Health: http://localhost:${PORT}/api/health\n`);
+  await runMigrations();
+  await seedAdminUsers();
 });

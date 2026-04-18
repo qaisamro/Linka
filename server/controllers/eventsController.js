@@ -11,7 +11,7 @@ const getEvents = async (req, res) => {
     SELECT e.*,
            n.name as neighborhood_name,
            u.name as created_by_name,
-           (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.user_id = ?) as is_registered
+           (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.user_id = ?)::int as is_registered
     FROM events e
     LEFT JOIN neighborhoods n ON e.neighborhood_id = n.id
     LEFT JOIN users u ON e.created_by = u.id

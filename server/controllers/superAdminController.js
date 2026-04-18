@@ -6,29 +6,29 @@ const bcrypt = require('bcryptjs');
 async function maybeAutoAlerts() {
   try {
     const [[{ c: regs24 }]] = await pool.query(
-      `SELECT COUNT(*) AS c FROM registrations WHERE registered_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)`
+      `SELECT COUNT(*) AS c FROM registrations WHERE registered_at > NOW() - INTERVAL '24 hours'`
     );
     const [[{ c: regsPrev }]] = await pool.query(
       `SELECT COUNT(*) AS c FROM registrations
-       WHERE registered_at <= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-         AND registered_at > DATE_SUB(NOW(), INTERVAL 48 HOUR)`
+       WHERE registered_at <= NOW() - INTERVAL '24 hours'
+         AND registered_at > NOW() - INTERVAL '48 hours'`
     );
     const [[{ c: users24 }]] = await pool.query(
-      `SELECT COUNT(*) AS c FROM users WHERE created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)`
+      `SELECT COUNT(*) AS c FROM users WHERE created_at > NOW() - INTERVAL '24 hours'`
     );
 
     if (regsPrev > 0 && regs24 > regsPrev * 3 && regs24 >= 10) {
       const [[dup]] = await pool.query(
         `SELECT id FROM admin_alerts WHERE alert_type = 'SPIKE_REGISTRATIONS'
-         AND created_at > DATE_SUB(NOW(), INTERVAL 6 HOUR) LIMIT 1`
+         AND created_at > NOW() - INTERVAL '6 hours' LIMIT 1`
       );
       if (!dup) {
         await pool.query(
           `INSERT INTO admin_alerts (severity, alert_type, title, body, metadata)
            VALUES ('warning', 'SPIKE_REGISTRATIONS', 'زيادة حادة في التسجيلات',
                    'عدد التسجيلات خلال 24 ساعة تجاوز 3× اليوم السابق',
-                   JSON_OBJECT('regs24', ?, 'regsPrev', ?))`,
-          [regs24, regsPrev]
+                   ?)`,
+          [JSON.stringify({regs24, regsPrev})]
         );
       }
     }
@@ -36,15 +36,15 @@ async function maybeAutoAlerts() {
     if (users24 >= 30) {
       const [[dup]] = await pool.query(
         `SELECT id FROM admin_alerts WHERE alert_type = 'SPIKE_NEW_USERS'
-         AND created_at > DATE_SUB(NOW(), INTERVAL 12 HOUR) LIMIT 1`
+         AND created_at > NOW() - INTERVAL '12 hours' LIMIT 1`
       );
       if (!dup) {
         await pool.query(
           `INSERT INTO admin_alerts (severity, alert_type, title, body, metadata)
            VALUES ('info', 'SPIKE_NEW_USERS', 'عدد كبير من المستخدمين الجدد',
                    'تم إنشاء حسابات جديدة بوتيرة عالية',
-                   JSON_OBJECT('users24', ?))`,
-          [users24]
+                   ?)`,
+          [JSON.stringify({users24})]
         );
       }
     }
@@ -70,18 +70,18 @@ const getOverview = async (req, res) => {
       { active_last_7d_login },
     ] = await Promise.all([
       q(`SELECT COUNT(*) AS total_users FROM users`),
-      q(`SELECT COUNT(*) AS active_accounts FROM users WHERE is_active = 1`),
+      q(`SELECT COUNT(*) AS active_accounts FROM users WHERE is_active = TRUE`),
       q(`SELECT COUNT(*) AS youth_count FROM users WHERE role = 'youth'`),
-      q(`SELECT COUNT(*) AS upcoming_events FROM events WHERE date >= CURDATE() AND status = 'active'`),
+      q(`SELECT COUNT(*) AS upcoming_events FROM events WHERE date >= CURRENT_DATE AND status = 'active'`),
       q(`SELECT COUNT(*) AS all_events FROM events`),
       q(`SELECT COUNT(*) AS total_regs FROM registrations`),
       q(
-        `SELECT COUNT(*) AS regs_7d FROM registrations WHERE registered_at > DATE_SUB(NOW(), INTERVAL 7 DAY)`
+        `SELECT COUNT(*) AS regs_7d FROM registrations WHERE registered_at > NOW() - INTERVAL '7 days'`
       ),
       q(`SELECT COALESCE(SUM(total_hours),0) AS hours_sum FROM users`),
       q(
         `SELECT COUNT(*) AS active_last_7d_login FROM users
-         WHERE last_login_at IS NOT NULL AND last_login_at > DATE_SUB(NOW(), INTERVAL 7 DAY)`
+         WHERE last_login_at IS NOT NULL AND last_login_at > NOW() - INTERVAL '7 days'`
       ),
     ]);
 
@@ -122,7 +122,7 @@ const getOverview = async (req, res) => {
     `);
 
     const [unreadAlerts] = await pool.query(
-      `SELECT * FROM admin_alerts WHERE is_read = 0 ORDER BY created_at DESC LIMIT 20`
+      `SELECT * FROM admin_alerts WHERE is_read = FALSE ORDER BY created_at DESC LIMIT 20`
     );
 
     const metrics = getRequestMetrics();
@@ -166,7 +166,7 @@ const listAlerts = async (req, res) => {
     const { unread_only } = req.query;
     let q = 'SELECT * FROM admin_alerts WHERE 1=1';
     const p = [];
-    if (unread_only === '1') q += ' AND is_read = 0';
+    if (unread_only === '1') q += ' AND is_read = FALSE';
     q += ' ORDER BY created_at DESC LIMIT 100';
     const [rows] = await pool.query(q, p);
     res.json({ alerts: rows });
@@ -178,7 +178,7 @@ const listAlerts = async (req, res) => {
 const markAlertRead = async (req, res) => {
   const { id } = req.params;
   try {
-    await pool.query('UPDATE admin_alerts SET is_read = 1 WHERE id = ?', [id]);
+    await pool.query('UPDATE admin_alerts SET is_read = TRUE WHERE id = ?', [id]);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: 'خطأ في تحديث التنبيه' });
@@ -205,8 +205,8 @@ const addBlockedIp = async (req, res) => {
   try {
     await pool.query(
       `INSERT INTO blocked_ips (ip, reason, created_by, is_active)
-       VALUES (?, ?, ?, 1)
-       ON DUPLICATE KEY UPDATE is_active = 1, reason = VALUES(reason)`,
+       VALUES (?, ?, ?, TRUE)
+       ON CONFLICT (ip) DO UPDATE SET is_active = TRUE, reason = EXCLUDED.reason`,
       [clean, reason || null, req.user.id]
     );
     const [adminRows] = await pool.query('SELECT name FROM users WHERE id = ?', [req.user.id]);
@@ -229,7 +229,7 @@ const addBlockedIp = async (req, res) => {
 const removeBlockedIp = async (req, res) => {
   const { id } = req.params;
   try {
-    await pool.query('UPDATE blocked_ips SET is_active = 0 WHERE id = ?', [id]);
+    await pool.query('UPDATE blocked_ips SET is_active = FALSE WHERE id = ?', [id]);
     const [adminRows] = await pool.query('SELECT name FROM users WHERE id = ?', [req.user.id]);
     await writeAdminAudit(req.user.id, adminRows[0]?.name, 'IP_UNBLOCKED', 'security', parseInt(id, 10), null);
     res.json({ message: 'تم إلغاء الحظر' });
@@ -314,7 +314,7 @@ const patchUser = async (req, res) => {
 
     res.json({ message: 'تم تحديث المستخدم' });
   } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') {
+    if (err.code === 'ER_DUP_ENTRY' || err.code === '23505') {
       return res.status(409).json({ error: 'البريد الإلكتروني مستخدم مسبقاً' });
     }
     console.error(err);

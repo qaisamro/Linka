@@ -59,7 +59,7 @@ const register = async (req, res) => {
           await pool.query(
             `INSERT INTO university_students (university_id, user_id, student_id, student_name)
              VALUES (?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE user_id = VALUES(user_id), student_name = VALUES(student_name)`,
+             ON CONFLICT (university_id, student_id) DO UPDATE SET user_id = EXCLUDED.user_id, student_name = EXCLUDED.student_name`,
             [finalUniId, newUserId, student_id, name]
           );
         }
@@ -134,6 +134,7 @@ const login = async (req, res) => {
       'SELECT * FROM entities WHERE email = ? AND is_active = TRUE',
       [email.toLowerCase()]
     );
+
 
     if (entRows.length > 0) {
       const ent = entRows[0];

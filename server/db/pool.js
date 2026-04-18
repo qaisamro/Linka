@@ -1,31 +1,52 @@
-const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 require('dotenv').config();
 
-const pool = mysql.createPool({
-  host: process.env.MYSQL_HOST || 'localhost',
-  port: process.env.MYSQL_PORT || 3306,
-  user: process.env.MYSQL_USER || 'root',
-  password: process.env.MYSQL_PASSWORD || '',
-  database: process.env.MYSQL_DATABASE || 'Hebron_Youth',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+const pgPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('sslmode=require')
+    ? { rejectUnauthorized: false }
+    : false,
 });
 
-console.log('📡 MySQL Pool Created');
+console.log('📡 PostgreSQL Pool Created');
 
-pool.checkDatabaseHealth = async () => {
-  try {
-    const connection = await pool.getConnection();
-    await connection.ping();
-    connection.release();
-    return { connected: true };
-  } catch (err) {
-    return {
-      connected: false,
-      code: err.code || null,
-    };
-  }
+let paramIndex = 0;
+
+function convertMysqlParams(sql, params) {
+  if (!params || params.length === 0) return { sql, params: [] };
+
+  let i = 0;
+  const pgSql = sql.replace(/\?/g, () => `$${++i}`);
+  return { sql: pgSql, params };
+}
+
+function mysqlifyRows(pgResult) {
+  const rows = pgResult.rows || [];
+  Object.defineProperty(rows, 'affectedRows', { value: pgResult.rowCount || 0, enumerable: false });
+  Object.defineProperty(rows, 'insertId', { value: rows[0]?.id || null, enumerable: false });
+  return rows;
+}
+
+const pool = {
+  async query(sql, params) {
+    try {
+      const { sql: pgSql, params: pgParams } = convertMysqlParams(sql, params);
+      const result = await pgPool.query(pgSql, pgParams);
+      const rows = mysqlifyRows(result);
+      return [rows, null];
+    } catch (err) {
+      throw err;
+    }
+  },
+  checkDatabaseHealth: async () => {
+    try {
+      await pgPool.query('SELECT 1');
+      return { connected: true };
+    } catch (err) {
+      return { connected: false, code: err.code || null };
+    }
+  },
+  end: () => pgPool.end(),
 };
 
 module.exports = pool;

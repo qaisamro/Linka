@@ -1,0 +1,13 @@
+{
+  "name": "hebron-youth-platform",
+  "version": "1.0.0",
+  "description": "Hebron Youth Interaction Map - Full Stack Platform",
+  "scripts": {
+    "build": "cd client && npm install && npm run build",
+    "start": "node server/index.js",
+    "dev": "cd server && npm start & cd client && npm run dev"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
