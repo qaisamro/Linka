@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Heart, Calendar, Users, Award, Facebook, 
@@ -6,9 +7,38 @@ import {
   MapPin, ArrowLeft, Send
 } from 'lucide-react';
 import logo from '../../assets/2.jpg.png';
+import { toast } from 'react-hot-toast';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!email) return toast.error('يرجى إدخال البريد الإلكتروني');
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'حدث خطأ');
+      }
+      
+      toast.success(data.message || 'تم الاشتراك بنجاح!');
+      setEmail('');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const footerLinks = {
     platform: [
@@ -53,14 +83,21 @@ export default function Footer() {
             <p className="text-[#F9F5F0]/70 font-bold max-w-md">اشترك في نشرتنا الإخبارية لتصلك أحدث الفعاليات والفرص فور صدورها.</p>
           </div>
           <div className="w-full lg:max-w-md">
-            <form className="relative flex items-center" onSubmit={(e) => e.preventDefault()}>
+            <form className="relative flex items-center" onSubmit={handleSubscribe}>
               <input 
                 type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="بريدك الإلكتروني" 
-                className="w-full bg-[#344F1F]/50 border-2 border-[#F9F5F0]/10 rounded-2xl py-4 pr-6 pl-16 focus:outline-none focus:border-[#F4991A] text-[#F9F5F0] font-bold transition-all placeholder:text-[#F9F5F0]/30"
+                disabled={loading}
+                className="w-full bg-[#344F1F]/50 border-2 border-[#F9F5F0]/10 rounded-2xl py-4 pr-6 pl-16 focus:outline-none focus:border-[#F4991A] text-[#F9F5F0] font-bold transition-all placeholder:text-[#F9F5F0]/30 disabled:opacity-50"
               />
-              <button className="absolute left-2 p-2 bg-[#F4991A] text-[#344F1F] rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg">
-                <Send size={24} />
+              <button 
+                type="submit"
+                disabled={loading}
+                className="absolute left-2 p-2 bg-[#F4991A] text-[#344F1F] rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50 disabled:hover:scale-100"
+              >
+                {loading ? <div className="w-6 h-6 border-2 border-t-2 border-[#344F1F] border-t-transparent rounded-full animate-spin" /> : <Send size={24} />}
               </button>
             </form>
           </div>

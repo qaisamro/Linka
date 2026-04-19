@@ -85,6 +85,52 @@ const register = async (req, res) => {
       { neighborhood_id }
     );
 
+    // Send Welcome Email for newly registered user
+    const emailUser = process.env.EMAIL_USER || 'linka.palestine@gmail.com';
+    const emailPass = process.env.EMAIL_PASS || '';
+    if (emailPass) {
+      const isLocal = req.get('host') ? req.get('host').includes('localhost') : false;
+      const baseUrl = 'https://linka2026.replit.app';
+      const logoUrl = isLocal ? baseUrl + '/favicon.jpeg' : baseUrl + '/public-assets/2.jpg.png';
+      
+      const transporter = require('nodemailer').createTransport({
+        service: 'gmail',
+        auth: { user: emailUser, pass: emailPass }
+      });
+      
+      const mailOptions = {
+        from: `"منصة لينكا Linka" <${emailUser}>`,
+        to: email.toLowerCase(),
+        subject: 'انضمام موفّق! أهلاً بك في منصة لينكا 🚀',
+        html: `
+          <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; text-align: right; color: #344F1F; padding: 20px; background-color: #f9f5f0;">
+            <div style="background: white; border-radius: 16px; padding: 35px 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); max-width: 600px; margin: 0 auto; position: relative;">
+              <div style="text-align: center; margin-bottom: 25px;">
+                <img src="${logoUrl}" alt="Linka Logo" style="max-width: 140px; height: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 5px; background: white; border: 2px solid #F9F5F0; display: inline-block;" />
+              </div>
+              <h2 style="color: #F4991A; margin-top: 0; text-align: center; font-size: 26px; font-weight: 900;">
+                مرحباً بك يا ${name.split(' ')[0]}!
+              </h2>
+              <div style="text-align: right; line-height: 1.8; font-size: 15px; margin-top: 20px;">
+                <p>سعدنا جداً بانضمامك رسمياً كمستخدم جديد في منصتنا.</p>
+                <p>منصة لينكا هي بوابتك نحو عالم متكامل من الفرص التطوعية، الفعاليات المتميزة، والتدريبات الحصرية.</p>
+                <p>انطلق الآن واكتشف الفرص المتاحة في دولتك، وابدأ بجمع النقاط لتعزيز ملفك الشخصي!</p>
+                <br>
+                <div style="border-top: 2px dashed #eee; padding-top: 20px;">
+                  <p style="font-size: 13px; color: #777; margin: 0; text-align: center;">
+                    <strong>— فريق لينكا للتطوير —</strong><br>
+                    فلسطين
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      };
+      
+      transporter.sendMail(mailOptions).catch(err => console.error('Register Welcome Email Error:', err));
+    }
+
     res.status(201).json({ message: 'تم إنشاء الحساب بنجاح', token, user: newUser });
   } catch (err) {
     console.error('Register error:', err.message);

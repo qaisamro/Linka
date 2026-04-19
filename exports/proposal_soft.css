@@ -1,0 +1,58 @@
+@page {
+  size: A4;
+  margin: 16mm 16mm;
+}
+
+html, body {
+  direction: rtl;
+  text-align: right;
+  font-family: "Cairo", "Segoe UI", Tahoma, Arial, sans-serif;
+  font-size: 12pt;
+  line-height: 1.7;
+  color: #111827;
+  background: #fff;
+}
+
+a { color: inherit; text-decoration: none; }
+
+h1 {
+  font-size: 17pt;
+  margin: 0 0 5mm 0;
+  font-weight: 800;
+}
+
+h2 {
+  font-size: 14pt;
+  margin: 0 0 4mm 0;
+  font-weight: 800;
+}
+
+h3 {
+  font-size: 12.6pt;
+  margin: 4mm 0 2.6mm 0;
+  font-weight: 800;
+}
+
+p { margin: 0 0 3.6mm 0; }
+
+hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 7mm 0;
+}
+
+ul, ol {
+  margin: 2mm 0 4mm 0;
+  padding: 0 16px 0 0;
+}
+
+li { margin: 1mm 0; }
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.95em;
+}
+
+/* Cleaner pagination */
+h1, h2, h3 { break-after: avoid-page; page-break-after: avoid; }
+ul, ol, p { orphans: 2; widows: 2; }

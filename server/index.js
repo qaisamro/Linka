@@ -14,6 +14,18 @@ async function runMigrations() {
   } catch (err) {
     // Ignore if already TEXT or no change needed
   }
+  
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } catch (err) {
+    console.error('⚠️  Could not migrate newsletter_subscribers:', err.message);
+  }
 }
 
 // ─── Ensure required admin accounts exist ────────────────────────
@@ -87,6 +99,7 @@ app.use('/api/super-admin', require('./routes/superAdmin'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/entities', require('./routes/entities'));
 app.use('/api/training', require('./routes/training'));
+app.use('/api/newsletter', require('./routes/newsletter'));
 
 // ─── Neighborhoods (simple, no controller needed) ─────────────────
 app.get('/api/neighborhoods', async (req, res) => {

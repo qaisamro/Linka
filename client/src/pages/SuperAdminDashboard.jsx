@@ -7,7 +7,7 @@ import {
   Clock, ArrowRight, TrendingUp, AlertCircle, Eye, Bell,
   Settings, Database, Filter, Download, UserPlus, Fingerprint,
   Map as MapIcon, Power, Printer, Server, ShieldAlert, LineChart,
-  Zap, Globe, MousePointer2, AlertTriangle, MapPin
+  Zap, Globe, MousePointer2, AlertTriangle, MapPin, Mail, Send
 } from 'lucide-react';
 import { entitiesAPI, adminAPI, superAdminAPI, analyticsAPI } from '../api';
 import toast from 'react-hot-toast';
@@ -104,6 +104,7 @@ export default function SuperAdminDashboard() {
     { id: 'events', icon: Calendar, label: 'الفعاليات' },
     { id: 'logs', icon: Clock, label: 'سجل العمليات' },
     { id: 'security', icon: ShieldAlert, label: 'الأمن والحظر' },
+    { id: 'newsletter', icon: Mail, label: 'النشرة الإخبارية' },
     { id: 'settings', icon: Settings, label: 'إعدادات المنصة' },
   ];
 
@@ -415,6 +416,7 @@ export default function SuperAdminDashboard() {
                 onDisable={handleDisableBlocked}
               />
             )}
+            {activeTab === 'newsletter' && <NewsletterBroadcastView />}
             {activeTab === 'settings' && <SettingsView settings={settings} onToggle={handleToggleSetting} />}
           </AnimatePresence>
         </div>
@@ -1199,3 +1201,262 @@ function EntitySettingsModal({ entity, onClose, onSubmit }) {
     </div>
   );
 }
+
+function NewsletterBroadcastView() {
+  const [subject, setSubject] = useState('');
+  const [messageHtml, setMessageHtml] = useState('');
+  const [audience, setAudience] = useState('all');
+  const [selectedEmails, setSelectedEmails] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [contacts, setContacts] = useState({ users: [], subscribers: [] });
+  const [loadingContacts, setLoadingContacts] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  const fetchContacts = async () => {
+    try {
+      const res = await fetch('/api/newsletter/contacts', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await res.json();
+      if (res.ok) setContacts(data);
+    } catch (err) {
+      toast.error('فشل جلب جهات الاتصال');
+    } finally {
+      setLoadingContacts(false);
+    }
+  };
+
+  const getCombinedContacts = () => {
+    const list = [];
+    (contacts.users || []).forEach(u => list.push({ email: u.email, name: u.name, type: 'مستخدم مسجل' }));
+    (contacts.subscribers || []).forEach(s => {
+      if (!list.find(item => item.email === s.email)) {
+        list.push({ email: s.email, name: '—', type: 'مشترك نشرة' });
+      }
+    });
+    return list;
+  };
+
+  const allContacts = getCombinedContacts();
+  const filteredContacts = allContacts.filter(c => 
+    (c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (c.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleToggleSelect = (email) => {
+    setSelectedEmails(prev => prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]);
+  };
+
+  const handleSelectAll = (e) => {
+    e.preventDefault();
+    if (selectedEmails.length === filteredContacts.length) {
+      setSelectedEmails([]);
+    } else {
+      setSelectedEmails(filteredContacts.map(c => c.email));
+    }
+  };
+
+  const handleDeleteSubscriber = async (email, e) => {
+    e.stopPropagation();
+    if (!window.confirm('هل أنت متأكد من حذف هذا الإيميل والانهاء من النشرة الإخبارية بشكل دائم؟')) return;
+    
+    try {
+      const res = await fetch(`/api/newsletter/subscribers/${encodeURIComponent(email)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'فشل الحذف');
+      
+      toast.success(data.message || 'تم إزالة المشترك بنجاح');
+      fetchContacts();
+      setSelectedEmails(prev => prev.filter(em => em !== email));
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!subject || !messageHtml) return toast.error('الموضوع ونص الرسالة مطلوبان');
+    
+    if (audience === 'specific' && selectedEmails.length === 0) {
+      return toast.error('يرجى تحديد جهة اتصال واحدة على الأقل');
+    }
+
+    if (!window.confirm('أنت على وشك إرسال هذه الرسالة. هل أنت متأكد؟')) return;
+    
+    setLoading(true);
+    try {
+      const submitAudience = audience === 'all' ? 'all' : 'custom';
+      
+      const res = await fetch('/api/newsletter/broadcast', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ subject, messageHtml, audience: submitAudience, customEmails: selectedEmails })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'فشل الإرسال');
+      
+      toast.success(data.message || 'تم الإرسال بنجاح');
+      setSubject('');
+      setMessageHtml('');
+      setSelectedEmails([]);
+      setAudience('all');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#F9F5F0] rounded-[2.5rem] p-4 sm:p-8 shadow-sm border border-[#F9F5F0]">
+      <div className="mb-8">
+        <h3 className="text-xl sm:text-2xl font-black text-[#344F1F] flex items-center gap-3">
+          <Mail className="text-[#F4991A]" size={28} /> نظام البث المباشر المتقدم
+        </h3>
+        <p className="text-xs sm:text-sm font-bold text-[#344F1F]/60 mt-2">
+          رسائل منسقة وإشعارات بريدية للجميع، أو استهداف دقيق لأشخاص محددين سواء كانوا مستخدمين أو مشتركين.
+        </p>
+      </div>
+
+      <form onSubmit={handleSend} className="space-y-6 max-w-5xl">
+        <div className="bg-white p-6 rounded-[2rem] border border-[#F2EAD3] shadow-sm space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-black text-[#F4991A] mb-2 mr-2 uppercase">عنوان الرسالة (Subject)</label>
+              <input 
+                value={subject} 
+                onChange={(e) => setSubject(e.target.value)} 
+                placeholder="مثال: إشعار هام..."
+                className="w-full px-5 py-4 bg-[#F9F5F0] border-0 rounded-2xl focus:ring-2 focus:ring-[#F4991A] font-bold text-sm" 
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-black text-[#F4991A] mb-2 mr-2 uppercase">من سيستلم الرسالة؟</label>
+              <select 
+                value={audience} 
+                onChange={(e) => {
+                  setAudience(e.target.value);
+                  if (e.target.value === 'all') setSelectedEmails([]);
+                }}
+                className="w-full px-5 py-4 bg-[#F9F5F0] border-0 rounded-2xl focus:ring-2 focus:ring-[#F4991A] font-bold text-sm"
+              >
+                <option value="all">إرسال للجميع عام (كافة المشتركين والمستخدمين المعرفين)</option>
+                <option value="specific">تحديد أفراد محددين بشكل يدوي (توجيه فردي)</option>
+              </select>
+            </div>
+          </div>
+
+          {audience === 'specific' && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-4">
+              <label className="block text-xs font-black text-[#F4991A] mb-4 mr-2 uppercase flex items-center justify-between">
+                <span>تحديد المستلمين ({selectedEmails.length} محددون)</span>
+                <button type="button" onClick={handleSelectAll} className="text-[#344F1F] hover:underline bg-[#F9F5F0] px-3 py-1 rounded">
+                  {selectedEmails.length === filteredContacts.length && filteredContacts.length > 0 ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
+                </button>
+              </label>
+              
+              <div className="mb-4 relative">
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-[#F4991A]" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="بحث عن اسم أو بريد..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pr-12 pl-4 py-3 bg-[#F9F5F0] border border-[#F2EAD3] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#F4991A]/50 text-sm font-bold transition-all placeholder:text-[#344F1F]/40"
+                />
+              </div>
+
+              <div className="bg-[#F9F5F0] border border-[#F4991A]/30 rounded-2xl overflow-hidden max-h-60 overflow-y-auto rich-scroll">
+                {loadingContacts ? (
+                  <div className="p-8 text-center text-[#344F1F]/40 font-black">جاري التحميل...</div>
+                ) : filteredContacts.length === 0 ? (
+                  <div className="p-8 text-center text-[#344F1F]/40 font-black">لا توجد نتائج مطابقة</div>
+                ) : (
+                  <table className="w-full text-right text-sm">
+                    <thead className="bg-[#F2EAD3] sticky top-0">
+                      <tr>
+                        <th className="p-3 w-16 text-center">اختيار</th>
+                        <th className="p-3 text-[#344F1F]">الاسم</th>
+                        <th className="p-3 text-[#344F1F]">الإيميل</th>
+                        <th className="p-3 text-[#344F1F]">الجهة/النوع</th>
+                        <th className="p-3 text-[#344F1F] text-left">إجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F2EAD3]">
+                      {filteredContacts.map((c, i) => (
+                        <tr 
+                          key={i} 
+                          onClick={() => handleToggleSelect(c.email)}
+                          className={`cursor-pointer transition-colors ${selectedEmails.includes(c.email) ? 'bg-[#344F1F]/5 text-[#344F1F]' : 'hover:bg-white'}`}
+                        >
+                          <td className="p-3 text-center">
+                            <input 
+                              type="checkbox" 
+                              checked={selectedEmails.includes(c.email)} 
+                              readOnly 
+                              className="w-5 h-5 accent-[#F4991A] rounded"
+                            />
+                          </td>
+                          <td className="p-3 font-black text-[#344F1F]">{c.name}</td>
+                          <td className="p-3 font-medium text-[#F4991A]">{c.email}</td>
+                          <td className="p-3 text-xs font-bold text-[#344F1F]/60"><span className="bg-white border border-[#F2EAD3] px-2 py-0.5 rounded shadow-sm">{c.type}</span></td>
+                          <td className="p-3 text-left">
+                            {c.type === 'مشترك نشرة' && (
+                              <button
+                                type="button"
+                                onClick={(e) => handleDeleteSubscriber(c.email, e)}
+                                title="حذف الاشتراك"
+                                className="text-[10px] text-red-600 hover:text-white hover:bg-red-600 px-3 py-1 font-bold rounded-lg transition-colors border border-red-200 bg-white shadow-sm"
+                              >
+                                إزالة
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          <div>
+            <label className="block text-xs font-black text-[#F4991A] mb-2 mr-2 uppercase">محتوى الرسالة المنسق</label>
+            <textarea 
+              value={messageHtml} 
+              onChange={(e) => setMessageHtml(e.target.value)} 
+              rows={8}
+              placeholder="اكتب رسالتك هنا... (يدعم أكواد HTML للتنسيق والصور)"
+              className="w-full px-5 py-4 bg-[#F9F5F0] border-0 rounded-2xl focus:ring-2 focus:ring-[#F4991A] font-medium text-sm resize-none text-right"
+              dir="ltr"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-4">
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="px-8 py-4 bg-[#344F1F] text-[#F9F5F0] rounded-2xl font-black shadow-lg shadow-[#344F1F]/20 disabled:opacity-50 flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95"
+          >
+            {loading ? <div className="w-5 h-5 border-2 border-[#F4991A] border-t-transparent rounded-full animate-spin" /> : <Send size={20} className="text-[#F4991A]" />}
+            {loading ? 'جاري الإرسال...' : audience === 'all' ? 'بث الرسالة بلا استثناء 🚀' : 'إرسال للمحددين فقط'}
+          </button>
+        </div>
+      </form>
+    </motion.div>
+  );
+}
+
