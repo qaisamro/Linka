@@ -957,6 +957,22 @@ function SecurityView({ blocked, onAdd, onDisable }) {
 }
 
 function LogsView({ logs, search, setSearch, logActionFilter, setLogActionFilter, onApplyFilters }) {
+  const ACTION_LABELS = {
+    USER_LOGIN: 'تسجيل دخول مستخدم',
+    ENTITY_LOGIN: 'تسجيل دخول جهة',
+    USER_REGISTERED: 'تسجيل مستخدم جديد',
+    USER_DISABLED: 'تعطيل حساب',
+    USER_ENABLED: 'تفعيل حساب',
+    USER_DELETED: 'حذف مستخدم',
+    USER_UPDATED_BY_SUPER: 'تعديل بيانات مستخدم',
+    REG_CANCELLED: 'إلغاء تسجيل',
+    REG_STATUS_CHANGED: 'تغيير حالة تسجيل',
+    IMPERSONATION_START: 'بدء تقمص شخصية',
+    SETTING_CHANGED: 'تعديل إعداد سيستم',
+    IP_BLOCKED: 'حظر عنوان IP',
+    IP_UNBLOCKED: 'إلغاء حظر IP',
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#F9F5F0] rounded-[2.5rem] p-4 sm:p-8 shadow-sm border border-[#F9F5F0] print:border-0">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
@@ -976,7 +992,9 @@ function LogsView({ logs, search, setSearch, logActionFilter, setLogActionFilter
             <div className="flex items-center gap-4">
               <div className="w-2 h-2 rounded-full bg-[#F2EAD3] group-hover:bg-[#F4991A] transition-colors" />
               <div>
-                <span className="text-[10px] font-black text-[#F4991A] uppercase tracking-tighter">{log.action}</span>
+                <span className="text-[10px] font-black text-[#F4991A] uppercase tracking-tighter">
+                  {ACTION_LABELS[log.action] || log.action}
+                </span>
                 <p className="text-sm font-bold text-[#344F1F]">{log.admin_name} استهدف {log.target_name}</p>
               </div>
             </div>

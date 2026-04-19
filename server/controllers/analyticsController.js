@@ -38,7 +38,7 @@ const getHeatmap = async (req, res) => {
         FROM registrations r
         JOIN events e2 ON r.event_id = e2.id
         WHERE r.status = 'attended'
-        GROUP BY event_id
+        GROUP BY event_id, e2.duration_hours
       ) a ON a.event_id = e.id
       WHERE e.lat IS NOT NULL
         AND e.lng IS NOT NULL

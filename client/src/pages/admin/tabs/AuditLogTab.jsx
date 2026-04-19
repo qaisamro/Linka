@@ -11,11 +11,19 @@ import toast from 'react-hot-toast';
 
 // ── Action meta ────────────────────────────────────────────────────
 const ACTION_META = {
-  USER_DISABLED:      { label: 'تعطيل حساب',      icon: UserX,       cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]',  dot: 'bg-[#F4991A]'  },
+  USER_LOGIN:         { label: 'تسجيل دخول مستخدم',   icon: UserCheck,   cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]',  dot: 'bg-[#F4991A]' },
+  ENTITY_LOGIN:       { label: 'تسجيل دخول جهة',     icon: UserCheck,   cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]',  dot: 'bg-[#F4991A]' },
+  USER_REGISTERED:    { label: 'تسجيل مستخدم جديد',   icon: UserCheck,   cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]',  dot: 'bg-[#F4991A]' },
+  USER_DISABLED:      { label: 'تعطيل حساب',      icon: UserX,       cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]',  dot: 'bg-[#F4991A]' },
   USER_ENABLED:       { label: 'تفعيل حساب',       icon: UserCheck,   cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]', dot: 'bg-[#F4991A]' },
   USER_DELETED:       { label: 'حذف مستخدم',       icon: Trash2,      cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]',        dot: 'bg-[#F4991A]'    },
+  USER_UPDATED_BY_SUPER: { label: 'تعديل بيانات مستخدم', icon: RefreshCw, cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]', dot: 'bg-[#F4991A]' },
   REG_CANCELLED:      { label: 'إلغاء تسجيل',      icon: UserMinus,   cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]',     dot: 'bg-[#F4991A]'   },
   REG_STATUS_CHANGED: { label: 'تغيير حالة تسجيل', icon: ToggleLeft,  cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]',     dot: 'bg-[#F4991A]'   },
+  IMPERSONATION_START: { label: 'بدء تقمص شخصية',  icon: UserCheck,   cls: 'bg-red-50 text-red-700 border-red-100', dot: 'bg-red-500' },
+  SETTING_CHANGED:    { label: 'تغيير إعداد سيستم', icon: RefreshCw,   cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]', dot: 'bg-[#F4991A]' },
+  IP_BLOCKED:         { label: 'حظر عنوان IP',     icon: UserX,       cls: 'bg-red-50 text-red-700 border-red-100', dot: 'bg-red-500' },
+  IP_UNBLOCKED:       { label: 'إلغاء حظر IP',     icon: UserCheck,   cls: 'bg-green-50 text-green-700 border-green-100', dot: 'bg-green-500' },
 };
 
 const ActionBadge = ({ action }) => {

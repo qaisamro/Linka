@@ -75,7 +75,7 @@ const getMyNotifications = async (req, res) => {
     const [countRows] = await pool.query(
       `SELECT
          COUNT(*) AS total,
-         SUM(CASE WHEN is_read = 0 THEN 1 ELSE 0 END) AS unread
+         SUM(CASE WHEN is_read = FALSE THEN 1 ELSE 0 END) AS unread
        FROM notifications WHERE user_id = ?`,
       [userId]
     );
@@ -96,7 +96,7 @@ const getUnreadCount = async (req, res) => {
   const userId = req.user.id;
   try {
     const [rows] = await pool.query(
-      `SELECT COUNT(*) AS count FROM notifications WHERE user_id = ? AND is_read = 0`,
+      `SELECT COUNT(*) AS count FROM notifications WHERE user_id = ? AND is_read = FALSE`,
       [userId]
     );
     res.json({ count: Number(rows[0].count) || 0 });
@@ -112,7 +112,7 @@ const markAsRead = async (req, res) => {
   const userId = req.user.id;
   try {
     await pool.query(
-      `UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?`,
+      `UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?`,
       [id, userId]
     );
     res.json({ message: 'تم تحديد الإشعار كمقروء' });
@@ -127,7 +127,7 @@ const markAllAsRead = async (req, res) => {
   const userId = req.user.id;
   try {
     await pool.query(
-      `UPDATE notifications SET is_read = 1 WHERE user_id = ?`,
+      `UPDATE notifications SET is_read = TRUE WHERE user_id = ?`,
       [userId]
     );
     res.json({ message: 'تم تحديد جميع الإشعارات كمقروءة' });
@@ -158,7 +158,7 @@ const clearReadNotifications = async (req, res) => {
   const userId = req.user.id;
   try {
     const [result] = await pool.query(
-      `DELETE FROM notifications WHERE user_id = ? AND is_read = 1`,
+      `DELETE FROM notifications WHERE user_id = ? AND is_read = TRUE`,
       [userId]
     );
     res.json({ message: `تم حذف ${result.affectedRows} إشعار`, count: result.affectedRows });

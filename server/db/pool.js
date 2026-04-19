@@ -10,11 +10,8 @@ const pgPool = new Pool({
 
 console.log('📡 PostgreSQL Pool Created');
 
-let paramIndex = 0;
-
 function convertMysqlParams(sql, params) {
   if (!params || params.length === 0) return { sql, params: [] };
-
   let i = 0;
   const pgSql = sql.replace(/\?/g, () => `$${++i}`);
   return { sql: pgSql, params };
