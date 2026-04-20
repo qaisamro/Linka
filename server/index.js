@@ -55,6 +55,13 @@ async function runMigrations() {
     console.error('⚠️  Could not migrate training_attendance_sessions:', err.message);
   }
 
+  // entity_id column on jobs (links job postings to entity accounts)
+  try {
+    await pool.query(`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS entity_id INTEGER REFERENCES entities(id) ON DELETE SET NULL`);
+  } catch (err) {
+    console.error('⚠️  Could not migrate jobs.entity_id:', err.message);
+  }
+
   // Job applications table
   try {
     await pool.query(`
