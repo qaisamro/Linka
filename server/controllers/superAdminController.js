@@ -417,10 +417,10 @@ const deleteUser = async (req, res) => {
 const listAllJobs = async (req, res) => {
   try {
     const [jobs] = await pool.query(`
-      SELECT j.*, u.name as company_name,
+      SELECT j.*, COALESCE(e.name, j.organization) as company_name,
              (SELECT COUNT(*) FROM job_applications ja WHERE ja.job_id = j.id) as applications_count
       FROM jobs j
-      LEFT JOIN users u ON j.entity_id = u.id
+      LEFT JOIN entities e ON j.entity_id = e.id
       ORDER BY j.created_at DESC
     `);
     res.json({ jobs });
