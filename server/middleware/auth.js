@@ -29,7 +29,7 @@ const verifyToken = async (req, res, next) => {
       if (rows.length === 0) {
         return res.status(401).json({ error: 'Entity account not found.' });
       }
-      if (rows[0].is_active === 0) {
+      if (!rows[0].is_active) {
         return res.status(403).json({ error: 'تم تعطيل الجهة من قِبل الإدارة. يُرجى التواصل معنا.' });
       }
       req.user = decoded; // { id, email, role: 'entity', entity_id, entity_type, ... }
@@ -45,7 +45,7 @@ const verifyToken = async (req, res, next) => {
       return res.status(401).json({ error: 'Account not found.' });
     }
 
-    if (rows[0].is_active === 0) {
+    if (!rows[0].is_active) {
       return res.status(403).json({ error: 'تم تعطيل حسابك من قِبل الإدارة. يُرجى التواصل معنا.' });
     }
 
