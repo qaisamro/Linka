@@ -5,6 +5,7 @@ const verifyToken = require('../middleware/auth');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 const pool = require('../db/pool');
+const { emailHeader, emailFooter } = require('../utils/emailHelpers');
 
 // In-memory store for reset codes (code → {email, expires})
 const resetCodes = new Map();
@@ -34,9 +35,6 @@ router.post('/forgot-password', async (req, res) => {
 
     if (!emailPass) return res.status(500).json({ error: 'خدمة البريد غير مهيأة' });
 
-    const baseUrl = 'https://linka2026.replit.app';
-    const logoUrl = baseUrl + '/favicon.jpeg';
-
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: { user: emailUser, pass: emailPass }
@@ -46,26 +44,15 @@ router.post('/forgot-password', async (req, res) => {
       from: `"منصة لينكا Linka" <${emailUser}>`,
       to: email.toLowerCase(),
       subject: '🔐 رمز إعادة تعيين كلمة المرور — لينكا',
-      html: `
-        <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; text-align: right; color: #344F1F; padding: 20px; background-color: #f9f5f0;">
-          <div style="background: white; border-radius: 16px; padding: 35px 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); max-width: 500px; margin: 0 auto;">
-            <div style="text-align: center; margin-bottom: 20px;">
-              <img src="${logoUrl}" alt="Linka" style="max-width: 80px; border-radius: 12px; border: 2px solid #F9F5F0;" />
-            </div>
-            <h2 style="color: #F4991A; text-align: center; font-size: 22px; margin-top: 0;">إعادة تعيين كلمة المرور</h2>
-            <p style="font-size: 15px;">مرحباً ${userName.split(' ')[0]}،</p>
-            <p style="font-size: 15px;">لقد طلبت إعادة تعيين كلمة المرور الخاصة بحسابك. استخدم الرمز التالي:</p>
-            <div style="text-align: center; margin: 25px 0;">
-              <div style="display: inline-block; background: #344F1F; color: #F9F5F0; font-size: 32px; font-weight: 900; letter-spacing: 8px; padding: 15px 30px; border-radius: 16px;">${code}</div>
-            </div>
-            <p style="font-size: 13px; color: #999; text-align: center;">⏰ ينتهي هذا الرمز خلال 10 دقائق</p>
-            <p style="font-size: 13px; color: #999; text-align: center;">إذا لم تطلب ذلك، تجاهل هذه الرسالة.</p>
-            <div style="border-top: 2px dashed #eee; padding-top: 15px; margin-top: 20px; text-align: center; color: #999; font-size: 12px;">
-              <strong style="color: #344F1F;">— منصة لينكا Linka —</strong>
-            </div>
-          </div>
+      html: emailHeader('إعادة تعيين كلمة المرور') + `
+        <p style="font-size:15px;">مرحباً <b>${userName.split(' ')[0]}</b>،</p>
+        <p style="font-size:15px;">لقد طلبت إعادة تعيين كلمة المرور. استخدم الرمز التالي:</p>
+        <div style="text-align:center;margin:25px 0;">
+          <div style="display:inline-block;background:#344F1F;color:#F9F5F0;font-size:34px;font-weight:900;letter-spacing:8px;padding:16px 35px;border-radius:16px;">${code}</div>
         </div>
-      `
+        <p style="font-size:13px;color:#999;text-align:center;">⏰ ينتهي هذا الرمز خلال 10 دقائق</p>
+        <p style="font-size:13px;color:#999;text-align:center;">إذا لم تطلب ذلك، تجاهل هذه الرسالة.</p>
+      ` + emailFooter()
     });
 
     res.json({ message: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني' });

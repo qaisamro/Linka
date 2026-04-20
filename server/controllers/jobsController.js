@@ -1,6 +1,7 @@
 const pool = require('../db/pool');
 const { createNotificationForUser } = require('./notificationsController');
 const { writeAdminAudit } = require('../utils/auditLog');
+const { emailHeader, emailFooter } = require('../utils/emailHelpers');
 
 // ─── Skill mapping from event types ─────────────────────────────
 const SKILL_MAP = {
@@ -350,17 +351,16 @@ const applyToJob = async (req, res) => {
             from: `"Linka Team" <${process.env.EMAIL_USER}>`,
             to: snapshot.email || req.user.email,
             subject: `تأكيد التقديم: ${job.title}`,
-            html: `
-        <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-          <h2 style="color: #344F1F;">تم استلام طلبك بنجاح! 🎉</h2>
-          <p>عزيزي <b>${snapshot.name}</b>،</p>
-          <p>لقد قمت بالتقديم بنجاح لفرصة العمل: <b>${job.title}</b> في <b>${job.organization}</b>.</p>
-          <p>سيقوم فريق التوظيف بمراجعة ملفك الشخصي والتواصل معك عبر البريد الإلكتروني أو الهاتف في حال تم اختيارك للمرحلة التالية.</p>
-          <hr style="border: 0; border-top: 1px solid #ccc; margin: 20px 0;" />
-          <p>نتمنى لك كل التوفيق في مسيرتك المهنية.</p>
-          <p><b>فريق لينكا</b></p>
-        </div>
-      `
+            html: emailHeader('تم استلام طلبك بنجاح! 🎉') + `
+              <p style="font-size:15px;">عزيزي <b>${snapshot.name}</b>،</p>
+              <p style="font-size:15px;">لقد قدّمت بنجاح على فرصة العمل:</p>
+              <div style="background:#F9F5F0;border-right:5px solid #344F1F;padding:15px 20px;border-radius:10px;margin:20px 0;">
+                <p style="margin:0;font-size:16px;font-weight:bold;color:#344F1F;">${job.title}</p>
+                <p style="margin:5px 0 0;color:#555;">${job.organization}</p>
+              </div>
+              <p style="font-size:15px;">سيتواصل معك فريق التوظيف قريباً في حال اختيارك للمرحلة التالية.</p>
+              <p style="font-size:15px;">نتمنى لك كل التوفيق في مسيرتك المهنية.</p>
+            ` + emailFooter()
         };
 
         transporter.sendMail(mailOptions).catch(err => console.error('Email error:', err.message));
@@ -530,22 +530,14 @@ const updateApplicationStatus = async (req, res) => {
         });
 
         let emailSubject = `تحديث بخصوص طلبك في ${job[0].organization}`;
-        let emailHtml = `
-            <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                <h2 style="color: #344F1F;">تحديث حالة طلب التوظيف</h2>
-                <p>مرحباً <b>${application.applicant_name}</b>،</p>
-                <p>نود إعلامك بأن جهة العمل <b>${job[0].organization}</b> قد قامت بتحديث حالة طلبك لفرصة: <b>${job[0].title}</b>.</p>
-                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0; border-right: 5px solid ${status === 'accepted' ? '#344F1F' : '#F4991A'};">
-                    <b>الحالة الجديدة:</b> 
-                    <span style="color: ${status === 'accepted' ? '#344F1F' : '#F4991A'}; font-size: 1.2rem;">
-                        ${statusText}
-                    </span>
-                </div>
-                <p>${status === 'accepted' ? 'سيقوم فريق التوظيف بالتواصل معك قريباً لمتابعة الإجراءات.' : 'نشكرك على اهتمامك ونتمنى لك التوفيق في فرص أخرى.'}</p>
-                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-                <p style="font-size: 0.9rem; color: #777;">فريق لينكا - منصة تمكين الشباب</p>
+        let emailHtml = emailHeader('تحديث حالة طلب التوظيف') + `
+            <p style="font-size:15px;">مرحباً <b>${application.applicant_name}</b>،</p>
+            <p style="font-size:15px;">نود إعلامك بأن جهة العمل <b>${job[0].organization}</b> قامت بتحديث حالة طلبك لفرصة: <b>${job[0].title}</b>.</p>
+            <div style="background:#F9F5F0;padding:15px 20px;border-radius:10px;margin:20px 0;border-right:5px solid ${status === 'accepted' ? '#344F1F' : '#F4991A'};">
+              <p style="margin:0;font-size:15px;"><b>الحالة الجديدة: </b><span style="color:${status === 'accepted' ? '#344F1F' : '#F4991A'};font-size:17px;font-weight:bold;">${statusText}</span></p>
             </div>
-        `;
+            <p style="font-size:15px;">${status === 'accepted' ? 'سيتواصل معك فريق التوظيف قريباً لمتابعة الإجراءات.' : 'نشكرك على اهتمامك ونتمنى لك التوفيق في فرص أخرى.'}</p>
+        ` + emailFooter();
 
         const mailOptions = {
             from: `"Linka Jobs" <${process.env.EMAIL_USER}>`,
@@ -600,19 +592,14 @@ const contactApplicant = async (req, res) => {
             from: `"${job[0].organization} via Linka" <${process.env.EMAIL_USER}>`,
             to: application.applicant_email,
             subject: subject,
-            html: `
-                <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #344F1F; border-radius: 10px;">
-                    <h2 style="color: #F4991A;">رسالة من جهة العمل: ${job[0].organization}</h2>
-                    <p>عزيزي <b>${application.applicant_name}</b>،</p>
-                    <p>لقد استلمت رسالة بخصوص طلب التقديم الخاص بك لفرصة: <b>${job[0].title}</b>:</p>
-                    <div style="background: #F9F5F0; padding: 20px; border-radius: 8px; border-right: 5px solid #F4991A; margin: 20px 0; color: #333; line-height: 1.6;">
-                        ${body.replace(/\n/g, '<br>')}
-                    </div>
-                    <p>يمكنك التجاوب مع هذه الرسالة عبر الرد المباشر على هذا الإيميل.</p>
-                    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-                    <p style="font-size: 0.9rem; color: #777;">فريق لينكا - منصة تمكين الشباب الفلسطيني</p>
-                </div>
-            `
+            html: emailHeader(`رسالة من: ${job[0].organization}`) + `
+              <p style="font-size:15px;">عزيزي <b>${application.applicant_name}</b>،</p>
+              <p style="font-size:15px;">استلمت رسالة بخصوص طلبك لفرصة: <b>${job[0].title}</b>:</p>
+              <div style="background:#F9F5F0;padding:20px;border-radius:10px;border-right:5px solid #F4991A;margin:20px 0;color:#333;line-height:1.8;font-size:15px;">
+                ${body.replace(/\n/g, '<br>')}
+              </div>
+              <p style="font-size:14px;color:#666;">يمكنك الرد مباشرةً على هذا الإيميل للتواصل مع جهة العمل.</p>
+            ` + emailFooter()
         };
 
         await transporter.sendMail(mailOptions);

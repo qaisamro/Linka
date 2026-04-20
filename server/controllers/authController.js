@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const pool = require('../db/pool');
 const { clientIp } = require('../middleware/checkBlockedIp');
 const { writeAdminAudit } = require('../utils/auditLog');
+const { emailHeader, emailFooter } = require('../utils/emailHelpers');
 
 // ─── Helper: generate JWT ───────────────────────────────────────
 const generateToken = (payload) => {
@@ -99,10 +100,6 @@ const register = async (req, res) => {
     const emailUser = process.env.EMAIL_USER || 'linka.palestine@gmail.com';
     const emailPass = process.env.EMAIL_PASS || '';
     if (emailPass) {
-      const isLocal = req.get('host') ? req.get('host').includes('localhost') : false;
-      const baseUrl = 'https://linka2026.replit.app';
-      const logoUrl = isLocal ? baseUrl + '/favicon.jpeg' : baseUrl + '/public-assets/2.jpg.png';
-
       const transporter = require('nodemailer').createTransport({
         service: 'gmail',
         auth: { user: emailUser, pass: emailPass }
@@ -112,22 +109,15 @@ const register = async (req, res) => {
         from: `"منصة لينكا Linka" <${emailUser}>`,
         to: email.toLowerCase(),
         subject: `كود تفعيل حسابك: ${otp} 🚀`,
-        html: `
-          <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; text-align: right; color: #344F1F; padding: 20px; background-color: #f9f5f0;">
-            <div style="background: white; border-radius: 16px; padding: 35px 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); max-width: 600px; margin: 0 auto; text-align: center;">
-              <img src="${logoUrl}" alt="Linka Logo" style="max-width: 120px; margin-bottom: 20px;" />
-              <h2 style="color: #F4991A;">تفعيل الحساب</h2>
-              <p>أهلاً بك يا ${name.split(' ')[0]}! يرجى استخدام الكود التالي لتفعيل حسابك في منصة لينكا:</p>
-              <div style="background: #F9F5F0; padding: 20px; border-radius: 12px; font-size: 32px; font-weight: 900; letter-spacing: 5px; color: #344F1F; margin: 20px 0; border: 2px dashed #F4991A;">
-                ${otp}
-              </div>
-              <p style="font-size: 13px; color: #666;">إذا لم تطلب هذا الكود، يرجى تجاهل الرسالة.</p>
-              <div style="border-top: 1px solid #eee; margin-top: 25px; padding-top: 15px;">
-                 <strong>— فريق لينكا —</strong>
-              </div>
-            </div>
+        html: emailHeader('تفعيل الحساب') + `
+          <p style="font-size:15px;">أهلاً بك يا <b>${name.split(' ')[0]}</b>،</p>
+          <p style="font-size:15px;">يرجى استخدام الكود التالي لتفعيل حسابك في منصة لينكا:</p>
+          <div style="text-align:center;margin:25px 0;">
+            <div style="display:inline-block;background:#344F1F;color:#F9F5F0;font-size:34px;font-weight:900;letter-spacing:8px;padding:16px 35px;border-radius:16px;">${otp}</div>
           </div>
-        `
+          <p style="font-size:13px;color:#999;text-align:center;">⏰ ينتهي هذا الكود خلال 10 دقائق</p>
+          <p style="font-size:13px;color:#999;text-align:center;">إذا لم تطلب هذا الكود، يرجى تجاهل الرسالة.</p>
+        ` + emailFooter()
       };
       await transporter.sendMail(mailOptions);
     }
