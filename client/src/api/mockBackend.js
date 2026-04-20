@@ -92,7 +92,7 @@ function seedState() {
       { id: 12, user_id: 5, event_id: 3, status: 'registered', registered_at: isoDaysFromNow(-1), confirmed_at: null },
     ],
     notifications: [
-      { id: 1, user_id: 2, title: 'تم تسجيلك في "تنظيف حديقة المنتزه العام" ✅', message: 'موعد الفعالية بعد 3 أيام في حديقة المنتزه العام', type: 'registration', related_id: 1, related_type: 'event', is_read: 0, created_at: isoDaysFromNow(-1) },
+      { id: 1, user_id: 2, title: 'تم استلام طلب انضمامك في "تنظيف حديقة المنتزه العام" 📋', message: 'طلبك قيد المراجعة حالياً، سيصلك إشعار فور تأكيد الطلب.', type: 'registration', related_id: 1, related_type: 'event', is_read: 0, created_at: isoDaysFromNow(-1) },
       { id: 2, user_id: 2, title: 'حصلت على شارة "المتطوع" 🤝', message: 'أنجزت أكثر من 5 ساعات تطوع', type: 'badge', related_id: 4, related_type: 'badge', is_read: 1, created_at: isoDaysFromNow(-5) },
       { id: 3, user_id: 1, title: 'تسجيل جديد في "تنظيف حديقة المنتزه العام"', message: 'أحمد حسن انضم للفعالية', type: 'registration', related_id: 1, related_type: 'event', is_read: 0, created_at: isoDaysFromNow(-1) },
       { id: 4, user_id: 1, title: 'إعلان هام للمنصة', message: 'تم إضافة قسم فرص العمل بنجاح', type: 'announcement', related_id: null, related_type: null, is_read: 1, created_at: isoDaysFromNow(-2) },
@@ -647,7 +647,7 @@ mockAPI.registrations.register = async (eventId) => {
   const registration = { id: nextId('registration'), user_id: user.id, event_id: Number(eventId), status: 'registered', registered_at: new Date().toISOString(), confirmed_at: null };
   updateState((state) => {
     state.registrations.push(registration);
-    state.notifications.push({ id: nextId('notification'), user_id: user.id, title: `تم تسجيلك في "${event.title}" ✅`, message: `موعد الفعالية: ${new Date(event.date).toLocaleDateString('ar-EG')} · ${event.location_name}`, type: 'registration', related_id: event.id, related_type: 'event', is_read: 0, created_at: new Date().toISOString() });
+    state.notifications.push({ id: nextId('notification'), user_id: user.id, title: `تم استلام طلب انضمامك في "${event.title}" 📋`, message: `طلبك قيد المراجعة حالياً، سيصلك إشعار فور تأكيد الطلب.`, type: 'registration', related_id: event.id, related_type: 'event', is_read: 0, created_at: new Date().toISOString() });
     state.notifications.push({ id: nextId('notification'), user_id: 1, title: `تسجيل جديد في "${event.title}"`, message: `${user.name} انضم للفعالية`, type: 'registration', related_id: event.id, related_type: 'event', is_read: 0, created_at: new Date().toISOString() });
   });
   return response({ message: 'تم التسجيل في الفعالية بنجاح! 🎉', registration: { ...registration, title: event.title, date: event.date, location_name: event.location_name } }, 201);

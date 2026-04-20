@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const bcrypt = require('bcryptjs');
 
 // ─── GET /api/users/profile  ─────────────────────────────────────
 const getProfile = async (req, res) => {
@@ -128,15 +129,22 @@ const updateProfile = async (req, res) => {
     }
 
     // List of fields that users are allowed to update
-    const allowedFields = ['avatar_url', 'bio', 'phone', 'neighborhood_id'];
+    const allowedFields = ['name', 'avatar_url', 'bio', 'phone', 'neighborhood_id'];
     const fieldsToUpdate = [];
     const values = [];
 
     for (const key of Object.keys(updates)) {
-      if (allowedFields.includes(key)) {
+      if (allowedFields.includes(key) && updates[key] !== undefined) {
         fieldsToUpdate.push(`${key} = ?`);
         values.push(updates[key]);
       }
+    }
+
+    // Handle password change separately
+    if (updates.newPassword && updates.newPassword.trim().length >= 6) {
+      const hashedPassword = await bcrypt.hash(updates.newPassword, 10);
+      fieldsToUpdate.push(`password_hash = ?`);
+      values.push(hashedPassword);
     }
 
     if (fieldsToUpdate.length === 0) {
@@ -229,4 +237,29 @@ const getCVData = async (req, res) => {
   }
 };
 
-module.exports = { getProfile, getLeaderboard, getDashboardStats, updateProfile, getCVData };
+const deleteUser = async (req, res) => {
+  try {
+    if (!req.user.is_super_admin) return res.status(403).json({ error: 'Super Admin access required.' });
+    const { id } = req.params;
+    await pool.query('DELETE FROM users WHERE id = ?', [id]);
+    res.json({ message: 'تم حذف المستخدم بنجاح' });
+  } catch (err) {
+    console.error('deleteUser error:', err.message);
+    res.status(500).json({ error: 'خطأ في حذف المستخدم' });
+  }
+};
+
+const updateUserStatus = async (req, res) => {
+  try {
+    if (!req.user.is_super_admin) return res.status(403).json({ error: 'Super Admin access required.' });
+    const { id } = req.params;
+    const { is_active } = req.body;
+    await pool.query('UPDATE users SET is_active = ? WHERE id = ?', [is_active, id]);
+    res.json({ message: 'تم تحديث حالة المستخدم بنجاح' });
+  } catch (err) {
+    console.error('updateUserStatus error:', err.message);
+    res.status(500).json({ error: 'خطأ في تحديث حالة المستخدم' });
+  }
+};
+
+module.exports = { getProfile, getLeaderboard, getDashboardStats, updateProfile, getCVData, deleteUser, updateUserStatus };

@@ -9,13 +9,14 @@ import { adminAPI, eventsAPI } from '../../../api';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import ConfirmModal from '../../../components/ui/ConfirmModal';
 
 // ── Status config ──────────────────────────────────────────────────
 const STATUS_META = {
-  registered: { label: 'مسجّل',   icon: Clock,        cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]'     },
-  attended:   { label: 'حضر',     icon: CheckCircle,  cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' },
-  cancelled:  { label: 'ملغى',    icon: XCircle,      cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]'         },
-  absent:     { label: 'لم يحضر', icon: UserMinus,    cls: 'bg-[#F9F5F0] text-[#F4991A] border-[#F2EAD3]'   },
+  registered: { label: 'مسجّل', icon: Clock, cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' },
+  attended: { label: 'حضر', icon: CheckCircle, cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' },
+  cancelled: { label: 'ملغى', icon: XCircle, cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' },
+  absent: { label: 'لم يحضر', icon: UserMinus, cls: 'bg-[#F9F5F0] text-[#F4991A] border-[#F2EAD3]' },
 };
 
 const StatusBadge = ({ status }) => {
@@ -29,57 +30,17 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// ── Confirm Modal ──────────────────────────────────────────────────
-function ConfirmModal({ open, title, message, onConfirm, onCancel }) {
-  if (!open) return null;
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-[#344F1F]/40 backdrop-blur-sm z-[80] flex items-center justify-center p-4"
-        onClick={onCancel}
-      >
-        <motion.div
-          initial={{ scale: 0.9, y: 20 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.9 }}
-          onClick={e => e.stopPropagation()}
-          className="bg-[#F9F5F0] rounded-2xl shadow-2xl w-full max-w-sm p-6"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#F9F5F0] flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle size={22} className="text-[#F4991A]" />
-          </div>
-          <h3 className="font-black text-[#344F1F] text-center text-base mb-2">{title}</h3>
-          <p className="text-[#F4991A] text-sm text-center mb-6">{message}</p>
-          <div className="flex gap-3">
-            <button onClick={onCancel}
-              className="flex-1 px-4 py-2.5 rounded-xl border-2 border-[#F2EAD3] text-[#344F1F] font-semibold text-sm hover:bg-[#F9F5F0]">
-              إلغاء
-            </button>
-            <button onClick={onConfirm}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-[#F4991A] hover:bg-[#344F1F] text-[#F9F5F0] font-bold text-sm transition-colors">
-              تأكيد الإلغاء
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-}
-
 // ── Main Component ─────────────────────────────────────────────────
 export default function EventRegistrationsTab() {
-  const [events, setEvents]             = useState([]);
+  const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState('');
-  const [regs, setRegs]                 = useState([]);
-  const [eventInfo, setEventInfo]       = useState(null);
-  const [loading, setLoading]           = useState(false);
+  const [regs, setRegs] = useState([]);
+  const [eventInfo, setEventInfo] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [confirmCancel, setConfirmCancel] = useState(null);
-  const [actionId, setActionId]         = useState(null);
+  const [actionId, setActionId] = useState(null);
 
   // Load events list
   useEffect(() => {
@@ -209,11 +170,10 @@ export default function EventRegistrationsTab() {
             <button
               key={f.key}
               onClick={() => setStatusFilter(f.key)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-                statusFilter === f.key
-                  ? 'bg-[#344F1F] text-[#F9F5F0] shadow-sm'
-                  : 'bg-[#F9F5F0] text-[#F4991A] hover:bg-[#F2EAD3]'
-              }`}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${statusFilter === f.key
+                ? 'bg-[#344F1F] text-[#F9F5F0] shadow-sm'
+                : 'bg-[#F9F5F0] text-[#F4991A] hover:bg-[#F2EAD3]'
+                }`}
             >
               {f.label}
               {f.key && counts[f.key] > 0 && (
@@ -284,10 +244,13 @@ export default function EventRegistrationsTab() {
                         {/* Participant */}
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[#F9F5F0] font-black text-sm flex-shrink-0 ${
-                              r.is_active ? 'bg-hero-gradient' : 'bg-[#F2EAD3]'
-                            }`}>
-                              {r.user_name?.charAt(0)}
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[#F9F5F0] font-black text-sm flex-shrink-0 overflow-hidden ${r.is_active ? 'bg-hero-gradient' : 'bg-[#F2EAD3]'
+                              }`}>
+                              {r.avatar_url ? (
+                                <img src={r.avatar_url} alt={r.user_name} className="w-full h-full object-cover" />
+                              ) : (
+                                r.user_name?.charAt(0)
+                              )}
                             </div>
                             <div>
                               <p className="font-bold text-[#344F1F] text-sm leading-none">{r.user_name}</p>
@@ -360,13 +323,12 @@ export default function EventRegistrationsTab() {
         </div>
       )}
 
-      {/* ── Confirm Cancel Modal ─────────────────────────── */}
       <ConfirmModal
-        open={!!confirmCancel}
+        isOpen={!!confirmCancel}
+        onClose={() => setConfirmCancel(null)}
+        onConfirm={handleCancel}
         title={`إلغاء تسجيل "${confirmCancel?.user_name}"؟`}
         message="سيتم حذف سجل المشاركة بشكل نهائي وتعديل عدد المشاركين في الفعالية."
-        onConfirm={handleCancel}
-        onCancel={() => setConfirmCancel(null)}
       />
     </div>
   );

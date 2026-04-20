@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, BellRing } from 'lucide-react';
 import { useNotifications } from '../../context/NotificationContext';
@@ -70,15 +71,48 @@ export default function NotificationBell() {
       {/* ── Panel ────────────────────────────────────────────── */}
       <AnimatePresence>
         {panelOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-3 z-[150] flex flex-col"
-          >
-            <NotificationPanel onClose={() => setPanelOpen(false)} />
-          </motion.div>
+          <>
+            {/* Mobile Backdrop - Portal */}
+            {createPortal(
+              <div className="fixed inset-0 z-[9998] sm:hidden pointer-events-none">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setPanelOpen(false)}
+                  className="absolute inset-0 bg-[#344F1F]/40 backdrop-blur-sm pointer-events-auto"
+                />
+              </div>,
+              document.body
+            )}
+
+            {/* Desktop Backdrop (non-portal for click-outside reference) */}
+            <div className="hidden sm:block absolute inset-0 z-[-1]" />
+
+            {/* Panel - Portal for Mobile, Absolute for Desktop */}
+            {createPortal(
+              <motion.div
+                initial={{ opacity: 0, y: '100%' }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="fixed inset-x-0 bottom-0 z-[9999] flex flex-col sm:hidden"
+              >
+                <NotificationPanel onClose={() => setPanelOpen(false)} />
+              </motion.div>,
+              document.body
+            )}
+
+            {/* Desktop View (Keep in flow for positioning) */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="hidden sm:flex absolute right-0 top-full mt-3 z-[9900] flex-col"
+            >
+              <NotificationPanel onClose={() => setPanelOpen(false)} />
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

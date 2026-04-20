@@ -5,13 +5,14 @@ import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import {
   MapPin, Calendar, Clock, Users, ChevronRight,
-  Share2, Heart, CheckCircle, AlertCircle
+  Share2, Heart, CheckCircle, AlertCircle, Sparkles, ChevronLeft, Loader2
 } from 'lucide-react';
 import { eventsAPI, registrationsAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import ConfirmModal from '../components/ui/ConfirmModal';
 
 // Fix Leaflet icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -27,19 +28,25 @@ const TYPE_COLORS = {
 };
 
 export default function EventDetail() {
-  const { id }      = useParams();
-  const navigate    = useNavigate();
-  const { isAuth, isSuperAdmin }  = useAuth();
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { isAuth, isSuperAdmin } = useAuth();
 
-  const [event, setEvent]       = useState(null);
-  const [loading, setLoading]   = useState(true);
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [regLoading, setRegLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
-  const [liked, setLiked]       = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   useEffect(() => {
     eventsAPI.getById(id)
-      .then(res => setEvent(res.data.event))
+      .then(res => {
+        setEvent(res.data.event);
+        if (res.data.event.is_registered > 0) {
+          setRegistered(true);
+        }
+      })
       .catch(() => navigate('/events'))
       .finally(() => setLoading(false));
   }, [id]);
@@ -48,8 +55,8 @@ export default function EventDetail() {
     <div className="min-h-screen pt-20 flex items-center justify-center">
       <div className="flex flex-col items-center gap-3 text-[#F4991A]">
         <svg className="animate-spin h-10 w-10 text-[#F4991A]" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
         </svg>
         <p className="font-semibold">جاري التحميل...</p>
       </div>
@@ -58,8 +65,8 @@ export default function EventDetail() {
 
   if (!event) return null;
 
-  const fillPct  = Math.round((event.current_participants / event.max_participants) * 100);
-  const isFull   = event.current_participants >= event.max_participants;
+  const fillPct = Math.round((event.current_participants / event.max_participants) * 100);
+  const isFull = event.current_participants >= event.max_participants;
   const typeColor = TYPE_COLORS[event.type] || '#F4991A';
 
   const formattedDate = (() => {
@@ -69,7 +76,7 @@ export default function EventDetail() {
 
   const handleRegister = async () => {
     if (!isAuth) { toast.error('يجب تسجيل الدخول أولاً'); navigate('/login'); return; }
-    if (isFull)  { toast.error('الفعالية ممتلئة'); return; }
+    if (isFull) { toast.error('الفعالية ممتلئة'); return; }
     setRegLoading(true);
     try {
       await registrationsAPI.register(event.id);
@@ -150,8 +157,8 @@ export default function EventDetail() {
             >
               {[
                 { icon: Calendar, text: formattedDate },
-                { icon: MapPin,   text: event.location_name },
-                { icon: Clock,    text: `${event.duration_hours} ساعة` },
+                { icon: MapPin, text: event.location_name },
+                { icon: Clock, text: `${event.duration_hours} ساعة` },
               ].map(({ icon: Icon, text }, i) => (
                 <div key={i} className="flex items-center gap-2 bg-[#F9F5F0] rounded-xl px-4 py-2 shadow-sm text-sm text-[#344F1F] font-medium">
                   <Icon size={14} className="text-[#F4991A] flex-shrink-0" />
@@ -234,92 +241,144 @@ export default function EventDetail() {
           </div>
 
           {/* ── Sidebar ───────────────────────────────────────────── */}
-          {!isSuperAdmin && (
-          <div className="space-y-5">
-
-            {/* Register Card */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}
-              className="card p-5 sticky top-20"
-            >
-              <h3 className="font-bold text-[#344F1F] mb-4">التسجيل في الفعالية</h3>
-
-              {/* Capacity */}
-              <div className="mb-4">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="font-semibold text-[#344F1F] flex items-center gap-1">
-                    <Users size={14} className="text-[#F4991A]" />
-                    {event.current_participants} مشارك
-                  </span>
-                  <span className={isFull ? 'text-[#F4991A] font-bold' : 'text-[#F4991A]'}>
-                    {isFull ? 'مكتمل!' : `${event.max_participants - event.current_participants} مقعد متبقي`}
-                  </span>
+          {/* ── Sidebar ───────────────────────────────────────────── */}
+          {isSuperAdmin ? (
+            <div className="space-y-5">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}
+                className="card p-5 sticky top-20 border-2 border-[#F4991A]/50 bg-[#F4991A]/5"
+              >
+                <div className="flex items-center gap-2 mb-4 text-[#344F1F]">
+                  <Sparkles size={20} className="text-[#F4991A]" />
+                  <h3 className="font-bold">لوحة التحكم (Super Admin)</h3>
                 </div>
-                <div className="h-3 bg-[#F9F5F0] rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${fillPct}%` }}
-                    transition={{ duration: 1, ease: 'easeOut', delay: 0.4 }}
-                    className={`h-full rounded-full ${fillPct >= 90 ? 'bg-[#F4991A]' : fillPct >= 60 ? 'bg-[#F4991A]' : 'bg-[#F4991A]'}`}
-                  />
-                </div>
-                <p className="text-xs text-[#F4991A] mt-1 text-center">{fillPct}% ممتلئ</p>
-              </div>
 
-              {/* CTA Button */}
-              <button
-                onClick={handleRegister}
-                disabled={regLoading || registered || isFull}
-                className={`w-full py-3.5 rounded-xl font-bold text-base transition-all duration-200 flex items-center justify-center gap-2 ${
-                  registered
+                <div className="space-y-3">
+                  <Link
+                    to={`/admin/events/edit/${event.id}`}
+                    className="w-full py-3 rounded-xl font-bold bg-[#344F1F] text-[#F9F5F0] hover:bg-[#344F1F]/90 transition-all flex items-center justify-center gap-2"
+                  >
+                    تعديل الفعالية
+                  </Link>
+                  <button
+                    onClick={() => setIsConfirmOpen(true)}
+                    className="w-full py-3 rounded-xl font-bold border-2 border-red-500/30 text-red-600 hover:bg-red-50 transition-all flex items-center justify-center gap-2"
+                  >
+                    حذف الفعالية
+                  </button>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-[#F2EAD3] space-y-2 text-xs text-[#344F1F]/70">
+                  <div className="flex justify-between">
+                    <span>عدد المسجلين:</span>
+                    <span className="font-bold">{event.current_participants} / {event.max_participants}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>بواسطة:</span>
+                    <span className="font-bold">{event.created_by_name || 'System'}</span>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {/* Register Card */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}
+                className="card p-5 sticky top-20"
+              >
+                <h3 className="font-bold text-[#344F1F] mb-4">التسجيل في الفعالية</h3>
+
+                {/* Capacity */}
+                <div className="mb-4">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="font-semibold text-[#344F1F] flex items-center gap-1">
+                      <Users size={14} className="text-[#F4991A]" />
+                      {event.current_participants} مشارك
+                    </span>
+                    <span className={isFull ? 'text-[#F4991A] font-bold' : 'text-[#F4991A]'}>
+                      {isFull ? 'مكتمل!' : `${event.max_participants - event.current_participants} مقعد متبقي`}
+                    </span>
+                  </div>
+                  <div className="h-3 bg-[#F9F5F0] rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${fillPct}%` }}
+                      transition={{ duration: 1, ease: 'easeOut', delay: 0.4 }}
+                      className={`h-full rounded-full ${fillPct >= 90 ? 'bg-[#F4991A]' : fillPct >= 60 ? 'bg-[#F4991A]' : 'bg-[#F4991A]'}`}
+                    />
+                  </div>
+                  <p className="text-xs text-[#F4991A] mt-1 text-center">{fillPct}% ممتلئ</p>
+                </div>
+
+                {/* CTA Button */}
+                <button
+                  onClick={handleRegister}
+                  disabled={regLoading || registered || isFull}
+                  className={`w-full py-3.5 rounded-xl font-bold text-base transition-all duration-200 flex items-center justify-center gap-2 ${registered
                     ? 'bg-[#F9F5F0] text-[#344F1F] border-2 border-[#F2EAD3]'
                     : isFull
-                    ? 'bg-[#F9F5F0] text-[#F4991A] cursor-not-allowed'
-                    : 'btn-primary shadow-lg hover:shadow-xl'
-                }`}
-              >
-                {regLoading ? (
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                  </svg>
-                ) : registered ? (
-                  <><CheckCircle size={20} /> مسجّل بنجاح ✅</>
-                ) : isFull ? (
-                  <><AlertCircle size={20} /> الفعالية ممتلئة</>
-                ) : (
-                  <>انضم الآن 🚀</>
+                      ? 'bg-[#F9F5F0] text-[#F4991A] cursor-not-allowed'
+                      : 'btn-primary shadow-lg hover:shadow-xl'
+                    }`}
+                >
+                  {regLoading ? (
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                  ) : registered ? (
+                    <><CheckCircle size={20} /> تم التقديم (طلبك قيد المعالجة) ✅</>
+                  ) : isFull ? (
+                    <><AlertCircle size={20} /> الفعالية ممتلئة</>
+                  ) : (
+                    <>انضم الآن 🚀</>
+                  )}
+                </button>
+
+                {!isAuth && !registered && !isFull && (
+                  <p className="text-xs text-[#F4991A] text-center mt-2">
+                    <Link to="/login" className="text-[#344F1F] font-semibold hover:underline">سجّل دخولك</Link> للانضمام
+                  </p>
                 )}
-              </button>
 
-              {!isAuth && !registered && !isFull && (
-                <p className="text-xs text-[#F4991A] text-center mt-2">
-                  <Link to="/login" className="text-[#344F1F] font-semibold hover:underline">سجّل دخولك</Link> للانضمام
-                </p>
-              )}
-
-              {/* Event meta */}
-              <div className="mt-4 pt-4 border-t border-[#F9F5F0] space-y-2.5">
-                <div className="flex items-center gap-2 text-sm text-[#F4991A]">
-                  <Calendar size={13} className="text-[#F4991A] flex-shrink-0" />
-                  <span className="text-xs leading-relaxed">{formattedDate}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-[#F4991A]">
-                  <Clock size={13} className="text-[#F4991A]" />
-                  <span>المدة: {event.duration_hours} ساعة</span>
-                </div>
-                {event.neighborhood_name && (
+                {/* Event meta */}
+                <div className="mt-4 pt-4 border-t border-[#F9F5F0] space-y-2.5">
                   <div className="flex items-center gap-2 text-sm text-[#F4991A]">
-                    <MapPin size={13} className="text-[#F4991A]" />
-                    <span>{event.neighborhood_name}</span>
+                    <Calendar size={13} className="text-[#F4991A] flex-shrink-0" />
+                    <span className="text-xs leading-relaxed">{formattedDate}</span>
                   </div>
-                )}
-              </div>
-            </motion.div>
-          </div>
+                  <div className="flex items-center gap-2 text-sm text-[#F4991A]">
+                    <Clock size={13} className="text-[#F4991A]" />
+                    <span>المدة: {event.duration_hours} ساعة</span>
+                  </div>
+                  {event.neighborhood_name && (
+                    <div className="flex items-center gap-2 text-sm text-[#F4991A]">
+                      <MapPin size={13} className="text-[#F4991A]" />
+                      <span>{event.neighborhood_name}</span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </div>
           )}
         </div>
       </div>
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={async () => {
+          try {
+            await eventsAPI.delete(event.id);
+            toast.success('تم حذف الفعالية بنجاح');
+            navigate('/events');
+          } catch (err) {
+            toast.error('خطأ في الحذف');
+          }
+        }}
+        title="حذف الفعالية"
+        message="هل أنت متأكد من حذف هذه الفعالية نهائياً؟ سيؤدي ذلك إلى إلغاء جميع التسجيلات."
+      />
     </div>
   );
 }

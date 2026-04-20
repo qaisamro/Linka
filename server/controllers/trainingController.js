@@ -387,7 +387,7 @@ const acceptApplication = async (req, res) => {
     if (!appRows.length) return res.status(404).json({ error: 'Application not found' });
     const app = appRows[0];
 
-    if (app.company_entity_id !== company_entity_id) return res.status(403).json({ error: 'Not allowed' });
+    if (!req.user.is_super_admin && app.company_entity_id !== company_entity_id) return res.status(403).json({ error: 'Not allowed' });
     if (app.status !== 'pending') return res.status(400).json({ error: 'Application is not pending' });
 
     // Determine student's university link (same table universityController uses)
@@ -464,7 +464,7 @@ const rejectApplication = async (req, res) => {
     if (!appRows.length) return res.status(404).json({ error: 'Application not found' });
     const app = appRows[0];
 
-    if (app.company_entity_id !== company_entity_id) return res.status(403).json({ error: 'Not allowed' });
+    if (!req.user.is_super_admin && app.company_entity_id !== company_entity_id) return res.status(403).json({ error: 'Not allowed' });
     if (app.status !== 'pending') return res.status(400).json({ error: 'Application is not pending' });
 
     await pool.query(`
@@ -519,7 +519,7 @@ const checkIn = async (req, res) => {
     const program = programRows[0];
 
     const [openSessions] = await pool.query(`
-      SELECT id FROM training_sessions
+      SELECT id FROM training_attendance_sessions
       WHERE program_id = ? AND student_user_id = ? AND check_out_at IS NULL
       ORDER BY check_in_at DESC LIMIT 1
     `, [programId, student_user_id]);
@@ -580,7 +580,7 @@ const checkOut = async (req, res) => {
 
     const [sessions] = await pool.query(`
       SELECT *
-      FROM training_sessions
+      FROM training_attendance_sessions
       WHERE program_id = ? AND student_user_id = ? AND check_out_at IS NULL
       ORDER BY check_in_at DESC LIMIT 1
     `, [programId, student_user_id]);
@@ -608,7 +608,7 @@ const checkOut = async (req, res) => {
       WHERE id = ?
     `, [lat, lng, location_name || null, hours.toFixed(2), geo_verified, session.id]);
 
-    const [updated] = await pool.query(`SELECT * FROM training_sessions WHERE id = ?`, [session.id]);
+    const [updated] = await pool.query(`SELECT * FROM training_attendance_sessions WHERE id = ?`, [session.id]);
 
     await writeTrainingAudit(
       'student',
@@ -649,7 +649,7 @@ const universityApproveSession = async (req, res) => {
     if (s.status === 'university_approved') return res.status(400).json({ error: 'تم الاعتماد مسبقاً' });
 
     await pool.query(`
-      UPDATE training_sessions
+      UPDATE training_attendance_sessions
       SET status = 'university_approved',
           approved_by_user_id = ?,
           approved_at = NOW(),
@@ -811,6 +811,42 @@ const listPublicReviewsForOffer = async (req, res) => {
   }
 };
 
+const deleteOffer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [offer] = await pool.query('SELECT * FROM training_offers WHERE id = ?', [id]);
+    if (!offer.length) return res.status(404).json({ error: 'Offer not found' });
+
+    if (!req.user.is_super_admin && offer[0].company_entity_id !== req.user.entity_id && offer[0].created_by_user_id !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized to delete this offer' });
+    }
+
+    await pool.query('DELETE FROM training_offers WHERE id = ?', [id]);
+    res.json({ message: 'تم حذف عرض التدريب بنجاح' });
+  } catch (err) {
+    console.error('deleteOffer error:', err.message);
+    res.status(500).json({ error: 'خطأ في حذف العرض' });
+  }
+};
+
+const deleteProgram = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [program] = await pool.query('SELECT * FROM training_programs WHERE id = ?', [id]);
+    if (!program.length) return res.status(404).json({ error: 'Program not found' });
+
+    if (!req.user.is_super_admin && program[0].company_entity_id !== req.user.entity_id) {
+      return res.status(403).json({ error: 'Unauthorized to delete this program' });
+    }
+
+    await pool.query('DELETE FROM training_programs WHERE id = ?', [id]);
+    res.json({ message: 'تم حذف مسار التدريب بنجاح' });
+  } catch (err) {
+    console.error('deleteProgram error:', err.message);
+    res.status(500).json({ error: 'خطأ في حذف المسار' });
+  }
+};
+
 // Student view: list sessions for a program
 const listProgramSessions = async (req, res) => {
   try {
@@ -820,7 +856,7 @@ const listProgramSessions = async (req, res) => {
 
     const [rows] = await pool.query(`
       SELECT *
-      FROM training_sessions
+      FROM training_attendance_sessions
       WHERE program_id = ? AND student_user_id = ?
       ORDER BY check_in_at DESC
     `, [programId, student_user_id]);
@@ -851,7 +887,7 @@ const exportTrainingReport = async (req, res) => {
         s.check_in_location_name AS location,
         s.status AS session_status,
         s.geo_verified
-      FROM training_sessions s
+      FROM training_attendance_sessions s
       JOIN training_programs p ON s.program_id = p.id
       JOIN training_offers o ON p.offer_id = o.id
       JOIN users u ON s.student_user_id = u.id
@@ -910,5 +946,7 @@ module.exports = {
   listPublicReviewsForOffer,
   listProgramSessions,
   exportTrainingReport,
+  deleteOffer,
+  deleteProgram,
 };
 

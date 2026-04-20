@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Calendar, Clock, Users, ChevronLeft, Zap, ArrowUpRight } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -29,6 +29,10 @@ export default function EventCard({ event, onRegistered }) {
   const { isAuth } = useAuth();
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(Number(event.is_registered) > 0);
+
+  useEffect(() => {
+    setRegistered(Number(event.is_registered) > 0);
+  }, [event.is_registered]);
 
   const tc = TYPE_CONFIG[event.type] || TYPE_CONFIG['ثقافية'];
   const fillPct = Math.min(100, Math.round((event.current_participants / event.max_participants) * 100));
@@ -115,8 +119,8 @@ export default function EventCard({ event, onRegistered }) {
             </motion.span>
           )}
           {registered && (
-            <span className="flex items-center gap-1 bg-[#F4991A] text-[#F9F5F0] text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
-              ✅ مسجّل
+            <span className="flex items-center gap-1 bg-[#344F1F] text-[#F9F5F0] text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
+              ✅ تم التقديم
             </span>
           )}
         </div>
@@ -196,7 +200,7 @@ export default function EventCard({ event, onRegistered }) {
                 </svg>
                 جاري...
               </span>
-            ) : registered ? '✅ مسجّل' : isFull ? 'مكتمل' : 'انضم الآن'}
+            ) : registered ? '✅ طلبك قيد المعالجة' : isFull ? 'مكتمل' : 'انضم الآن'}
           </motion.button>
 
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>

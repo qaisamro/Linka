@@ -19,10 +19,10 @@ import toast from 'react-hot-toast';
 
 // ─── Tab definition ───────────────────────────────────────────────
 const TABS = [
-  { key: 'overview',  label: 'الرئيسية',        icon: LayoutDashboard },
-  { key: 'users',     label: 'المستخدمون',       icon: UserCog         },
-  { key: 'regs',      label: 'إدارة المشاركات',  icon: Calendar        },
-  { key: 'audit',     label: 'سجل الإجراءات',    icon: ClipboardList   },
+  { key: 'overview', label: 'الرئيسية', icon: LayoutDashboard },
+  { key: 'users', label: 'المستخدمون', icon: UserCog },
+  { key: 'regs', label: 'إدارة المشاركات', icon: Calendar },
+  { key: 'audit', label: 'سجل الإجراءات', icon: ClipboardList },
 ];
 
 // ─── Animated Stat Card ───────────────────────────────────────────
@@ -118,7 +118,7 @@ function NeighborhoodChart({ data }) {
               animate={{ width: `${(d.registrations / max) * 100}%` }}
               transition={{ delay: i * 0.1 + 0.3, duration: 0.8, ease: 'easeOut' }}
               className="h-full rounded-full"
-              style={{ background: `linear-gradient(to left, ${COLORS[i]}, ${COLORS[Math.min(i+1,4)]})` }}
+              style={{ background: `linear-gradient(to left, ${COLORS[i]}, ${COLORS[Math.min(i + 1, 4)]})` }}
             />
           </div>
           <span className="text-xs font-black text-[#F4991A] w-8 text-left">{d.registrations}</span>
@@ -142,9 +142,9 @@ function SectionCard({ children, className = '', delay = 0 }) {
 // ─── Status Badge (attendance) ────────────────────────────────────
 function StatusBadge({ status }) {
   const MAP = {
-    registered: { label: 'مسجّل',  cls: 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]'      },
-    attended:   { label: 'حضر',    cls: 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]' },
-    absent:     { label: 'غائب',   cls: 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]'           },
+    registered: { label: 'مسجّل', cls: 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]' },
+    attended: { label: 'حضر', cls: 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]' },
+    absent: { label: 'غائب', cls: 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]' },
   };
   const s = MAP[status] || MAP.registered;
   return <span className={`badge-pill text-xs ${s.cls}`}>{s.label}</span>;
@@ -152,18 +152,19 @@ function StatusBadge({ status }) {
 
 // ─── Overview Tab (stats + charts + events + attendance + broadcast) ──
 function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
-  const [registrations, setRegs]    = useState([]);
-  const [confirmId, setConfirmId]   = useState(null);
+  const [registrations, setRegs] = useState([]);
+  const [confirmId, setConfirmId] = useState(null);
   const [neighborhoods, setNeighborhoods] = useState([]);
-  const [broadcast, setBroadcast]   = useState({
+  const [broadcast, setBroadcast] = useState({
     title: '', message: '', type: 'announcement', target: 'youth', neighborhood_id: '',
   });
   const [sending, setSending] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState({ show: false, id: null });
 
   useEffect(() => {
     neighborhoodsAPI.getAll()
       .then(r => setNeighborhoods(r.data.neighborhoods || []))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const loadEventRegs = async (eventId) => {
@@ -185,10 +186,13 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('هل أنت متأكد من حذف هذه الفعالية؟')) return;
+  const handleDelete = (id) => {
+    setConfirmDelete({ show: true, id });
+  };
+
+  const confirmDeleteAction = async () => {
     try {
-      await eventsAPI.remove(id);
+      await eventsAPI.remove(confirmDelete.id);
       toast.success('تم حذف الفعالية');
       onRefresh();
     } catch { toast.error('خطأ في الحذف'); }
@@ -219,14 +223,14 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
     <div className="space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users}       label="إجمالي الشباب"  value={s.total_users || 0}
-          gradient="from-[#344F1F] to-[#344F1F]"    delay={0}   sub="مسجّل في المنصة" />
-        <StatCard icon={Calendar}    label="فعاليات نشطة"   value={s.active_events || 0}
-          gradient="from-[#F4991A] to-[#344F1F]"   delay={0.1} sub="متاحة للتسجيل" />
-        <StatCard icon={CheckCircle} label="إجمالي الحضور"  value={s.total_attendances || 0}
-          gradient="from-[#F4991A] to-[#344F1F]"  delay={0.2} sub="تأكيد حضور" />
-        <StatCard icon={Clock}       label="ساعات التطوع"   value={`${Math.round(s.total_volunteer_hours || 0)}h`}
-          gradient="from-[#F4991A] to-[#F4991A]"   delay={0.3} sub="مجموع الساعات" />
+        <StatCard icon={Users} label="إجمالي الشباب" value={s.total_users || 0}
+          gradient="from-[#344F1F] to-[#344F1F]" delay={0} sub="مسجّل في المنصة" />
+        <StatCard icon={Calendar} label="فعاليات نشطة" value={s.active_events || 0}
+          gradient="from-[#F4991A] to-[#344F1F]" delay={0.1} sub="متاحة للتسجيل" />
+        <StatCard icon={CheckCircle} label="إجمالي الحضور" value={s.total_attendances || 0}
+          gradient="from-[#F4991A] to-[#344F1F]" delay={0.2} sub="تأكيد حضور" />
+        <StatCard icon={Clock} label="ساعات التطوع" value={`${Math.round(s.total_volunteer_hours || 0)}h`}
+          gradient="from-[#F4991A] to-[#F4991A]" delay={0.3} sub="مجموع الساعات" />
       </div>
 
       {/* Charts */}
@@ -306,11 +310,10 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
                         <div className="w-16 h-2 bg-[#F2EAD3] rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full transition-all ${
-                            fill >= 90 ? 'bg-gradient-to-r from-[#F4991A] to-[#F4991A]' :
+                          <div className={`h-full rounded-full transition-all ${fill >= 90 ? 'bg-gradient-to-r from-[#F4991A] to-[#F4991A]' :
                             fill >= 60 ? 'bg-gradient-to-r from-[#F4991A] to-[#F4991A]' :
-                                         'bg-gradient-to-r from-[#F4991A] to-[#F4991A]'
-                          }`} style={{ width: `${fill}%` }} />
+                              'bg-gradient-to-r from-[#F4991A] to-[#F4991A]'
+                            }`} style={{ width: `${fill}%` }} />
                         </div>
                         <span className="text-xs text-[#F4991A] whitespace-nowrap font-semibold">
                           {ev.current_participants}/{ev.max_participants}
@@ -318,11 +321,10 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <span className={`badge-pill text-xs font-bold ${
-                        ev.status === 'active'
-                          ? 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]'
-                          : 'bg-[#F9F5F0] text-[#F4991A] border border-[#F2EAD3]'
-                      }`}>
+                      <span className={`badge-pill text-xs font-bold ${ev.status === 'active'
+                        ? 'bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3]'
+                        : 'bg-[#F9F5F0] text-[#F4991A] border border-[#F2EAD3]'
+                        }`}>
                         {ev.status === 'active' ? '🟢 نشطة' : '⚪ منتهية'}
                       </span>
                     </td>
@@ -383,8 +385,8 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F9F5F0] transition-colors">
-                    <div className="w-10 h-10 rounded-xl bg-hero-gradient text-[#F9F5F0] flex items-center justify-center font-black text-sm flex-shrink-0 shadow-md">
-                      {r.user_name?.charAt(0)}
+                    <div className="w-10 h-10 rounded-xl bg-hero-gradient text-[#F9F5F0] flex items-center justify-center font-black text-sm flex-shrink-0 shadow-md overflow-hidden">
+                      {r.avatar_url ? <img src={r.avatar_url} className="w-full h-full object-cover" /> : r.user_name?.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-[#344F1F] text-sm leading-none">{r.user_name}</p>
@@ -397,8 +399,8 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
                         className="btn-green text-xs py-1.5 px-3 flex items-center gap-1 flex-shrink-0">
                         {confirmId === r.id ? (
                           <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                           </svg>
                         ) : <><CheckCircle size={12} /> تأكيد</>}
                       </motion.button>
@@ -477,14 +479,22 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
             className="btn-primary w-full sm:w-auto flex items-center gap-2 justify-center">
             {sending ? (
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
               </svg>
             ) : <Send size={16} />}
             {sending ? 'جاري الإرسال...' : 'إرسال الإشعار'}
           </motion.button>
         </form>
       </SectionCard>
+
+      <ConfirmModal
+        isOpen={confirmDelete.show}
+        onClose={() => setConfirmDelete({ show: false, id: null })}
+        onConfirm={confirmDeleteAction}
+        title="حذف الفعالية"
+        message="هل أنت متأكد من حذف هذه الفعالية نهائياً؟ سيتم إلغاء جميع التسجيلات المرتبطة بها."
+      />
     </div>
   );
 }
@@ -493,12 +503,12 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
 export default function AdminDashboard() {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const [stats, setStats]           = useState(null);
-  const [events, setEvents]         = useState([]);
-  const [loading, setLoading]       = useState(true);
+  const [stats, setStats] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab]   = useState('overview');
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     if (!isAdmin) { navigate('/'); return; }
@@ -580,11 +590,10 @@ export default function AdminDashboard() {
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`relative flex items-center gap-2 px-5 py-3.5 text-sm font-bold whitespace-nowrap transition-all duration-200 border-[#F9F5F0] flex-shrink-0 ${
-                  activeTab === key
-                    ? 'border-[#344F1F] text-[#344F1F]'
-                    : 'border-transparent text-[#F4991A] hover:text-[#344F1F] hover:border-[#F2EAD3]'
-                }`}
+                className={`relative flex items-center gap-2 px-5 py-3.5 text-sm font-bold whitespace-nowrap transition-all duration-200 border-[#F9F5F0] flex-shrink-0 ${activeTab === key
+                  ? 'border-[#344F1F] text-[#344F1F]'
+                  : 'border-transparent text-[#F4991A] hover:text-[#344F1F] hover:border-[#F2EAD3]'
+                  }`}
               >
                 <Icon size={15} />
                 {label}
@@ -619,7 +628,7 @@ export default function AdminDashboard() {
               />
             )}
             {activeTab === 'users' && <UsersTab />}
-            {activeTab === 'regs'  && <EventRegistrationsTab />}
+            {activeTab === 'regs' && <EventRegistrationsTab />}
             {activeTab === 'audit' && <AuditLogTab />}
           </motion.div>
         </AnimatePresence>

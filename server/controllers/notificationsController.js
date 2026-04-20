@@ -75,15 +75,17 @@ const getMyNotifications = async (req, res) => {
     const [countRows] = await pool.query(
       `SELECT
          COUNT(*) AS total,
-         SUM(CASE WHEN is_read = FALSE THEN 1 ELSE 0 END) AS unread
+         COALESCE(SUM(CASE WHEN is_read = FALSE THEN 1 ELSE 0 END), 0) AS unread
        FROM notifications WHERE user_id = ?`,
       [userId]
     );
 
+    const stats = countRows[0] || { total: 0, unread: 0 };
+
     res.json({
       notifications: rows,
-      total:  Number(countRows[0].total)  || 0,
-      unread: Number(countRows[0].unread) || 0,
+      total: Number(stats.total) || 0,
+      unread: Number(stats.unread) || 0,
     });
   } catch (err) {
     console.error('getMyNotifications error:', err.message);

@@ -59,12 +59,13 @@ const getEventById = async (req, res) => {
       `SELECT e.*,
               n.name as neighborhood_name,
               u.name as created_by_name,
-              (SELECT COUNT(*) FROM registrations WHERE event_id = e.id) as registered_count
+              (SELECT COUNT(*) FROM registrations WHERE event_id = e.id) as registered_count,
+              (SELECT COUNT(*) FROM registrations WHERE event_id = e.id AND user_id = ?)::int as is_registered
        FROM events e
        LEFT JOIN neighborhoods n ON e.neighborhood_id = n.id
        LEFT JOIN users u ON e.created_by = u.id
        WHERE e.id = ?`,
-      [id]
+      [req.user?.id || 0, id]
     );
 
     if (rows.length === 0) {
@@ -164,6 +165,13 @@ const updateEvent = async (req, res) => {
   } = req.body;
 
   try {
+    const [event] = await pool.query('SELECT * FROM events WHERE id = ?', [id]);
+    if (event.length === 0) return res.status(404).json({ error: 'الفعالية غير موجودة' });
+
+    if (!req.user.is_super_admin && event[0].created_by !== req.user.id) {
+      return res.status(403).json({ error: 'غير مصرح لك بتعديل هذه الفعالية' });
+    }
+
     await pool.query(
       `UPDATE events SET
         title = COALESCE(?, title),
@@ -213,9 +221,13 @@ const deleteEvent = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [ev] = await pool.query('SELECT id, title FROM events WHERE id = ?', [id]);
+    const [ev] = await pool.query('SELECT * FROM events WHERE id = ?', [id]);
     if (!ev.length) {
       return res.status(404).json({ error: 'الفعالية غير موجودة' });
+    }
+
+    if (!req.user.is_super_admin && ev[0].created_by !== req.user.id) {
+      return res.status(403).json({ error: 'غير مصرح لك بحذف هذه الفعالية' });
     }
 
     const [result] = await pool.query('DELETE FROM events WHERE id = ?', [id]);

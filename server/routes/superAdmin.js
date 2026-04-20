@@ -17,8 +17,12 @@ router.patch('/blocked-ips/:id/disable', ctrl.removeBlockedIp);
 router.get('/events', ctrl.listAllEvents);
 
 router.patch('/users/:id', ctrl.patchUser);
+router.delete('/users/:id', ctrl.deleteUser);
 
 router.get('/export/audit-log.csv', ctrl.exportAuditCsv);
 router.get('/export/users.csv', ctrl.exportUsersCsv);
+
+router.get('/jobs', ctrl.listAllJobs);
+router.delete('/jobs/:id', ctrl.deleteJob);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Briefcase, Star, Sparkles, Search, Filter, Clock, MapPin,
@@ -7,6 +8,8 @@ import {
 import { jobsAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import ApplicationModal from '../components/jobs/ApplicationModal';
+import { Link } from 'react-router-dom';
 
 const TYPE_COLORS = {
     'وظيفة': { bg: 'bg-[#F4991A]', text: 'text-[#344F1F]', border: 'border-[#F4991A]/30', bar: '#F4991A' },
@@ -33,9 +36,14 @@ function MatchBadge({ score }) {
     );
 }
 
-function JobCard({ job, index, featured = false }) {
+function JobCard({ job, index, featured = false, onApply, hasApplied }) {
     const [expanded, setExpanded] = useState(false);
     const typeStyle = TYPE_COLORS[job.type] || TYPE_COLORS['وظيفة'];
+
+    const handleApplyClick = () => {
+        if (hasApplied) return;
+        onApply(job);
+    };
 
     return (
         <motion.div
@@ -116,7 +124,7 @@ function JobCard({ job, index, featured = false }) {
 
             {/* Description toggle */}
             {job.description && (
-                <div>
+                <div className="mb-4">
                     <AnimatePresence>
                         {expanded && (
                             <motion.p initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
@@ -132,12 +140,47 @@ function JobCard({ job, index, featured = false }) {
                     </button>
                 </div>
             )}
+
+            {/* Action Buttons */}
+            <div className="pt-3 border-t border-[#F2EAD3] flex justify-between items-center">
+                {useAuth().isSuperAdmin && (
+                    <button
+                        onClick={async (e) => {
+                            e.stopPropagation();
+                            if (window.confirm('هل أنت متأكد من حذف هذه الفرصة نهائياً؟')) {
+                                try {
+                                    await jobsAPI.delete(job.id);
+                                    toast.success('تم حذف الفرصة بنجاح');
+                                    window.location.reload();
+                                } catch (err) {
+                                    toast.error('خطأ في الحذف');
+                                }
+                            }
+                        }}
+                        className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors flex items-center gap-1"
+                    >
+                        <X size={14} /> حذف (Admin)
+                    </button>
+                )}
+                <button
+                    onClick={handleApplyClick}
+                    disabled={hasApplied}
+                    className={`text-xs font-black px-6 py-2 rounded-xl transition-all flex items-center gap-2 ${hasApplied
+                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        : 'bg-[#344F1F] text-[#F9F5F0] hover:bg-[#F4991A] hover:text-[#344F1F]'
+                        }`}
+                >
+                    {hasApplied ? <Target size={14} /> : <Sparkles size={14} />}
+                    {hasApplied ? 'تم التقديم' : 'قدم الآن'}
+                </button>
+            </div>
         </motion.div>
     );
 }
 
 export default function Jobs() {
-    const { isAuth, isSuperAdmin } = useAuth();
+    const { isAuth, isSuperAdmin, user } = useAuth();
+    const navigate = useNavigate();
     const [jobs, setJobs] = useState([]);
     const [recommended, setRecommended] = useState([]);
     const [userSkills, setUserSkills] = useState([]);
@@ -147,18 +190,47 @@ export default function Jobs() {
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState('all');
 
+    // Modal & Tracking state
+    const [myApplications, setMyApplications] = useState([]);
+    const [selectedJob, setSelectedJob] = useState(null);
+    const [modalOpen, setModalOpen] = useState(false);
+
     useEffect(() => {
         loadAll();
     }, []);
 
+    const handleApply = (job) => {
+        if (!isAuth) {
+            toast.error('يرجى تسجيل الدخول للتقديم');
+            navigate('/login');
+            return;
+        }
+        setSelectedJob(job);
+        setModalOpen(true);
+    };
+
+    const handleApplySuccess = () => {
+        loadAll();
+    };
+
     const loadAll = async () => {
         setLoading(true);
         try {
-            const [jobsRes] = await Promise.all([
-                jobsAPI.list(),
-            ]);
+            const promises = [jobsAPI.list()];
+            if (isAuth && user?.role === 'youth') {
+                promises.push(jobsAPI.getMyApplications().catch(() => ({ data: { applications: [] } })));
+            }
+
+            const results = await Promise.all(promises);
+            const jobsRes = results[0];
+            const appsRes = isAuth && user?.role === 'youth' && results.length > 1 ? results[1] : null;
+
             setJobs(jobsRes.data.jobs || []);
             setUserSkills(jobsRes.data.user_skills || []);
+
+            if (appsRes) {
+                setMyApplications(appsRes.data.applications || []);
+            }
 
             if (isAuth && !isSuperAdmin) {
                 const [recRes, careerRes] = await Promise.all([
@@ -302,7 +374,7 @@ export default function Jobs() {
                                     </div>
                                 ) : (
                                     <div className="grid sm:grid-cols-2 gap-4">
-                                        {filtered.map((job, i) => <JobCard key={job.id} job={job} index={i} />)}
+                                        {filtered.map((job, i) => <JobCard key={job.id} job={job} index={i} onApply={handleApply} hasApplied={myApplications.some(a => a.id === job.id)} />)}
                                     </div>
                                 )}
                             </div>
@@ -324,7 +396,7 @@ export default function Jobs() {
                                     </div>
                                 ) : (
                                     <div className="grid sm:grid-cols-2 gap-4">
-                                        {recommended.map((job, i) => <JobCard key={job.id} job={job} index={i} featured={i === 0} />)}
+                                        {recommended.map((job, i) => <JobCard key={job.id} job={job} index={i} featured={i === 0} onApply={handleApply} hasApplied={myApplications.some(a => a.id === job.id)} />)}
                                     </div>
                                 )}
                             </div>
@@ -404,6 +476,13 @@ export default function Jobs() {
                     </div>
                 </div>
             </div>
+
+            <ApplicationModal
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                job={selectedJob}
+                onApplySuccess={handleApplySuccess}
+            />
         </div>
     );
 }

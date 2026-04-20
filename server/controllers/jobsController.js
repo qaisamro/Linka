@@ -1,4 +1,6 @@
 const pool = require('../db/pool');
+const { createNotificationForUser } = require('./notificationsController');
+const { writeAdminAudit } = require('../utils/auditLog');
 
 // ─── Skill mapping from event types ─────────────────────────────
 const SKILL_MAP = {
@@ -111,6 +113,16 @@ const createJob = async (req, res) => {
                 location || 'الخليل', deadline || null, salary_range || null,
                 contact_email || null, req.user.id, entityId]
         );
+        await writeAdminAudit(
+            req.user.id,
+            req.user.name,
+            'JOB_CREATED',
+            'job',
+            result.insertId,
+            title,
+            { organization: orgName }
+        );
+
         res.status(201).json({ message: 'تم إضافة الفرصة بنجاح', id: result.insertId });
     } catch (err) {
         console.error('createJob error:', err.message);
@@ -254,4 +266,367 @@ const getCareerPath = async (req, res) => {
     }
 };
 
-module.exports = { listJobs, createJob, getUserSkills, getRecommendations, getCareerPath };
+const getJobApplications = async (req, res) => {
+    const { id } = req.params; // Job ID
+    const userId = req.user.id;
+    const isEntity = req.user.role === 'entity';
+
+    try {
+        // Verify job owner
+        const [job] = await pool.query('SELECT * FROM jobs WHERE id = ?', [id]);
+        if (!job.length) return res.status(404).json({ error: 'الفرصة غير موجودة' });
+
+        if (!isEntity || (job[0].created_by !== userId && job[0].entity_id !== req.user.entity_id)) {
+            // Check if super admin
+            if (req.user.role !== 'super_admin') {
+                return res.status(403).json({ error: 'غير مصرح لك بمشاهدة الطلبات' });
+            }
+        }
+
+        const [apps] = await pool.query(`
+      SELECT a.*, u.name as applicant_name, u.email as applicant_email, u.phone as applicant_phone
+      FROM job_applications a
+      JOIN users u ON a.user_id = u.id
+      WHERE a.job_id = ?
+      ORDER BY a.applied_at DESC
+    `, [id]);
+
+        res.json({ applications: apps });
+    } catch (err) {
+        console.error('getJobApplications error:', err.message);
+        res.status(500).json({ error: 'خطأ في جلب الطلبات' });
+    }
+};
+
+const applyToJob = async (req, res) => {
+    const { id } = req.params; // Job ID
+    const userId = req.user.id;
+    const { profileData, coverLetter } = req.body;
+
+    try {
+        // 1. Check job existence
+        const [jobRows] = await pool.query('SELECT * FROM jobs WHERE id = ? AND is_active = TRUE', [id]);
+        if (!jobRows.length) return res.status(404).json({ error: 'الفرصة غير موجودة أو غير نشطة' });
+        const job = jobRows[0];
+
+        // 2. Check if already applied
+        const [existing] = await pool.query(
+            'SELECT id FROM job_applications WHERE job_id = ? AND user_id = ?',
+            [id, userId]
+        );
+        if (existing.length) return res.status(400).json({ error: 'لقد قمت بالتقدم لهذه الفرصة مسبقاً' });
+
+        // 3. Compute skills for the snapshot securely from the backend
+        const skills = await computeUserSkills(userId);
+
+        // 4. Combine user-provided data with backend skills
+        const snapshot = {
+            name: profileData?.name,
+            email: profileData?.email,
+            phone: profileData?.phone,
+            bio: profileData?.bio,
+            university: profileData?.university,
+            student_id: profileData?.student_id,
+            cover_letter: coverLetter,
+            skills: skills
+        };
+
+        // 5. Insert application
+        await pool.query(
+            'INSERT INTO job_applications (job_id, user_id, resume_snapshot) VALUES (?, ?, ?)',
+            [id, userId, JSON.stringify(snapshot)]
+        );
+
+        // 6. Send confirmation email
+        const transporter = require('nodemailer').createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: `"Linka Team" <${process.env.EMAIL_USER}>`,
+            to: snapshot.email || req.user.email,
+            subject: `تأكيد التقديم: ${job.title}`,
+            html: `
+        <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #344F1F;">تم استلام طلبك بنجاح! 🎉</h2>
+          <p>عزيزي <b>${snapshot.name}</b>،</p>
+          <p>لقد قمت بالتقديم بنجاح لفرصة العمل: <b>${job.title}</b> في <b>${job.organization}</b>.</p>
+          <p>سيقوم فريق التوظيف بمراجعة ملفك الشخصي والتواصل معك عبر البريد الإلكتروني أو الهاتف في حال تم اختيارك للمرحلة التالية.</p>
+          <hr style="border: 0; border-top: 1px solid #ccc; margin: 20px 0;" />
+          <p>نتمنى لك كل التوفيق في مسيرتك المهنية.</p>
+          <p><b>فريق لينكا</b></p>
+        </div>
+      `
+        };
+
+        transporter.sendMail(mailOptions).catch(err => console.error('Email error:', err.message));
+
+        res.json({ message: 'تم التقديم للفرصة بنجاح وسيصلك إيميل تأكيد' });
+    } catch (err) {
+        console.error('applyToJob error:', err.message);
+        res.status(500).json({ error: 'خطأ في عملية التقديم' });
+    }
+};
+
+const getMyJobApplications = async (req, res) => {
+    const userId = req.user.id;
+    try {
+        const [apps] = await pool.query(`
+            SELECT a.id as application_id, a.status as application_status, a.applied_at, 
+                   j.id, j.title, j.organization, j.type, j.location, j.salary_range, j.contact_email
+            FROM job_applications a
+            JOIN jobs j ON a.job_id = j.id
+            WHERE a.user_id = ?
+            ORDER BY a.applied_at DESC
+        `, [userId]);
+
+        res.json({ applications: apps });
+    } catch (err) {
+        console.error('getMyJobApplications error:', err.message);
+        res.status(500).json({ error: 'خطأ في جلب طلبات التوظيف' });
+    }
+};
+
+const updateJob = async (req, res) => {
+    const jobId = req.params.id;
+    const { title, description, type, required_skills, location, deadline, salary_range, contact_email } = req.body;
+
+    // Allow either super admin, or the entity that created the job
+    try {
+        const [job] = await pool.query('SELECT * FROM jobs WHERE id = ?', [jobId]);
+        if (job.length === 0) return res.status(404).json({ error: 'فرصة العمل غير موجودة' });
+
+        if (!req.user.is_super_admin && job[0].entity_id !== req.user.entity_id && job[0].created_by !== req.user.id) {
+            return res.status(403).json({ error: 'غير مصرح لك بتعديل هذه الفرصة' });
+        }
+
+        await pool.query(
+            `UPDATE jobs SET title = COALESCE(?, title), type = COALESCE(?, type), 
+             description = COALESCE(?, description), required_skills = COALESCE(?, required_skills), 
+             location = COALESCE(?, location), deadline = COALESCE(?, deadline), 
+             salary_range = COALESCE(?, salary_range), contact_email = COALESCE(?, contact_email) 
+             WHERE id = ?`,
+            [title, type, description, required_skills ? JSON.stringify(required_skills) : null, location, deadline, salary_range, contact_email, jobId]
+        );
+        await writeAdminAudit(
+            req.user.id,
+            req.user.name,
+            'JOB_UPDATED',
+            'job',
+            parseInt(jobId),
+            job[0].title,
+            { fields: Object.keys(req.body) }
+        );
+
+        res.json({ message: 'تم تحديث الفرصة بنجاح' });
+    } catch (err) {
+        console.error('updateJob error:', err.message);
+        res.status(500).json({ error: 'خطأ في تحديث الفرصة' });
+    }
+};
+
+const deleteJob = async (req, res) => {
+    const jobId = req.params.id;
+    try {
+        const [job] = await pool.query('SELECT * FROM jobs WHERE id = ?', [jobId]);
+        if (job.length === 0) return res.status(404).json({ error: 'فرصة العمل غير موجودة' });
+
+        if (!req.user.is_super_admin && job[0].entity_id !== req.user.entity_id && job[0].created_by !== req.user.id) {
+            return res.status(403).json({ error: 'غير مصرح لك بحذف هذه الفرصة' });
+        }
+
+        await pool.query('DELETE FROM jobs WHERE id = ?', [jobId]);
+
+        await writeAdminAudit(
+            req.user.id,
+            req.user.name,
+            'JOB_DELETED',
+            'job',
+            parseInt(jobId),
+            job[0].title
+        );
+
+        res.json({ message: 'تم حذف الفرصة بنجاح' });
+    } catch (err) {
+        console.error('deleteJob error:', err.message);
+        res.status(500).json({ error: 'خطأ في حذف الفرصة' });
+    }
+};
+
+const deleteJobApplication = async (req, res) => {
+    const { id, appId } = req.params;
+    try {
+        const [job] = await pool.query('SELECT * FROM jobs WHERE id = ?', [id]);
+        if (job.length === 0) return res.status(404).json({ error: 'فرصة العمل غير موجودة' });
+
+        if (!req.user.is_super_admin && job[0].entity_id !== req.user.entity_id && job[0].created_by !== req.user.id) {
+            return res.status(403).json({ error: 'غير مصرح لك بحذف هذا الطلب' });
+        }
+
+        await pool.query('DELETE FROM job_applications WHERE id = ? AND job_id = ?', [appId, id]);
+
+        await writeAdminAudit(
+            req.user.id,
+            req.user.name,
+            'JOB_APP_DELETED',
+            'job_application',
+            parseInt(appId),
+            `طلب #${appId} ← ${job[0].title}`
+        );
+
+        res.json({ message: 'تم حذف طلب التوظيف بنجاح' });
+    } catch (err) {
+        console.error('deleteJobApplication error:', err.message);
+        res.status(500).json({ error: 'خطأ في حذف الطلب' });
+    }
+};
+
+const updateApplicationStatus = async (req, res) => {
+    const { id, appId } = req.params;
+    const { status } = req.body;
+
+    try {
+        const [job] = await pool.query('SELECT * FROM jobs WHERE id = ?', [id]);
+        if (!job.length) return res.status(404).json({ error: 'الفرصة غير موجودة' });
+
+        if (!req.user.is_super_admin && job[0].entity_id !== req.user.entity_id && job[0].created_by !== req.user.id) {
+            return res.status(403).json({ error: 'غير مصرح لك بتحديث هذا الطلب' });
+        }
+
+        const [appRows] = await pool.query(`
+            SELECT a.*, u.name as applicant_name, u.email as applicant_email
+            FROM job_applications a
+            JOIN users u ON a.user_id = u.id
+            WHERE a.id = ? AND a.job_id = ?
+        `, [appId, id]);
+
+        if (!appRows.length) return res.status(404).json({ error: 'الطلب غير موجود' });
+        const application = appRows[0];
+
+        await pool.query('UPDATE job_applications SET status = ? WHERE id = ?', [status, appId]);
+
+        // Create platform notification
+        let emoji = status === 'accepted' ? '✅' : (status === 'rejected' ? '❌' : 'ℹ️');
+        let statusText = status === 'accepted' ? 'مقبول' : (status === 'rejected' ? 'مرفوض' : status);
+
+        await createNotificationForUser(
+            application.user_id,
+            `تحديث حالة طلبك: ${job[0].title} ${emoji}`,
+            `تم تحديث حالة طلب التقديم الخاص بك لتصبح: ${statusText}.`,
+            'system'
+        );
+
+        // Send Email
+        const transporter = require('nodemailer').createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        let emailSubject = `تحديث بخصوص طلبك في ${job[0].organization}`;
+        let emailHtml = `
+            <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                <h2 style="color: #344F1F;">تحديث حالة طلب التوظيف</h2>
+                <p>مرحباً <b>${application.applicant_name}</b>،</p>
+                <p>نود إعلامك بأن جهة العمل <b>${job[0].organization}</b> قد قامت بتحديث حالة طلبك لفرصة: <b>${job[0].title}</b>.</p>
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0; border-right: 5px solid ${status === 'accepted' ? '#344F1F' : '#F4991A'};">
+                    <b>الحالة الجديدة:</b> 
+                    <span style="color: ${status === 'accepted' ? '#344F1F' : '#F4991A'}; font-size: 1.2rem;">
+                        ${statusText}
+                    </span>
+                </div>
+                <p>${status === 'accepted' ? 'سيقوم فريق التوظيف بالتواصل معك قريباً لمتابعة الإجراءات.' : 'نشكرك على اهتمامك ونتمنى لك التوفيق في فرص أخرى.'}</p>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+                <p style="font-size: 0.9rem; color: #777;">فريق لينكا - منصة تمكين الشباب</p>
+            </div>
+        `;
+
+        const mailOptions = {
+            from: `"Linka Jobs" <${process.env.EMAIL_USER}>`,
+            to: application.applicant_email,
+            subject: emailSubject,
+            html: emailHtml
+        };
+
+        transporter.sendMail(mailOptions).catch(err => console.error('Email status notification failed:', err));
+
+        res.json({ message: 'تم تحديث الحالة وإرسال إشعار للمتقدم بنجاح' });
+    } catch (err) {
+        console.error('updateApplicationStatus error:', err.message);
+        res.status(500).json({ error: 'خطأ في تحديث الحالة' });
+    }
+};
+
+const contactApplicant = async (req, res) => {
+    const { id, appId } = req.params;
+    const { subject, body } = req.body;
+
+    if (!subject || !body) return res.status(400).json({ error: 'الموضوع والرسالة مطالبان' });
+
+    try {
+        const [job] = await pool.query('SELECT * FROM jobs WHERE id = ?', [id]);
+        if (!job.length) return res.status(404).json({ error: 'الفرصة غير موجودة' });
+
+        if (!req.user.is_super_admin && job[0].entity_id !== req.user.entity_id && job[0].created_by !== req.user.id) {
+            return res.status(403).json({ error: 'غير مصرح لك بمراسلة هذا المتقدم' });
+        }
+
+        const [appRows] = await pool.query(`
+            SELECT a.*, u.name as applicant_name, u.email as applicant_email
+            FROM job_applications a
+            JOIN users u ON a.user_id = u.id
+            WHERE a.id = ? AND a.job_id = ?
+        `, [appId, id]);
+
+        if (!appRows.length) return res.status(404).json({ error: 'الطلب غير موجود' });
+        const application = appRows[0];
+
+        // Send Email
+        const transporter = require('nodemailer').createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: `"${job[0].organization} via Linka" <${process.env.EMAIL_USER}>`,
+            to: application.applicant_email,
+            subject: subject,
+            html: `
+                <div dir="rtl" style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #344F1F; border-radius: 10px;">
+                    <h2 style="color: #F4991A;">رسالة من جهة العمل: ${job[0].organization}</h2>
+                    <p>عزيزي <b>${application.applicant_name}</b>،</p>
+                    <p>لقد استلمت رسالة بخصوص طلب التقديم الخاص بك لفرصة: <b>${job[0].title}</b>:</p>
+                    <div style="background: #F9F5F0; padding: 20px; border-radius: 8px; border-right: 5px solid #F4991A; margin: 20px 0; color: #333; line-height: 1.6;">
+                        ${body.replace(/\n/g, '<br>')}
+                    </div>
+                    <p>يمكنك التجاوب مع هذه الرسالة عبر الرد المباشر على هذا الإيميل.</p>
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+                    <p style="font-size: 0.9rem; color: #777;">فريق لينكا - منصة تمكين الشباب الفلسطيني</p>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.json({ message: 'تم إرسال الرسالة إلى المتقدم بنجاح' });
+    } catch (err) {
+        console.error('contactApplicant error:', err.message);
+        res.status(500).json({ error: 'خطأ في إرسال الرسالة' });
+    }
+};
+
+module.exports = {
+    listJobs, createJob, getUserSkills, getRecommendations, getCareerPath,
+    applyToJob, getJobApplications, getMyJobApplications,
+    updateJob, deleteJob, deleteJobApplication, updateApplicationStatus,
+    contactApplicant
+};
