@@ -48,10 +48,28 @@ async function runMigrations() {
         ADD COLUMN IF NOT EXISTS approved_by_user_id INTEGER,
         ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP,
         ADD COLUMN IF NOT EXISTS supervisor_signature_url TEXT,
-        ADD COLUMN IF NOT EXISTS supervisor_notes TEXT
+        ADD COLUMN IF NOT EXISTS supervisor_notes TEXT,
+        ADD COLUMN IF NOT EXISTS notes TEXT
     `);
   } catch (err) {
     console.error('⚠️  Could not migrate training_attendance_sessions:', err.message);
+  }
+
+  // Job applications table
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS job_applications (
+        id SERIAL PRIMARY KEY,
+        job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        status VARCHAR(30) DEFAULT 'pending',
+        applied_at TIMESTAMP DEFAULT NOW(),
+        resume_snapshot JSONB,
+        UNIQUE(job_id, user_id)
+      )
+    `);
+  } catch (err) {
+    console.error('⚠️  Could not migrate job_applications:', err.message);
   }
 }
 
