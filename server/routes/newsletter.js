@@ -3,8 +3,55 @@ const router = express.Router();
 const nodemailer = require('nodemailer');
 const pool = require('../db/pool');
 const path = require('path');
+const fs = require('fs');
 const verifyToken = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
+
+const LOGO_PATH = path.join(__dirname, '../../client/public/linka-logo.jpeg');
+
+function buildTransporter() {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER || 'linka.palestine@gmail.com',
+      pass: process.env.EMAIL_PASS || ''
+    }
+  });
+}
+
+function logoAttachment() {
+  return {
+    filename: 'linka-logo.jpeg',
+    path: LOGO_PATH,
+    cid: 'linka-logo'
+  };
+}
+
+function welcomeHtml() {
+  return `
+    <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; text-align: right; color: #344F1F; padding: 20px; background-color: #f9f5f0;">
+      <div style="background: white; border-radius: 16px; padding: 35px 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); max-width: 600px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 25px;">
+          <img src="cid:linka-logo" alt="Linka Logo" style="max-width: 140px; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 5px; background: white; border: 2px solid #F9F5F0;" />
+        </div>
+        <h2 style="color: #F4991A; margin-top: 0; text-align: center; font-size: 26px; font-weight: 900;">
+          أهلاً بك في منصة لينكا!
+        </h2>
+        <div style="text-align: right; line-height: 1.8; font-size: 15px; margin-top: 20px;">
+          <p>يسعدنا انضمامك إلى النشرة الإخبارية الخاصة بنا.</p>
+          <p>من الآن فصاعداً، ستصلك أحدث الفعاليات، فرص التطوع، وتحديثات المنصة فور صدورها لضمان بقائك على اطلاع دائم.</p>
+          <p>شكراً لثقتك بنا، ونتمنى لك رحلة ممتعة ومثمرة معنا في بناء المجتمع وتطوير المسار المهني.</p>
+          <br>
+          <div style="border-top: 2px dashed #eee; padding-top: 20px;">
+            <p style="font-size: 13px; color: #777; margin: 0; text-align: center;">
+              <strong>— فريق لينكا —</strong><br>فلسطين
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
 
 router.post('/subscribe', async (req, res) => {
   const { email } = req.body;
@@ -24,60 +71,22 @@ router.post('/subscribe', async (req, res) => {
     await pool.query('INSERT INTO newsletter_subscribers (email) VALUES (?)', [email]);
 
     // 3. Send email using Nodemailer
-    const emailUser = process.env.EMAIL_USER || 'linka.palestine@gmail.com';
     const emailPass = process.env.EMAIL_PASS || '';
+    const emailUser = process.env.EMAIL_USER || 'linka.palestine@gmail.com';
 
     if (!emailPass) {
-      console.warn('⚠️ EMAIL_PASS not set in .env. Email is saved, but welcome email will not be sent.');
-      return res.status(200).json({ message: 'تم الاشتراك بنجاح! (تنبيه للمسؤول: يرجى إضافة كلمة مرور الإيميل في .env لإرسال الرسائل)' });
+      console.warn('⚠️ EMAIL_PASS not set. Email saved but welcome email will not be sent.');
+      return res.status(200).json({ message: 'تم الاشتراك بنجاح!' });
     }
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: emailUser,
-        pass: emailPass
-      }
-    });
-
-    // Generate absolute HTTP URL pointing to the live Replit URL so Gmail always renders it without attachments
-    const isLocal = req.get('host').includes('localhost');
-    const baseUrl = 'https://linka2026.replit.app';
-    
-    // Use the already-live favicon for local testing. Once deployed, use the high-res 2.jpg.png from /public-assets.
-    const logoUrl = isLocal ? baseUrl + '/favicon.jpeg' : baseUrl + '/public-assets/2.jpg.png';
+    const transporter = buildTransporter();
 
     const mailOptions = {
       from: `"منصة لينكا Linka" <${emailUser}>`,
       to: email,
       subject: 'مرحباً بك في مجتمع لينكا 🚀',
-      html: `
-        <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; text-align: right; color: #344F1F; padding: 20px; background-color: #f9f5f0;">
-          <div style="background: white; border-radius: 16px; padding: 35px 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); max-width: 600px; margin: 0 auto; position: relative;">
-            
-            <div style="text-align: center; margin-bottom: 25px;">
-              <img src="${logoUrl}" alt="Linka Logo" style="max-width: 140px; height: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 5px; background: white; border: 2px solid #F9F5F0; display: inline-block;" />
-            </div>
-
-            <h2 style="color: #F4991A; margin-top: 0; text-align: center; font-size: 26px; font-weight: 900;">
-              أهلاً بك في منصة لينكا!
-            </h2>
-            
-            <div style="text-align: right; line-height: 1.8; font-size: 15px; margin-top: 20px;">
-              <p>يسعدنا انضمامك إلى النشرة الإخبارية الخاصة بنا.</p>
-              <p>من الآن فصاعداً، ستصلك أحدث الفعاليات، فرص التطوع، وتحديثات المنصة فور صدورها لضمان بقائك على اطلاع دائم.</p>
-              <p>شكراً لثقتك بنا، ونتمنى لك رحلة ممتعة ومثمرة معنا في بناء المجتمع وتطوير المسار المهني.</p>
-              <br>
-              <div style="border-top: 2px dashed #eee; padding-top: 20px;">
-                <p style="font-size: 13px; color: #777; margin: 0; text-align: center;">
-                  <strong>— فريق لينكا  —</strong><br>
-                  فلسطين
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      `
+      html: welcomeHtml(),
+      attachments: [logoAttachment()]
     };
 
     transporter.sendMail(mailOptions).catch(err => console.error('Nodemailer Error:', err));
