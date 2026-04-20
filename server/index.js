@@ -26,6 +26,33 @@ async function runMigrations() {
   } catch (err) {
     console.error('⚠️  Could not migrate newsletter_subscribers:', err.message);
   }
+
+  // Email verification fields
+  try {
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE`);
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_code VARCHAR(10)`);
+    await pool.query(`UPDATE users SET is_verified = TRUE WHERE is_verified IS NULL OR is_verified = FALSE`);
+  } catch (err) {
+    console.error('⚠️  Could not migrate users (is_verified):', err.message);
+  }
+
+  // Training attendance sessions extra fields
+  try {
+    await pool.query(`
+      ALTER TABLE training_attendance_sessions
+        ADD COLUMN IF NOT EXISTS check_in_location_name VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS check_out_location_name VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS computed_hours NUMERIC(7,2) DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS geo_verified BOOLEAN DEFAULT FALSE,
+        ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'pending',
+        ADD COLUMN IF NOT EXISTS approved_by_user_id INTEGER,
+        ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS supervisor_signature_url TEXT,
+        ADD COLUMN IF NOT EXISTS supervisor_notes TEXT
+    `);
+  } catch (err) {
+    console.error('⚠️  Could not migrate training_attendance_sessions:', err.message);
+  }
 }
 
 // ─── Ensure required admin accounts exist ────────────────────────
