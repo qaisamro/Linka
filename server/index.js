@@ -110,6 +110,9 @@ async function seedAdminUsers() {
   }
 }
 
+// ─── Seed demo data (entities, jobs, training, events) ───────────
+const seedDemoData = require('./scripts/seedDemoData');
+
 // ─── App Setup ───────────────────────────────────────────────────
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -188,4 +191,5 @@ app.listen(PORT, async () => {
   console.log(`🏥 Health: http://localhost:${PORT}/api/health\n`);
   await runMigrations();
   await seedAdminUsers();
+  await seedDemoData().catch(e => console.error('⚠️  seedDemoData error:', e.message));
 });

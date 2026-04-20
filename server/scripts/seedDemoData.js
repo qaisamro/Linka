@@ -401,17 +401,13 @@ async function seed() {
     console.log(`✅ Inserted event: ${ev.title}`);
   }
 
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🎉 Seed completed! Entity Login Credentials:');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  for (const e of insertedEntities) {
-    console.log(`  ${e.name}`);
-    console.log(`    Email: ${e.email}`);
-    console.log(`    Pass:  Demo@2026`);
-    console.log('');
-  }
-
-  process.exit(0);
+  console.log('🌱 Demo data seed complete.');
 }
 
-seed().catch(e => { console.error('Seed failed:', e.message, e.detail || '', e.hint || ''); process.exit(1); });
+module.exports = seed;
+
+if (require.main === module) {
+  seed()
+    .then(() => process.exit(0))
+    .catch(e => { console.error('Seed failed:', e.message, e.detail || ''); process.exit(1); });
+}
