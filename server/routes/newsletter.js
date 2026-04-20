@@ -9,6 +9,20 @@ const isAdmin = require('../middleware/isAdmin');
 
 const LOGO_PATH = path.join(__dirname, '../../client/public/linka-logo.jpeg');
 
+let _logoBase64 = null;
+function getLogoDataUri() {
+  if (!_logoBase64) {
+    try {
+      const data = fs.readFileSync(LOGO_PATH);
+      _logoBase64 = data.toString('base64');
+    } catch (e) {
+      console.warn('Could not read logo file:', e.message);
+      return '';
+    }
+  }
+  return `data:image/jpeg;base64,${_logoBase64}`;
+}
+
 function buildTransporter() {
   return nodemailer.createTransport({
     service: 'gmail',
@@ -19,20 +33,13 @@ function buildTransporter() {
   });
 }
 
-function logoAttachment() {
-  return {
-    filename: 'linka-logo.jpeg',
-    path: LOGO_PATH,
-    cid: 'linka-logo'
-  };
-}
-
 function welcomeHtml() {
+  const logoSrc = getLogoDataUri();
   return `
     <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; text-align: right; color: #344F1F; padding: 20px; background-color: #f9f5f0;">
       <div style="background: white; border-radius: 16px; padding: 35px 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); max-width: 600px; margin: 0 auto;">
         <div style="text-align: center; margin-bottom: 25px;">
-          <img src="cid:linka-logo" alt="Linka Logo" style="max-width: 140px; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 5px; background: white; border: 2px solid #F9F5F0;" />
+          <img src="${logoSrc}" alt="Linka Logo" style="max-width: 140px; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 5px; background: white; border: 2px solid #F9F5F0;" />
         </div>
         <h2 style="color: #F4991A; margin-top: 0; text-align: center; font-size: 26px; font-weight: 900;">
           أهلاً بك في منصة لينكا!
@@ -85,8 +92,7 @@ router.post('/subscribe', async (req, res) => {
       from: `"منصة لينكا Linka" <${emailUser}>`,
       to: email,
       subject: 'مرحباً بك في مجتمع لينكا 🚀',
-      html: welcomeHtml(),
-      attachments: [logoAttachment()]
+      html: welcomeHtml()
     };
 
     transporter.sendMail(mailOptions).catch(err => console.error('Nodemailer Error:', err));
