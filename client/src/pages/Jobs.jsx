@@ -137,7 +137,7 @@ function JobCard({ job, index, featured = false }) {
 }
 
 export default function Jobs() {
-    const { isAuth } = useAuth();
+    const { isAuth, isSuperAdmin } = useAuth();
     const [jobs, setJobs] = useState([]);
     const [recommended, setRecommended] = useState([]);
     const [userSkills, setUserSkills] = useState([]);
@@ -160,7 +160,7 @@ export default function Jobs() {
             setJobs(jobsRes.data.jobs || []);
             setUserSkills(jobsRes.data.user_skills || []);
 
-            if (isAuth) {
+            if (isAuth && !isSuperAdmin) {
                 const [recRes, careerRes] = await Promise.all([
                     jobsAPI.getRecommend().catch(() => ({ data: { recommendations: [] } })),
                     jobsAPI.getCareerPath().catch(() => ({ data: null })),
@@ -181,8 +181,8 @@ export default function Jobs() {
 
     const TABS = [
         { key: 'all', label: 'جميع الفرص', count: filtered.length },
-        ...(isAuth ? [{ key: 'recommended', label: 'مناسبة لك ⭐', count: recommended.length }] : []),
-        ...(isAuth ? [{ key: 'career', label: 'مسار التطوير 🗺️', count: null }] : []),
+        ...(isAuth && !isSuperAdmin ? [{ key: 'recommended', label: 'مناسبة لك ⭐', count: recommended.length }] : []),
+        ...(isAuth && !isSuperAdmin ? [{ key: 'career', label: 'مسار التطوير 🗺️', count: null }] : []),
     ];
 
     const LEVEL_COLOR = { 'مبتدئ': 'bg-[#F9F5F0] text-[#344F1F]', 'متوسط': 'bg-[#F9F5F0] text-[#344F1F]', 'متقدم': 'bg-[#F9F5F0] text-[#344F1F]' };
@@ -230,7 +230,7 @@ export default function Jobs() {
                 <div className="flex flex-col lg:flex-row gap-8">
 
                     {/* ── Sidebar: Skills Profile ──────────────────────────── */}
-                    {isAuth && userSkills.length > 0 && (
+                    {isAuth && !isSuperAdmin && userSkills.length > 0 && (
                         <div className="lg:w-72 flex-shrink-0 space-y-4">
                             <div className="card p-5">
                                 <h3 className="font-bold text-[#344F1F] mb-4 flex items-center gap-2">

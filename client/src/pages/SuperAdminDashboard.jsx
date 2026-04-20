@@ -1329,7 +1329,7 @@ function NewsletterBroadcastView() {
       </div>
 
       <form onSubmit={handleSend} className="space-y-6 max-w-5xl">
-        <div className="bg-white p-6 rounded-[2rem] border border-[#F2EAD3] shadow-sm space-y-6">
+        <div className="bg-white p-4 sm:p-6 rounded-[2rem] border border-[#F2EAD3] shadow-sm space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-xs font-black text-[#F4991A] mb-2 mr-2 uppercase">عنوان الرسالة (Subject)</label>
@@ -1359,9 +1359,9 @@ function NewsletterBroadcastView() {
 
           {audience === 'specific' && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-4">
-              <label className="block text-xs font-black text-[#F4991A] mb-4 mr-2 uppercase flex items-center justify-between">
+              <label className="text-xs font-black text-[#F4991A] mb-4 uppercase flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <span>تحديد المستلمين ({selectedEmails.length} محددون)</span>
-                <button type="button" onClick={handleSelectAll} className="text-[#344F1F] hover:underline bg-[#F9F5F0] px-3 py-1 rounded">
+                <button type="button" onClick={handleSelectAll} className="text-[#344F1F] hover:underline bg-[#F9F5F0] px-3 py-1.5 rounded w-full sm:w-auto text-center">
                   {selectedEmails.length === filteredContacts.length && filteredContacts.length > 0 ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
                 </button>
               </label>
@@ -1377,20 +1377,20 @@ function NewsletterBroadcastView() {
                 />
               </div>
 
-              <div className="bg-[#F9F5F0] border border-[#F4991A]/30 rounded-2xl overflow-hidden max-h-60 overflow-y-auto rich-scroll">
+              <div className="bg-[#F9F5F0] border border-[#F4991A]/30 rounded-2xl overflow-x-auto max-h-60 overflow-y-auto rich-scroll">
                 {loadingContacts ? (
                   <div className="p-8 text-center text-[#344F1F]/40 font-black">جاري التحميل...</div>
                 ) : filteredContacts.length === 0 ? (
                   <div className="p-8 text-center text-[#344F1F]/40 font-black">لا توجد نتائج مطابقة</div>
                 ) : (
-                  <table className="w-full text-right text-sm">
-                    <thead className="bg-[#F2EAD3] sticky top-0">
+                  <table className="w-full text-right text-xs sm:text-sm min-w-[500px]">
+                    <thead className="bg-[#F2EAD3] sticky top-0 z-10">
                       <tr>
-                        <th className="p-3 w-16 text-center">اختيار</th>
-                        <th className="p-3 text-[#344F1F]">الاسم</th>
-                        <th className="p-3 text-[#344F1F]">الإيميل</th>
-                        <th className="p-3 text-[#344F1F]">الجهة/النوع</th>
-                        <th className="p-3 text-[#344F1F] text-left">إجراءات</th>
+                        <th className="p-2 sm:p-3 w-12 sm:w-16 text-center">اختيار</th>
+                        <th className="p-2 sm:p-3 text-[#344F1F]">الاسم</th>
+                        <th className="p-2 sm:p-3 text-[#344F1F]">الإيميل</th>
+                        <th className="p-2 sm:p-3 text-[#344F1F]">الجهة/النوع</th>
+                        <th className="p-2 sm:p-3 text-[#344F1F] text-left">إجراءات</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#F2EAD3]">
@@ -1400,18 +1400,20 @@ function NewsletterBroadcastView() {
                           onClick={() => handleToggleSelect(c.email)}
                           className={`cursor-pointer transition-colors ${selectedEmails.includes(c.email) ? 'bg-[#344F1F]/5 text-[#344F1F]' : 'hover:bg-white'}`}
                         >
-                          <td className="p-3 text-center">
+                          <td className="p-2 sm:p-3 text-center">
                             <input 
                               type="checkbox" 
                               checked={selectedEmails.includes(c.email)} 
                               readOnly 
-                              className="w-5 h-5 accent-[#F4991A] rounded"
+                              className="w-4 h-4 sm:w-5 sm:h-5 accent-[#F4991A] rounded"
                             />
                           </td>
-                          <td className="p-3 font-black text-[#344F1F]">{c.name}</td>
-                          <td className="p-3 font-medium text-[#F4991A]">{c.email}</td>
-                          <td className="p-3 text-xs font-bold text-[#344F1F]/60"><span className="bg-white border border-[#F2EAD3] px-2 py-0.5 rounded shadow-sm">{c.type}</span></td>
-                          <td className="p-3 text-left">
+                          <td className="p-2 sm:p-3 font-black text-[#344F1F]">{c.name}</td>
+                          <td className="p-2 sm:p-3 font-medium text-[#F4991A] break-all">{c.email}</td>
+                          <td className="p-2 sm:p-3 text-[10px] sm:text-xs font-bold text-[#344F1F]/60">
+                            <span className="bg-white border border-[#F2EAD3] px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">{c.type}</span>
+                          </td>
+                          <td className="p-2 sm:p-3 text-left">
                             {c.type === 'مشترك نشرة' && (
                               <button
                                 type="button"

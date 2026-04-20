@@ -50,7 +50,7 @@ export default function Navbar() {
   const isActive = (path) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
-  const navLinks = [
+  const navLinks = isSuperAdmin ? [] : [
     { label: 'الرئيسية', path: '/', icon: Home },
     { label: 'الفعاليات', path: '/events', icon: Calendar },
     { label: 'فرص العمل', path: '/jobs', icon: Briefcase },
@@ -97,13 +97,6 @@ export default function Navbar() {
             <div className="hidden md:flex items-center gap-2">
               {isAuth ? (
                 <>
-                  {isSuperAdmin && (
-                    <Link to="/super-admin"
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-[#344F1F] hover:bg-[#F9F5F0] transition-colors">
-                      <Shield size={16} />
-                      إدارة النظام
-                    </Link>
-                  )}
                   {isAdmin && !isSuperAdmin && (
                     <Link to="/admin"
                       className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-[#344F1F] hover:bg-[#F9F5F0] transition-colors">
@@ -126,7 +119,7 @@ export default function Navbar() {
                     </Link>
                   )}
 
-                  <NotificationBell />
+                  {!isSuperAdmin && <NotificationBell />}
 
                   {/* Profile Chip */}
                   <Link to={isSuperAdmin ? '/super-admin' : isUniversity ? '/university-portal' : (isEntity && entityType === 'company') ? '/company-portal' : '/profile'}
@@ -196,35 +189,50 @@ export default function Navbar() {
                 </div>
               )}
 
-              {navLinks.map((link) => (
-                <Link key={link.path} to={link.path} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all ${isActive(link.path) ? 'bg-[#344F1F] text-[#F9F5F0]' : 'text-[#344F1F] hover:bg-[#F2EAD3]'}`}>
-                  <link.icon size={18} />
-                  {link.label}
-                </Link>
-              ))}
-
-              {isAuth ? (
-                <div className="pt-2 border-t border-[#F2EAD3]/50 space-y-1">
-                  {isSuperAdmin && <Link to="/super-admin" className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-[#344F1F] hover:bg-[#F2EAD3]">
-                    <Shield size={18} /> إدارة النظام
-                  </Link>}
-                  {isUniversity && <Link to="/university-portal" className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-[#344F1F] hover:bg-[#F2EAD3]">
-                    <GraduationCap size={18} /> بوابة الجامعة
-                  </Link>}
-                  {isEntity && entityType === 'company' && <Link to="/company-portal" className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-[#344F1F] hover:bg-[#F2EAD3]">
-                    <Briefcase size={18} /> بوابة الشركة
-                  </Link>}
-
-                  <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-[#F4991A] hover:bg-[#F2EAD3] transition-all">
-                    <LogOut size={18} />
-                    تسجيل الخروج
-                  </button>
+              {isSuperAdmin ? (
+                /* Super Admin Mobile: Only admin dashboard link */
+                <div className="space-y-2">
+                  <Link to="/super-admin" className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all ${isActive('/super-admin') ? 'bg-[#344F1F] text-[#F9F5F0]' : 'text-[#344F1F] hover:bg-[#F2EAD3]'}`}>
+                    <Shield size={18} />
+                    لوحة إدارة النظام
+                  </Link>
+                  <div className="pt-2 border-t border-[#F2EAD3]/50">
+                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-[#F4991A] hover:bg-[#F2EAD3] transition-all">
+                      <LogOut size={18} />
+                      تسجيل الخروج
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div className="pt-4 space-y-3">
-                  <Link to="/login" className="block text-center btn-secondary py-3.5 w-full">تسجيل الدخول</Link>
-                  <Link to="/register" className="block text-center btn-primary py-3.5 w-full">انضم الآن مجاناً</Link>
-                </div>
+                <>
+                  {navLinks.map((link) => (
+                    <Link key={link.path} to={link.path} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all ${isActive(link.path) ? 'bg-[#344F1F] text-[#F9F5F0]' : 'text-[#344F1F] hover:bg-[#F2EAD3]'}`}>
+                      <link.icon size={18} />
+                      {link.label}
+                    </Link>
+                  ))}
+
+                  {isAuth ? (
+                    <div className="pt-2 border-t border-[#F2EAD3]/50 space-y-1">
+                      {isUniversity && <Link to="/university-portal" className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-[#344F1F] hover:bg-[#F2EAD3]">
+                        <GraduationCap size={18} /> بوابة الجامعة
+                      </Link>}
+                      {isEntity && entityType === 'company' && <Link to="/company-portal" className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-[#344F1F] hover:bg-[#F2EAD3]">
+                        <Briefcase size={18} /> بوابة الشركة
+                      </Link>}
+
+                      <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-[#F4991A] hover:bg-[#F2EAD3] transition-all">
+                        <LogOut size={18} />
+                        تسجيل الخروج
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="pt-4 space-y-3">
+                      <Link to="/login" className="block text-center btn-secondary py-3.5 w-full">تسجيل الدخول</Link>
+                      <Link to="/register" className="block text-center btn-primary py-3.5 w-full">انضم الآن مجاناً</Link>
+                    </div>
+                  )}
+                </>
               )}
             </motion.div>
           )}

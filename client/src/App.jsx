@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster, resolveValue, ToastIcon } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import Navbar from './components/layout/Navbar';
@@ -83,20 +83,46 @@ function AppContent() {
   );
 }
 
+
 export default function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
         <AppContent />
       </NotificationProvider>
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: { fontFamily: 'Cairo', direction: 'rtl', borderRadius: '12px' },
-          success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
-          error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
-        }}
-      />
+      <Toaster position="bottom-center" reverseOrder={false} toastOptions={{ duration: 5000 }} containerStyle={{ bottom: 40 }}>
+        {(t) => (
+          <div
+            className={`
+              ${t.visible ? 'animate-enter opacity-100 scale-100' : 'animate-leave opacity-0 scale-95'}
+              max-w-md w-full rounded-2xl pointer-events-auto flex items-center p-4 border-[3px] transition-all duration-300
+              ${t.type === 'success' ? 'border-emerald-500 bg-emerald-50 shadow-[0_8px_30px_rgba(16,185,129,0.3)]' 
+                : t.type === 'error' ? 'border-red-500 bg-red-50 shadow-[0_8px_30px_rgba(239,68,68,0.3)]' 
+                : 'border-[#F4991A] bg-white shadow-[0_8px_30px_rgba(244,153,26,0.3)]'}
+            `}
+            style={{ direction: 'rtl', fontFamily: 'Cairo' }}
+          >
+            <div className={`flex-shrink-0 flex items-center justify-center rounded-full w-10 h-10
+              ${t.type === 'success' ? 'bg-emerald-500' : t.type === 'error' ? 'bg-red-500' : 'bg-[#F4991A]'}
+            `}>
+              <ToastIcon toast={t} />
+            </div>
+            <div className="mr-4 ml-4 flex-1">
+              <p className="text-[14px] sm:text-[15px] font-black text-[#344F1F] leading-snug">
+                {resolveValue(t.message, t)}
+              </p>
+            </div>
+            {t.type !== 'loading' && (
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="flex-shrink-0 text-gray-400 hover:text-red-500 rounded-full p-1.5 transition-colors cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            )}
+          </div>
+        )}
+      </Toaster>
     </AuthProvider>
   );
 }

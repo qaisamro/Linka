@@ -43,7 +43,7 @@ function MatchBadge({ score }) {
 }
 
 export default function TrainingHub() {
-  const { isAuth, user } = useAuth();
+  const { isAuth, user, isSuperAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState('offers'); // offers | apps | programs
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -268,8 +268,8 @@ export default function TrainingHub() {
           <div className="flex items-center gap-4 overflow-x-auto pb-1 w-full md:w-auto">
             {[
               { key: 'offers', label: 'عروض التدريب', icon: <Target size={16} /> },
-              { key: 'apps', label: 'طلباتي', icon: <Send size={16} /> },
-              { key: 'programs', label: 'مساراتي', icon: <Navigation size={16} /> },
+              ...(!isSuperAdmin ? [{ key: 'apps', label: 'طلباتي', icon: <Send size={16} /> }] : []),
+              ...(!isSuperAdmin ? [{ key: 'programs', label: 'مساراتي', icon: <Navigation size={16} /> }] : []),
             ].map((t) => (
               <button
                 key={t.key}
@@ -320,6 +320,7 @@ export default function TrainingHub() {
                           </div>
                           <div className="flex items-center gap-2">
                             <MatchBadge score={o.match_score || 0} />
+                            {!isSuperAdmin && (
                             <button
                               disabled={o.is_applied}
                               onClick={() => apply(o.id)}
@@ -331,6 +332,7 @@ export default function TrainingHub() {
                               {o.is_applied ? <CheckCircle2 size={16} /> : <Send size={16} />}
                               {o.is_applied ? 'تم التقديم' : 'تقديم'}
                             </button>
+                            )}
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-3 mt-3 text-xs text-[#F4991A] font-bold">
@@ -390,6 +392,7 @@ export default function TrainingHub() {
             )}
           </div>
 
+          {!isSuperAdmin && (
           <div className="bg-[#F9F5F0] rounded-[2rem] p-6 border border-[#F9F5F0]">
             <h3 className="text-lg font-black text-[#344F1F] mb-3 flex items-center gap-2">
               <BadgeCheck className="text-[#344F1F]" size={18} /> إدارة الحضور
@@ -468,6 +471,7 @@ export default function TrainingHub() {
               </>
             )}
           </div>
+          )}
         </div>
       </div>
     </div>

@@ -29,7 +29,7 @@ const TYPE_COLORS = {
 export default function EventDetail() {
   const { id }      = useParams();
   const navigate    = useNavigate();
-  const { isAuth }  = useAuth();
+  const { isAuth, isSuperAdmin }  = useAuth();
 
   const [event, setEvent]       = useState(null);
   const [loading, setLoading]   = useState(true);
@@ -234,6 +234,7 @@ export default function EventDetail() {
           </div>
 
           {/* ── Sidebar ───────────────────────────────────────────── */}
+          {!isSuperAdmin && (
           <div className="space-y-5">
 
             {/* Register Card */}
@@ -316,6 +317,7 @@ export default function EventDetail() {
               </div>
             </motion.div>
           </div>
+          )}
         </div>
       </div>
     </div>
