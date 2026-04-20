@@ -11,6 +11,8 @@ packages = ["sptk"]
 [userenv.shared]
 JWT_SECRET = "hebron-youth-platform-secret-2024"
 JWT_EXPIRES_IN = "7d"
+EMAIL_USER = "linka.palestine@gmail.com"
+EMAIL_PASS = "wqlq ibwo kfwq wysq"
 
 [workflows]
 runButton = "Project"
