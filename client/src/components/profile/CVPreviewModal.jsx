@@ -44,13 +44,13 @@ export default function CVPreviewModal({ onClose }) {
         usersAPI.getCVData()
             .then(res => {
                 setData(res.data);
-                setSummary(res.data.summary);
+                setSummary(res.data?.summary || '');
                 setCustomInfo(prev => ({
                     ...prev,
-                    phone: res.data.user.phone || '',
-                    address: res.data.user.neighborhood_name || '',
-                    education: res.data.user.university || '',
-                    image: res.data.user.avatar_url || null
+                    phone: res.data?.user?.phone || '',
+                    address: res.data?.user?.neighborhood_name || '',
+                    education: res.data?.user?.university || '',
+                    image: res.data?.user?.avatar_url || null
                 }));
             })
             .catch(() => toast.error('تعذر جلب بيانات السيرة الذاتية'))
@@ -136,7 +136,7 @@ export default function CVPreviewModal({ onClose }) {
 
             const opt = {
                 margin: 0,
-                filename: `CV_Linka_${data.user.name}.pdf`,
+                filename: `CV_Linka_${data?.user?.name || 'User'}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: {
                     scale: 2,
@@ -172,7 +172,7 @@ export default function CVPreviewModal({ onClose }) {
     };
 
     const handleShare = () => {
-        const url = `https://linka.ps/cv/${data.user.id}`;
+        const url = `https://linka.ps/cv/${data?.user?.id || ''}`;
         navigator.clipboard.writeText(url);
         toast.success('تم نسخ رابط السيرة الذاتية');
     };
@@ -288,8 +288,8 @@ export default function CVPreviewModal({ onClose }) {
                                             <div className="space-y-4">
                                                 <div className="flex items-center gap-4 mb-2">
                                                     <div className="w-16 h-16 rounded-2xl bg-[#F9F5F0] overflow-hidden border-2 border-[#F2EAD3] flex-shrink-0">
-                                                        {customInfo.image || data.user.avatar_url ? (
-                                                            <img src={customInfo.image || data.user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                                        {customInfo.image || data?.user?.avatar_url ? (
+                                                            <img src={customInfo.image || data?.user?.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                                                         ) : (
                                                             <div className="w-full h-full flex items-center justify-center text-[#F2EAD3]"><Users size={24} /></div>
                                                         )}

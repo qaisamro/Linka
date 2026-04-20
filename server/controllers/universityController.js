@@ -353,7 +353,7 @@ const addStudent = async (req, res) => {
 
       const [userInsert] = await pool.query(
         `INSERT INTO users (name, email, password_hash, is_university_student, university, student_id)
-         VALUES (?, ?, ?, TRUE, ?, ?)`,
+         VALUES (?, ?, ?, TRUE, ?, ?) RETURNING id`,
         [student_name || 'طالب جديد', email.toLowerCase(), password_hash, uniName, student_id]
       );
       userId = userInsert.insertId;
@@ -601,7 +601,7 @@ const generateEventCode = async (req, res) => {
     const expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     await pool.query(
-      'INSERT INTO verification_codes (event_id, code, expires_at) VALUES (?, ?, ?)',
+      'INSERT INTO verification_codes (event_id, code, expires_at) VALUES (?, ?, ?) RETURNING id',
       [event_id, code, expires_at]
     );
 

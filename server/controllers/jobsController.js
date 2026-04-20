@@ -105,7 +105,7 @@ const createJob = async (req, res) => {
     try {
         const [result] = await pool.query(
             `INSERT INTO jobs (title, organization, type, description, required_skills, location, deadline, salary_range, contact_email, created_by, entity_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
             [title, orgName, type || 'وظيفة',
                 description, JSON.stringify(required_skills || []),
                 location || 'الخليل', deadline || null, salary_range || null,

@@ -38,7 +38,7 @@ const registerToEvent = async (req, res) => {
 
     // Register user
     const [insertResult] = await pool.query(
-      `INSERT INTO registrations (user_id, event_id) VALUES (?, ?)`,
+      `INSERT INTO registrations (user_id, event_id) VALUES (?, ?) RETURNING id`,
       [userId, eventId]
     );
 
@@ -59,7 +59,7 @@ const registerToEvent = async (req, res) => {
     // ── Fetch user name for notification ──────────────────────
     const [userRows] = await pool.query('SELECT name FROM users WHERE id = ?', [userId]);
     const userName = userRows[0]?.name || 'مستخدم';
-    const regTime  = new Date().toLocaleString('ar-EG', {
+    const regTime = new Date().toLocaleString('ar-EG', {
       timeZone: 'Asia/Hebron', hour: '2-digit', minute: '2-digit',
       day: 'numeric', month: 'short',
     });
@@ -233,7 +233,7 @@ const checkAndAwardBadges = async (userId) => {
 
       if (earned) {
         const [insertResult] = await pool.query(
-          `INSERT INTO user_badges (user_id, badge_id) VALUES (?, ?) ON CONFLICT (user_id, badge_id) DO NOTHING`,
+          `INSERT INTO user_badges (user_id, badge_id) VALUES (?, ?) ON CONFLICT (user_id, badge_id) DO NOTHING RETURNING id`,
           [userId, badge.id]
         );
         if (insertResult.affectedRows > 0) {

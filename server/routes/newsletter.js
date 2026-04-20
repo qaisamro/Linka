@@ -192,4 +192,56 @@ router.post('/broadcast', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
+// ─── POST /api/newsletter/contact ── Contact Form ──────────────
+router.post('/contact', async (req, res) => {
+  const { name, email, subject, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'يرجى تعبئة جميع الحقول المطلوبة' });
+  }
+
+  const emailUser = process.env.EMAIL_USER || 'linka.palestine@gmail.com';
+  const emailPass = process.env.EMAIL_PASS || '';
+
+  if (!emailPass) {
+    return res.status(500).json({ error: 'لم يتم تهيئة خدمة البريد الإلكتروني' });
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: emailUser, pass: emailPass }
+    });
+
+    await transporter.sendMail({
+      from: `"مركز المساعدة - لينكا" <${emailUser}>`,
+      to: emailUser,
+      replyTo: email,
+      subject: `📩 رسالة جديدة من مركز المساعدة: ${subject || 'بدون عنوان'}`,
+      html: `
+        <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; color: #344F1F; padding: 20px;">
+          <div style="background: white; border-radius: 16px; padding: 30px; max-width: 500px; margin: 0 auto; border: 2px solid #F2EAD3;">
+            <h2 style="color: #F4991A; margin-top: 0;">📩 رسالة جديدة من مركز المساعدة</h2>
+            <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+              <tr><td style="padding: 8px 0; font-weight: bold; color: #344F1F;">الاسم:</td><td style="padding: 8px 0;">${name}</td></tr>
+              <tr><td style="padding: 8px 0; font-weight: bold; color: #344F1F;">البريد:</td><td style="padding: 8px 0;"><a href="mailto:${email}">${email}</a></td></tr>
+              <tr><td style="padding: 8px 0; font-weight: bold; color: #344F1F;">الموضوع:</td><td style="padding: 8px 0;">${subject || '—'}</td></tr>
+            </table>
+            <div style="margin-top: 15px; padding: 15px; background: #F9F5F0; border-radius: 12px; border-right: 4px solid #F4991A;">
+              <p style="margin: 0; font-weight: bold; color: #344F1F; margin-bottom: 8px;">الرسالة:</p>
+              <p style="margin: 0; white-space: pre-wrap;">${message}</p>
+            </div>
+            <p style="font-size: 11px; color: #999; margin-top: 20px; text-align: center;">تم الإرسال عبر مركز المساعدة — منصة لينكا</p>
+          </div>
+        </div>
+      `
+    });
+
+    res.json({ message: 'تم إرسال رسالتك بنجاح! سنرد عليك قريباً.' });
+  } catch (error) {
+    console.error('Contact Form Error:', error);
+    res.status(500).json({ error: 'حدث خطأ أثناء إرسال الرسالة. حاول مرة أخرى.' });
+  }
+});
+
 module.exports = router;

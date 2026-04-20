@@ -5,8 +5,8 @@ import { QRCodeSVG } from 'qrcode.react';
 const ProfessionalCV = forwardRef(({ data, color = '#344F1F' }, ref) => {
     if (!data) return null;
 
-    const { user, badges, skills, transcript, volunteerScore, summary, customInfo = {} } = data;
-    const userImage = customInfo.image || user.avatar_url;
+    const { user = {}, badges = [], skills = [], transcript = [], volunteerScore = 0, summary = '', customInfo = {} } = data;
+    const userImage = customInfo.image || user?.avatar_url;
 
     const SocialIcon = ({ type, size = 12 }) => {
         const icons = {

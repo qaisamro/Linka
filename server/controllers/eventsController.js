@@ -95,7 +95,7 @@ const createEvent = async (req, res) => {
       `INSERT INTO events
         (title, description, type, neighborhood_id, location_name, lat, lng,
          date, duration_hours, max_participants, image_url, created_by)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id`,
       [title, description, type, neighborhood_id, location_name,
         lat, lng, date, duration_hours || 2, max_participants || 50,
         image_url, req.user.id]

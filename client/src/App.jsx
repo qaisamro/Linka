@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import toast, { Toaster, resolveValue, ToastIcon } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -27,6 +27,10 @@ const Jobs = lazy(() => import('./pages/Jobs'));
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
 const CompanyPortal = lazy(() => import('./pages/CompanyPortal'));
 const TrainingHub = lazy(() => import('./pages/TrainingHub'));
+const FAQ = lazy(() => import('./pages/FAQ'));
+const HelpCenter = lazy(() => import('./pages/HelpCenter'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 
 // Loading component
 const PageLoader = () => (
@@ -63,6 +67,8 @@ function AppContent() {
           <Route path="/map" element={<MapView />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/profile" element={<Protected><Profile /></Protected>} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/events/:id" element={<EventDetail />} />
@@ -74,6 +80,8 @@ function AppContent() {
           <Route path="/super-admin" element={<SuperAdminRoute><SuperAdminDashboard /></SuperAdminRoute>} />
           <Route path="/company-portal" element={<CompanyPortal />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/help" element={<HelpCenter />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
@@ -96,9 +104,9 @@ export default function App() {
             className={`
               ${t.visible ? 'animate-enter opacity-100 scale-100' : 'animate-leave opacity-0 scale-95'}
               max-w-md w-full rounded-2xl pointer-events-auto flex items-center p-4 border-[3px] transition-all duration-300
-              ${t.type === 'success' ? 'border-emerald-500 bg-emerald-50 shadow-[0_8px_30px_rgba(16,185,129,0.3)]' 
-                : t.type === 'error' ? 'border-red-500 bg-red-50 shadow-[0_8px_30px_rgba(239,68,68,0.3)]' 
-                : 'border-[#F4991A] bg-white shadow-[0_8px_30px_rgba(244,153,26,0.3)]'}
+              ${t.type === 'success' ? 'border-emerald-500 bg-emerald-50 shadow-[0_8px_30px_rgba(16,185,129,0.3)]'
+                : t.type === 'error' ? 'border-red-500 bg-red-50 shadow-[0_8px_30px_rgba(239,68,68,0.3)]'
+                  : 'border-[#F4991A] bg-white shadow-[0_8px_30px_rgba(244,153,26,0.3)]'}
             `}
             style={{ direction: 'rtl', fontFamily: 'Cairo' }}
           >

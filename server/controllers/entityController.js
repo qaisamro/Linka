@@ -15,7 +15,7 @@ const createEntity = async (req, res) => {
     const password_hash = await bcrypt.hash(password, 10);
     const [result] = await pool.query(
       `INSERT INTO entities (name, name_en, type, email, password_hash, code, contact_name, phone, website, description, city, is_approved) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE) RETURNING id`,
       [name, name_en, type, email, password_hash, code, contact_name, phone, website, description, city]
     );
 

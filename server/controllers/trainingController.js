@@ -215,7 +215,7 @@ const listOffers = async (req, res) => {
     const enriched = offers.map((o) => {
       const requiredSkills = parseJsonMaybe(o.required_skills);
       const match_score = student ? computeMatchScore(requiredSkills, userSkillNames) : 0;
-      return { ...o, required_skills: requiredSkills, match_score, is_applied: !!o.is_applied };
+      return { ...o, required_skills: requiredSkills, match_score, is_applied: parseInt(o.is_applied || 0, 10) > 0 };
     });
 
     res.json({ offers: enriched });
@@ -324,7 +324,7 @@ const getMyPrograms = async (req, res) => {
 
     const [stats] = await pool.query(`
       SELECT COALESCE(SUM(ts.computed_hours), 0) as total_training_hours
-      FROM training_sessions ts
+      FROM training_attendance_sessions ts
       JOIN training_programs tp ON ts.program_id = tp.id
       WHERE tp.student_user_id = ? AND ts.status = 'university_approved'
     `, [student_user_id]);
@@ -534,13 +534,13 @@ const checkIn = async (req, res) => {
     }
 
     await pool.query(`
-      INSERT INTO training_sessions
+      INSERT INTO training_attendance_sessions
         (program_id, student_user_id, check_in_at, check_in_lat, check_in_lng, check_in_location_name, geo_verified, status)
       VALUES (?, ?, NOW(), ?, ?, ?, ?, 'pending')
     `, [programId, student_user_id, lat, lng, location_name || null, geo_verified]);
 
     const [s] = await pool.query(`
-      SELECT * FROM training_sessions
+      SELECT * FROM training_attendance_sessions
       WHERE program_id = ? AND student_user_id = ?
       ORDER BY id DESC LIMIT 1
     `, [programId, student_user_id]);
@@ -597,7 +597,7 @@ const checkOut = async (req, res) => {
     }
 
     await pool.query(`
-      UPDATE training_sessions
+      UPDATE training_attendance_sessions
       SET check_out_at = NOW(),
           check_out_lat = ?,
           check_out_lng = ?,
@@ -635,7 +635,7 @@ const universityApproveSession = async (req, res) => {
 
     const [rows] = await pool.query(`
       SELECT s.*, p.university_id
-      FROM training_sessions s
+      FROM training_attendance_sessions s
       JOIN training_programs p ON p.id = s.program_id
       WHERE s.id = ?
     `, [sessionId]);
@@ -686,7 +686,7 @@ const universityListPendingSessions = async (req, res) => {
         o.company_name,
         u.name AS student_name,
         u.student_id
-      FROM training_sessions s
+      FROM training_attendance_sessions s
       JOIN training_programs p ON p.id = s.program_id
       JOIN training_offers o ON o.id = p.offer_id
       JOIN users u ON u.id = s.student_user_id
@@ -721,7 +721,7 @@ const completeProgram = async (req, res) => {
     if (program.status !== 'in_progress') return res.status(400).json({ error: 'Program cannot be completed' });
 
     const [sessions] = await pool.query(`
-      SELECT id, status FROM training_sessions
+      SELECT id, status FROM training_attendance_sessions
       WHERE program_id = ? AND student_user_id = ?
     `, [programId, student_user_id]);
 

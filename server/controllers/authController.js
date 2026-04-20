@@ -11,6 +11,32 @@ const generateToken = (payload) => {
   });
 };
 
+// ─── Post /api/auth/verify-otp ──────────────────────────────────
+const verifyOTP = async (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) return res.status(400).json({ error: 'البريد الإلكتروني والكود مطلوبان' });
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, name, role FROM users WHERE email = ? AND verification_code = ?',
+      [email.toLowerCase(), code]
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({ error: 'كود التحقق غير صحيح' });
+    }
+
+    const user = rows[0];
+    await pool.query('UPDATE users SET is_verified = TRUE, verification_code = NULL WHERE id = ?', [user.id]);
+
+    const token = generateToken({ id: user.id, email: email.toLowerCase(), role: user.role });
+    res.json({ message: 'تم تفعيل الحساب بنجاح', token, user });
+  } catch (err) {
+    console.error('verifyOTP error:', err.message);
+    res.status(500).json({ error: 'خطأ في تفعيل الحساب' });
+  }
+};
+
 // ─── POST /api/auth/register ────────────────────────────────────
 const register = async (req, res) => {
   const {
@@ -36,25 +62,28 @@ const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
 
+    // Generate random 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
     const [insertResult] = await pool.query(
-      `INSERT INTO users (name, email, password_hash, phone, neighborhood_id, is_university_student, university, student_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO users (name, email, password_hash, phone, neighborhood_id, is_university_student, university, student_id, is_verified, verification_code)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, FALSE, ?) RETURNING id`,
       [name, email.toLowerCase(), password_hash, phone || null,
         neighborhood_id || null, is_university_student || false,
-        university || null, student_id || null]
+        university || null, student_id || null, otp]
     );
 
     const newUserId = insertResult.insertId;
 
-    // Automatic linking to university_students if student details provided
+    // ... automatic linking logic ...
     if (is_university_student && (university_id || university) && student_id) {
+      // (Keeping same as before)
       try {
         let finalUniId = university_id;
         if (!finalUniId && university) {
           const [ents] = await pool.query("SELECT id FROM entities WHERE type = 'university' AND name = ? LIMIT 1", [university]);
           finalUniId = ents[0]?.id;
         }
-
         if (finalUniId) {
           await pool.query(
             `INSERT INTO university_students (university_id, user_id, student_id, student_name)
@@ -63,75 +92,51 @@ const register = async (req, res) => {
             [finalUniId, newUserId, student_id, name]
           );
         }
-      } catch (linkErr) {
-        console.warn('Auto-link to university failed:', linkErr.message);
-      }
+      } catch (linkErr) { console.warn('Auto-link failed:', linkErr.message); }
     }
 
-    const [userRows] = await pool.query(
-      'SELECT id, name, email, role, points, total_hours, created_at, is_university_student, university FROM users WHERE id = ?',
-      [newUserId]
-    );
-
-    const newUser = userRows[0];
-    const token = generateToken({ id: newUser.id, email: newUser.email, role: newUser.role });
-    await writeAdminAudit(
-      newUser.id,
-      newUser.name,
-      'USER_REGISTERED',
-      'user',
-      newUser.id,
-      newUser.email,
-      { neighborhood_id }
-    );
-
-    // Send Welcome Email for newly registered user
+    // Send Verification Email
     const emailUser = process.env.EMAIL_USER || 'linka.palestine@gmail.com';
     const emailPass = process.env.EMAIL_PASS || '';
     if (emailPass) {
       const isLocal = req.get('host') ? req.get('host').includes('localhost') : false;
       const baseUrl = 'https://linka2026.replit.app';
       const logoUrl = isLocal ? baseUrl + '/favicon.jpeg' : baseUrl + '/public-assets/2.jpg.png';
-      
+
       const transporter = require('nodemailer').createTransport({
         service: 'gmail',
         auth: { user: emailUser, pass: emailPass }
       });
-      
+
       const mailOptions = {
         from: `"منصة لينكا Linka" <${emailUser}>`,
         to: email.toLowerCase(),
-        subject: 'انضمام موفّق! أهلاً بك في منصة لينكا 🚀',
+        subject: `كود تفعيل حسابك: ${otp} 🚀`,
         html: `
           <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; text-align: right; color: #344F1F; padding: 20px; background-color: #f9f5f0;">
-            <div style="background: white; border-radius: 16px; padding: 35px 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); max-width: 600px; margin: 0 auto; position: relative;">
-              <div style="text-align: center; margin-bottom: 25px;">
-                <img src="${logoUrl}" alt="Linka Logo" style="max-width: 140px; height: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 5px; background: white; border: 2px solid #F9F5F0; display: inline-block;" />
+            <div style="background: white; border-radius: 16px; padding: 35px 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); max-width: 600px; margin: 0 auto; text-align: center;">
+              <img src="${logoUrl}" alt="Linka Logo" style="max-width: 120px; margin-bottom: 20px;" />
+              <h2 style="color: #F4991A;">تفعيل الحساب</h2>
+              <p>أهلاً بك يا ${name.split(' ')[0]}! يرجى استخدام الكود التالي لتفعيل حسابك في منصة لينكا:</p>
+              <div style="background: #F9F5F0; padding: 20px; border-radius: 12px; font-size: 32px; font-weight: 900; letter-spacing: 5px; color: #344F1F; margin: 20px 0; border: 2px dashed #F4991A;">
+                ${otp}
               </div>
-              <h2 style="color: #F4991A; margin-top: 0; text-align: center; font-size: 26px; font-weight: 900;">
-                مرحباً بك يا ${name.split(' ')[0]}!
-              </h2>
-              <div style="text-align: right; line-height: 1.8; font-size: 15px; margin-top: 20px;">
-                <p>سعدنا جداً بانضمامك رسمياً كمستخدم جديد في منصتنا.</p>
-                <p>منصة لينكا هي بوابتك نحو عالم متكامل من الفرص التطوعية، الفعاليات المتميزة، والتدريبات الحصرية.</p>
-                <p>انطلق الآن واكتشف الفرص المتاحة في دولتك، وابدأ بجمع النقاط لتعزيز ملفك الشخصي!</p>
-                <br>
-                <div style="border-top: 2px dashed #eee; padding-top: 20px;">
-                  <p style="font-size: 13px; color: #777; margin: 0; text-align: center;">
-                    <strong>— فريق لينكا للتطوير —</strong><br>
-                    فلسطين
-                  </p>
-                </div>
+              <p style="font-size: 13px; color: #666;">إذا لم تطلب هذا الكود، يرجى تجاهل الرسالة.</p>
+              <div style="border-top: 1px solid #eee; margin-top: 25px; padding-top: 15px;">
+                 <strong>— فريق لينكا —</strong>
               </div>
             </div>
           </div>
         `
       };
-      
-      transporter.sendMail(mailOptions).catch(err => console.error('Register Welcome Email Error:', err));
+      await transporter.sendMail(mailOptions);
     }
 
-    res.status(201).json({ message: 'تم إنشاء الحساب بنجاح', token, user: newUser });
+    res.status(201).json({
+      message: 'تم إرسال كود التفعيل لبريدك الإلكتروني',
+      mustVerify: true,
+      email: email.toLowerCase()
+    });
   } catch (err) {
     console.error('Register error:', err.message);
     res.status(500).json({ error: 'خطأ في الخادم، حاول مرة أخرى' });
@@ -147,7 +152,6 @@ const login = async (req, res) => {
   }
 
   try {
-    // 1. Check regular users table
     const [userRows] = await pool.query(
       `SELECT u.*, n.name as neighborhood_name
        FROM users u
@@ -158,6 +162,16 @@ const login = async (req, res) => {
 
     if (userRows.length > 0) {
       const user = userRows[0];
+
+      // Check verification
+      if (user.is_verified === false || user.is_verified === 0) {
+        return res.status(403).json({
+          error: 'يرجى تفعيل حسابك أولاً عبر الكود المرسل لبريدك الإلكتروني',
+          mustVerify: true,
+          email: user.email
+        });
+      }
+
       const isMatch = await bcrypt.compare(password, user.password_hash);
       if (!isMatch) {
         return res.status(401).json({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
@@ -168,62 +182,36 @@ const login = async (req, res) => {
           'UPDATE users SET last_login_at = NOW(), last_login_ip = ? WHERE id = ?',
           [ip || null, user.id]
         );
-      } catch (_) { /* أعمدة اختيارية قبل الهجرة */ }
+      } catch (_) { }
       await writeAdminAudit(user.id, user.name, 'USER_LOGIN', 'session', user.id, user.email, { ip });
       const token = generateToken({ id: user.id, email: user.email, role: user.role });
-      const { password_hash, ...safeUser } = user;
+      const { password_hash, verification_code, ...safeUser } = user;
       return res.json({ message: 'تم تسجيل الدخول بنجاح', token, user: safeUser });
     }
 
-    // 2. Check entities table (University, Company, Municipality accounts)
+    // 2. Check entities ... (exactly same as before)
     const [entRows] = await pool.query(
       'SELECT * FROM entities WHERE email = ? AND is_active = TRUE',
       [email.toLowerCase()]
     );
-
-
     if (entRows.length > 0) {
       const ent = entRows[0];
-      if (!ent.password_hash) {
-        return res.status(401).json({ error: 'لم يتم تفعيل هذا الحساب بعد' });
-      }
+      if (!ent.password_hash) return res.status(401).json({ error: 'لم يتم تفعيل هذا الحساب بعد' });
       const isMatch = await bcrypt.compare(password, ent.password_hash);
-      if (!isMatch) {
-        return res.status(401).json({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
-      }
-      const token = generateToken({
-        id: ent.id,
-        email: ent.email,
-        role: 'entity',
-        entity_id: ent.id,
-        entity_name: ent.name,
-        entity_type: ent.type
-      });
+      if (!isMatch) return res.status(401).json({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
+      const token = generateToken({ id: ent.id, email: ent.email, role: 'entity', entity_id: ent.id, entity_name: ent.name, entity_type: ent.type });
       await writeAdminAudit(ent.id, ent.name, 'ENTITY_LOGIN', 'entity', ent.id, ent.email, { ip: clientIp(req) });
-      return res.json({
-        message: 'تم تسجيل الدخول بنجاح',
-        token,
-        user: {
-          id: ent.id,
-          name: ent.name,
-          email: ent.email,
-          role: 'entity',
-          entity_id: ent.id,
-          entity_type: ent.type,
-          contact_name: ent.contact_name,
-          code: ent.code,
-        },
-      });
+      return res.json({ message: 'تم تسجيل الدخول بنجاح', token, user: { id: ent.id, name: ent.name, email: ent.email, role: 'entity', entity_id: ent.id, entity_type: ent.type, contact_name: ent.contact_name, code: ent.code } });
     }
 
     return res.status(401).json({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
   } catch (err) {
     console.error('Login error:', err.message);
-    res.status(500).json({ error: 'خطأ في الخادم، حاول مرة أخرى' });
+    res.status(500).json({ error: 'خطأ في الخادم' });
   }
 };
 
-// ─── GET /api/auth/me ───────────────────────────────────────────
+// (Keep getMe as is)
 const getMe = async (req, res) => {
   try {
     if (req.user.role === 'entity' || req.user.role === 'university') {
@@ -238,7 +226,7 @@ const getMe = async (req, res) => {
     }
 
     const [userRows] = await pool.query(
-      `SELECT u.id, u.name, u.email, u.phone, u.role, u.points, u.total_hours,
+      `SELECT u.id, u.name, u.email, u.phone, u.role, u.points, u.total_hours, u.is_verified,
               u.avatar_url, u.bio, u.created_at, n.name as neighborhood_name,
               (SELECT COUNT(*) FROM registrations WHERE user_id = u.id AND status = 'attended') as participations
        FROM users u
@@ -254,4 +242,4 @@ const getMe = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe };
+module.exports = { register, login, getMe, verifyOTP };

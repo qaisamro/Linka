@@ -34,6 +34,8 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (formData) => {
     const res = await authAPI.register(formData);
+    if (res.data.mustVerify) return res.data;
+
     const { token, user } = res.data;
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
