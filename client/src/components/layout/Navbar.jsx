@@ -21,7 +21,7 @@ const itemVariants = {
 };
 
 export default function Navbar() {
-  const { user, isAuth, isAdmin, isSuperAdmin, isUniversity, isEntity, entityType, logout } = useAuth();
+  const { user, isAuth, isAdmin, isSuperAdmin, isUniversity, isEntity, entityType, logout, isImpersonating } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -55,12 +55,15 @@ export default function Navbar() {
     { label: 'الفعاليات', path: '/events', icon: Calendar },
     { label: 'فرص العمل', path: '/jobs', icon: Briefcase },
     { label: 'من نحن', path: '/about', icon: Users },
-    ...(isAuth ? [{ label: 'التدريب الميداني', path: '/training', icon: Target }] : []),
+    ...(isAuth && user?.role === 'youth' ? [
+      { label: 'التدريب الميداني', path: '/training', icon: Target },
+      { label: 'فعالياتي', path: '/my-events', icon: Calendar },
+      { label: 'متابعة طلباتي', path: '/my-jobs', icon: Briefcase }
+    ] : []),
   ];
-
   return (
     <>
-      <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled
+      <nav className={`fixed inset-x-0 z-50 transition-all duration-300 ${isImpersonating ? 'top-[56px] sm:top-[64px]' : 'top-0'} ${scrolled
         ? 'bg-[#F9F5F0] shadow-nav border-b border-[#F9F5F0]/80'
         : 'bg-[#F9F5F0]/95 backdrop-blur-sm'
         }`}>
@@ -132,7 +135,7 @@ export default function Navbar() {
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-bold text-[#344F1F] leading-none">{user.name?.split(' ')[0]}</p>
+                      <p className="text-xs font-bold text-[#344F1F] leading-none">{user.name?.trim() || 'مستخدم'}</p>
                       <p className={`text-[10px] font-bold leading-none mt-0.5 ${isSuperAdmin ? 'text-[#344F1F]' : isEntity ? 'text-[#F4991A]' : 'text-[#F4991A]'}`}>
                         {isSuperAdmin ? 'أدمن النظام' : isEntity ? (entityType === 'company' ? '💼 شركة' : '🏛️ جهة') : `⭐ ${user.points || 0}`}
                       </p>
@@ -179,7 +182,7 @@ export default function Navbar() {
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-black text-[#344F1F] leading-none">{user.name}</p>
+                      <p className="text-sm font-black text-[#344F1F] leading-none">{user.name?.trim() || 'مستخدم'}</p>
                       <p className={`text-[11px] font-bold leading-none mt-1 ${isSuperAdmin ? 'text-[#344F1F]' : 'text-[#F4991A]'}`}>
                         {isSuperAdmin ? 'أدمن النظام' : isEntity ? (entityType === 'company' ? '💼 شركة' : '🏛️ جهة') : `⭐ ${user.points || 0} نقطة`}
                       </p>

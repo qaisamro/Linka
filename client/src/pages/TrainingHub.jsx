@@ -321,17 +321,17 @@ export default function TrainingHub() {
                           <div className="flex items-center gap-2">
                             <MatchBadge score={o.match_score || 0} />
                             {!isSuperAdmin && (
-                            <button
-                              disabled={o.is_applied}
-                              onClick={() => apply(o.id)}
-                              className={`px-4 py-2 rounded-xl font-black text-sm flex items-center gap-2 transition-all ${o.is_applied
-                                ? 'bg-[#F9F5F0] text-[#F4991A] border border-[#F2EAD3] cursor-default'
-                                : 'bg-[#344F1F] text-[#F9F5F0] hover:bg-[#344F1F]'
-                                }`}
-                            >
-                              {o.is_applied ? <CheckCircle2 size={16} /> : <Send size={16} />}
-                              {o.is_applied ? 'تم التقديم' : 'تقديم'}
-                            </button>
+                              <button
+                                disabled={o.is_applied}
+                                onClick={() => apply(o.id)}
+                                className={`px-4 py-2 rounded-xl font-black text-sm flex items-center gap-2 transition-all ${o.is_applied
+                                  ? 'bg-[#F9F5F0] text-[#F4991A] border border-[#F2EAD3] cursor-default'
+                                  : 'bg-[#344F1F] text-[#F9F5F0] hover:bg-[#344F1F]'
+                                  }`}
+                              >
+                                {o.is_applied ? <CheckCircle2 size={16} /> : <Send size={16} />}
+                                {o.is_applied ? 'تم التقديم' : 'تقديم'}
+                              </button>
                             )}
                           </div>
                         </div>
@@ -341,6 +341,26 @@ export default function TrainingHub() {
                           <span className="inline-flex items-center gap-1"><Target size={12} /> مهارات مطلوبة: {Array.isArray(o.required_skills) ? o.required_skills.length : 0}</span>
                         </div>
                         {o.description && <p className="text-sm text-[#344F1F] mt-3 leading-relaxed">{o.description}</p>}
+                        {isSuperAdmin && (
+                          <div className="mt-4 pt-4 border-t border-[#F2EAD3] flex justify-end">
+                            <button
+                              onClick={async () => {
+                                if (window.confirm('هل أنت متأكد من حذف هذا العرض التدريبي؟')) {
+                                  try {
+                                    await trainingAPI.deleteOffer(o.id);
+                                    toast.success('تم حذف العرض بنجاح');
+                                    refreshAll();
+                                  } catch (err) {
+                                    toast.error('خطأ في الحذف');
+                                  }
+                                }
+                              }}
+                              className="px-4 py-2 rounded-xl font-black text-xs text-red-600 border-2 border-red-500/20 hover:bg-red-50 transition-all flex items-center gap-2"
+                            >
+                              <XCircle size={14} /> حذف (Admin)
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </motion.div>
@@ -393,84 +413,84 @@ export default function TrainingHub() {
           </div>
 
           {!isSuperAdmin && (
-          <div className="bg-[#F9F5F0] rounded-[2rem] p-6 border border-[#F9F5F0]">
-            <h3 className="text-lg font-black text-[#344F1F] mb-3 flex items-center gap-2">
-              <BadgeCheck className="text-[#344F1F]" size={18} /> إدارة الحضور
-            </h3>
+            <div className="bg-[#F9F5F0] rounded-[2rem] p-6 border border-[#F9F5F0]">
+              <h3 className="text-lg font-black text-[#344F1F] mb-3 flex items-center gap-2">
+                <BadgeCheck className="text-[#344F1F]" size={18} /> إدارة الحضور
+              </h3>
 
-            {!selectedProgram ? (
-              <p className="text-sm text-[#F4991A] font-bold">اختر مساراً من “مساراتي” لتسجيل الدخول/الخروج ومتابعة الاعتماد.</p>
-            ) : (
-              <>
-                <div className="p-4 bg-[#F9F5F0] rounded-2xl border border-[#F9F5F0] mb-4">
-                  <p className="font-black text-[#344F1F] text-sm">{selectedProgram.offer_title}</p>
-                  <p className="text-xs text-[#F4991A] font-bold">{selectedProgram.company_name || 'شركة'}</p>
-                  <div className="mt-2"><StatusPill status={selectedProgram.status} /></div>
-                </div>
+              {!selectedProgram ? (
+                <p className="text-sm text-[#F4991A] font-bold">اختر مساراً من “مساراتي” لتسجيل الدخول/الخروج ومتابعة الاعتماد.</p>
+              ) : (
+                <>
+                  <div className="p-4 bg-[#F9F5F0] rounded-2xl border border-[#F9F5F0] mb-4">
+                    <p className="font-black text-[#344F1F] text-sm">{selectedProgram.offer_title}</p>
+                    <p className="text-xs text-[#F4991A] font-bold">{selectedProgram.company_name || 'شركة'}</p>
+                    <div className="mt-2"><StatusPill status={selectedProgram.status} /></div>
+                  </div>
 
-                <div className="flex gap-2 mb-4">
-                  <button onClick={() => doCheckIn(selectedProgram.id)} className="flex-1 px-4 py-3 rounded-2xl bg-[#344F1F] text-[#F9F5F0] font-black text-sm flex items-center justify-center gap-2">
-                    <LogIn size={16} /> Check-in
-                  </button>
-                  <button onClick={() => doCheckOut(selectedProgram.id)} className="flex-1 px-4 py-3 rounded-2xl bg-[#344F1F] text-[#F9F5F0] font-black text-sm flex items-center justify-center gap-2">
-                    <LogOut size={16} /> Check-out
-                  </button>
-                </div>
+                  <div className="flex gap-2 mb-4">
+                    <button onClick={() => doCheckIn(selectedProgram.id)} className="flex-1 px-4 py-3 rounded-2xl bg-[#344F1F] text-[#F9F5F0] font-black text-sm flex items-center justify-center gap-2">
+                      <LogIn size={16} /> Check-in
+                    </button>
+                    <button onClick={() => doCheckOut(selectedProgram.id)} className="flex-1 px-4 py-3 rounded-2xl bg-[#344F1F] text-[#F9F5F0] font-black text-sm flex items-center justify-center gap-2">
+                      <LogOut size={16} /> Check-out
+                    </button>
+                  </div>
 
-                <div className="mb-4">
-                  <button onClick={() => complete(selectedProgram.id)} className="w-full px-4 py-3 rounded-2xl bg-[#344F1F] text-[#F9F5F0] font-black text-sm flex items-center justify-center gap-2">
-                    <CheckCircle2 size={16} /> إنهاء التدريب (بعد الاعتماد)
-                  </button>
-                  <p className="text-[10px] text-[#F4991A] font-bold mt-2">يُسمح بالإنهاء فقط عندما يتم اعتماد جميع الجلسات من الجامعة.</p>
-                </div>
+                  <div className="mb-4">
+                    <button onClick={() => complete(selectedProgram.id)} className="w-full px-4 py-3 rounded-2xl bg-[#344F1F] text-[#F9F5F0] font-black text-sm flex items-center justify-center gap-2">
+                      <CheckCircle2 size={16} /> إنهاء التدريب (بعد الاعتماد)
+                    </button>
+                    <p className="text-[10px] text-[#F4991A] font-bold mt-2">يُسمح بالإنهاء فقط عندما يتم اعتماد جميع الجلسات من الجامعة.</p>
+                  </div>
 
-                <div className="border-t border-[#F9F5F0] pt-4">
-                  <h4 className="font-black text-[#344F1F] text-sm mb-2 flex items-center gap-2">
-                    <Clock size={16} className="text-[#F4991A]" /> الجلسات
-                  </h4>
-                  {sessionLoading ? (
-                    <p className="text-sm text-[#F4991A] font-bold">جاري تحميل الجلسات...</p>
-                  ) : sessions.length === 0 ? (
-                    <p className="text-sm text-[#F4991A] font-bold">لا توجد جلسات بعد.</p>
-                  ) : (
-                    <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
-                      {sessions.map((s) => (
-                        <div key={s.id} className="p-3 rounded-2xl bg-[#F9F5F0] border border-[#F9F5F0]">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs font-black text-[#344F1F]">#{s.id}</p>
-                            <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${s.status === 'university_approved' ? 'bg-[#F9F5F0] text-[#344F1F]' : s.status === 'rejected' ? 'bg-[#F9F5F0] text-[#344F1F]' : 'bg-[#F9F5F0] text-[#344F1F]'}`}>
-                              {s.status}
-                            </span>
+                  <div className="border-t border-[#F9F5F0] pt-4">
+                    <h4 className="font-black text-[#344F1F] text-sm mb-2 flex items-center gap-2">
+                      <Clock size={16} className="text-[#F4991A]" /> الجلسات
+                    </h4>
+                    {sessionLoading ? (
+                      <p className="text-sm text-[#F4991A] font-bold">جاري تحميل الجلسات...</p>
+                    ) : sessions.length === 0 ? (
+                      <p className="text-sm text-[#F4991A] font-bold">لا توجد جلسات بعد.</p>
+                    ) : (
+                      <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
+                        {sessions.map((s) => (
+                          <div key={s.id} className="p-3 rounded-2xl bg-[#F9F5F0] border border-[#F9F5F0]">
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-black text-[#344F1F]">#{s.id}</p>
+                              <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${s.status === 'university_approved' ? 'bg-[#F9F5F0] text-[#344F1F]' : s.status === 'rejected' ? 'bg-[#F9F5F0] text-[#344F1F]' : 'bg-[#F9F5F0] text-[#344F1F]'}`}>
+                                {s.status}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-[#344F1F] font-bold mt-2 space-y-1">
+                              <div className="flex items-center gap-1"><Navigation size={12} /> تحقق مكاني: {Number(s.geo_verified) === 1 ? <span className="text-[#344F1F]">نعم</span> : <span className="text-[#344F1F]">لا</span>}</div>
+                              <div>ساعات: <span dir="ltr">{s.computed_hours}</span></div>
+                              <div className="text-[10px] text-[#F4991A]">دخول: {new Date(s.check_in_at).toLocaleString('ar-EG')}</div>
+                              {s.check_out_at && <div className="text-[10px] text-[#F4991A]">خروج: {new Date(s.check_out_at).toLocaleString('ar-EG')}</div>}
+                            </div>
                           </div>
-                          <div className="text-[11px] text-[#344F1F] font-bold mt-2 space-y-1">
-                            <div className="flex items-center gap-1"><Navigation size={12} /> تحقق مكاني: {Number(s.geo_verified) === 1 ? <span className="text-[#344F1F]">نعم</span> : <span className="text-[#344F1F]">لا</span>}</div>
-                            <div>ساعات: <span dir="ltr">{s.computed_hours}</span></div>
-                            <div className="text-[10px] text-[#F4991A]">دخول: {new Date(s.check_in_at).toLocaleString('ar-EG')}</div>
-                            {s.check_out_at && <div className="text-[10px] text-[#F4991A]">خروج: {new Date(s.check_out_at).toLocaleString('ar-EG')}</div>}
-                          </div>
-                        </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t border-[#F9F5F0] pt-4 mt-4">
+                    <h4 className="font-black text-[#344F1F] text-sm mb-2 flex items-center gap-2"><Star size={16} className="text-[#F4991A]" /> تقييم الشركة</h4>
+                    <div className="flex items-center gap-2 mb-2">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <button key={n} type="button" onClick={() => setReview((r) => ({ ...r, rating: n }))} className={`w-9 h-9 rounded-xl border font-black ${review.rating >= n ? 'bg-[#F9F5F0] border-[#F2EAD3] text-[#344F1F]' : 'bg-[#F9F5F0] border-[#F2EAD3] text-[#F4991A]'}`}>
+                          {n}
+                        </button>
                       ))}
                     </div>
-                  )}
-                </div>
-
-                <div className="border-t border-[#F9F5F0] pt-4 mt-4">
-                  <h4 className="font-black text-[#344F1F] text-sm mb-2 flex items-center gap-2"><Star size={16} className="text-[#F4991A]" /> تقييم الشركة</h4>
-                  <div className="flex items-center gap-2 mb-2">
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <button key={n} type="button" onClick={() => setReview((r) => ({ ...r, rating: n }))} className={`w-9 h-9 rounded-xl border font-black ${review.rating >= n ? 'bg-[#F9F5F0] border-[#F2EAD3] text-[#344F1F]' : 'bg-[#F9F5F0] border-[#F2EAD3] text-[#F4991A]'}`}>
-                        {n}
-                      </button>
-                    ))}
+                    <textarea value={review.comment} onChange={(e) => setReview((r) => ({ ...r, comment: e.target.value }))} rows={3} placeholder="اكتب مراجعة مختصرة (اختياري)..." className="w-full p-3 rounded-2xl border border-[#F2EAD3] bg-[#F9F5F0] font-bold text-sm" />
+                    <button onClick={() => submitReview(selectedProgram.id)} className="w-full mt-2 px-4 py-3 rounded-2xl bg-[#F4991A] text-[#F9F5F0] font-black text-sm flex items-center justify-center gap-2">
+                      <Send size={16} /> إرسال التقييم
+                    </button>
                   </div>
-                  <textarea value={review.comment} onChange={(e) => setReview((r) => ({ ...r, comment: e.target.value }))} rows={3} placeholder="اكتب مراجعة مختصرة (اختياري)..." className="w-full p-3 rounded-2xl border border-[#F2EAD3] bg-[#F9F5F0] font-bold text-sm" />
-                  <button onClick={() => submitReview(selectedProgram.id)} className="w-full mt-2 px-4 py-3 rounded-2xl bg-[#F4991A] text-[#F9F5F0] font-black text-sm flex items-center justify-center gap-2">
-                    <Send size={16} /> إرسال التقييم
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+                </>
+              )}
+            </div>
           )}
         </div>
       </div>

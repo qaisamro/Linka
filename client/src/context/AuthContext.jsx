@@ -45,14 +45,32 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('admin_token');
     localStorage.removeItem('user');
     setUser(null);
   };
 
+  const exitImpersonation = () => {
+    const adminToken = localStorage.getItem('admin_token');
+    if (adminToken) {
+      localStorage.setItem('token', adminToken);
+      localStorage.removeItem('admin_token');
+      // Force refresh or reload me
+      authAPI.getMe().then(res => {
+        const u = res.data.user;
+        localStorage.setItem('user', JSON.stringify(u));
+        setUser(u);
+        window.location.href = '/super-admin';
+      }).catch(() => logout());
+    }
+  };
+
   const updateUser = (newData) => {
-    const updatedUser = { ...user, ...newData };
-    setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUser(prev => {
+      const updated = { ...prev, ...newData };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const isAdmin = user?.role === 'admin' || user?.role === 'sub_admin';
@@ -61,10 +79,12 @@ export const AuthProvider = ({ children }) => {
   const isEntity = user?.role === 'entity';
   const entityType = user?.entity_type;
   const isAuth = !!user;
+  const isImpersonating = !!localStorage.getItem('admin_token');
 
   return (
     <AuthContext.Provider value={{
-      user, loading, isAuth, isAdmin, isSuperAdmin, isUniversity, isEntity, entityType, login, register, logout, updateUser
+      user, loading, isAuth, isAdmin, isSuperAdmin, isUniversity, isEntity, entityType,
+      isImpersonating, login, register, logout, updateUser, exitImpersonation
     }}>
       {children}
     </AuthContext.Provider>

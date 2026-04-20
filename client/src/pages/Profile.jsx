@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Star, Clock, Users, Calendar, Trophy,
   LogOut, MapPin, CheckCircle, ChevronRight,
-  GraduationCap, TrendingUp, Zap, Award, FileText, Share2, Camera
+  GraduationCap, TrendingUp, Zap, Award, FileText, Share2, Camera, Settings, Loader2
 } from 'lucide-react';
 import CVPreviewModal from '../components/profile/CVPreviewModal';
 import { usersAPI, registrationsAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -99,11 +99,16 @@ function Spinner() {
 export default function Profile() {
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState(null);
   const [badges, setBadges] = useState([]);
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('activity');
+
+  // Get tab from URL if present
+  const queryTab = new URLSearchParams(location.search).get('tab');
+  const [tab, setTab] = useState(queryTab || 'activity');
+
   const [showCV, setShowCV] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -124,9 +129,14 @@ export default function Profile() {
   };
 
   useEffect(() => {
+    const queryTab = new URLSearchParams(location.search).get('tab');
+    if (queryTab) setTab(queryTab);
+  }, [location.search]);
+
+  useEffect(() => {
     Promise.all([
       usersAPI.getProfile(),
-      registrationsAPI.getMy(),
+      registrationsAPI.getMyRegistrations(),
     ]).then(([pRes, rRes]) => {
       setProfile(pRes.data.user);
       setBadges(pRes.data.badges || []);
@@ -156,7 +166,7 @@ export default function Profile() {
   const upcomingRegs = registrations.filter(r => r.status === 'registered');
 
   return (
-    <div className="min-h-screen bg-[#F9F5F0] pt-16">
+    <div className="min-h-screen bg-[#F9F5F0] pt-24">
 
       {/* ── Cover Banner ─────────────────────────────────── */}
       <div className="h-48 animated-gradient dot-pattern relative overflow-hidden">
@@ -371,6 +381,7 @@ export default function Profile() {
             {[
               { key: 'activity', label: 'نشاطاتي', icon: CheckCircle, count: activityRegs.length, color: 'text-[#344F1F]' },
               { key: 'upcoming', label: 'القادمة', icon: Calendar, count: upcomingRegs.length, color: 'text-[#344F1F]' },
+              { key: 'settings', label: 'الإعدادات', icon: Settings, count: 0, color: 'text-[#F4991A]' },
             ].map(({ key, label, icon: Icon, count, color }) => (
               <button
                 key={key}
@@ -449,6 +460,17 @@ export default function Profile() {
                   )}
                 </motion.div>
               )}
+              {tab === 'settings' && (
+                <motion.div
+                  key="settings"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <SettingsTab user={p} onUpdate={setProfile} />
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
         </motion.div>
@@ -518,5 +540,76 @@ function EmptyState({ icon: Icon, title, sub }) {
       <p className="font-bold text-[#344F1F] mb-1">{title}</p>
       <p className="text-xs text-[#F4991A] max-w-xs">{sub}</p>
     </div>
+  );
+}
+
+function SettingsTab({ user, onUpdate }) {
+  const { updateUser } = useAuth();
+  const [formData, setFormData] = useState({
+    name: user.name || '',
+    email: user.email || '',
+    phone: user.phone || '',
+    password: '',
+    newPassword: '',
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await usersAPI.updateProfile(formData);
+      toast.success('تم تحديث البيانات بنجاح');
+      const profileUpdates = { name: formData.name, phone: formData.phone };
+      onUpdate({ ...user, ...profileUpdates });
+      updateUser(profileUpdates);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'خطأ في التحديث');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 py-4">
+      <div className="grid gap-4">
+        <div>
+          <label className="block text-xs font-black text-[#344F1F] mb-2 uppercase tracking-wider">الاسم الكامل</label>
+          <input
+            type="text"
+            required
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="w-full px-4 py-3 bg-[#F9F5F0] border-2 border-[#F2EAD3] rounded-2xl focus:border-[#F4991A] focus:ring-0 transition-all font-bold text-[#344F1F]"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-black text-[#344F1F] mb-2 uppercase tracking-wider">رقم الهاتف</label>
+          <input
+            type="text"
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            className="w-full px-4 py-3 bg-[#F9F5F0] border-2 border-[#F2EAD3] rounded-2xl focus:border-[#F4991A] focus:ring-0 transition-all font-bold text-[#344F1F]"
+          />
+        </div>
+        <div className="pt-4 border-t border-[#F2EAD3]">
+          <label className="block text-xs font-black text-[#F4991A] mb-2 uppercase tracking-wider">تغيير كلمة المرور (اختياري)</label>
+          <input
+            type="password"
+            placeholder="كلمة المرور الجديدة"
+            value={formData.newPassword}
+            onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+            className="w-full px-4 py-3 bg-[#F9F5F0] border-2 border-[#F2EAD3] rounded-2xl focus:border-[#F4991A] focus:ring-0 transition-all font-bold text-[#344F1F]"
+          />
+        </div>
+      </div>
+      <button
+        type="submit"
+        disabled={loading || !formData.name.trim()}
+        className="w-full btn-primary py-4 rounded-2xl shadow-xl shadow-[#344F1F]/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading ? <Loader2 className="animate-spin" size={20} /> : 'حفظ التغييرات'}
+      </button>
+    </form>
   );
 }

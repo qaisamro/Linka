@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -73,11 +73,11 @@ function NotifItem({ notif, onRead, onDelete, onClose }) {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <p className={`text-sm leading-snug line-clamp-2 ${isUnread ? 'font-bold text-[#344F1F]' : 'font-medium text-[#344F1F]'}`}>
+          <p className={`text-sm leading-snug ${isUnread ? 'font-bold text-[#344F1F]' : 'font-medium text-[#344F1F]'}`}>
             {notif.title}
           </p>
           {notif.message && (
-            <p className="text-xs text-[#F4991A] mt-0.5 line-clamp-1">{notif.message}</p>
+            <p className="text-xs text-[#F4991A] mt-0.5 break-words">{notif.message}</p>
           )}
           <div className="flex items-center gap-2 mt-1">
             <span className="text-[10px] text-[#F4991A]">{timeAgo(notif.created_at)}</span>
@@ -117,10 +117,18 @@ export default function NotificationPanel({ onClose }) {
 
   const unreadFiltered = filtered.filter(n => !n.is_read).length;
 
+  const listRef = useRef(null);
+
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = 0;
+    }
+  }, [filter, loading]);
+
   return (
     <div
       onMouseDown={(e) => e.stopPropagation()}
-      className="w-full h-full sm:w-[420px] bg-[#F9F5F0] rounded-none sm:rounded-3xl shadow-2xl sm:border-2 border-[#F2EAD3] overflow-hidden flex flex-col sm:max-h-[600px] sm:origin-top-left"
+      className="w-full sm:w-[450px] bg-[#F9F5F0] rounded-t-3xl sm:rounded-[2rem] shadow-2xl border-x-2 border-t-2 sm:border-2 border-[#F2EAD3] overflow-hidden flex flex-col max-h-[85vh] sm:h-auto sm:max-h-[min(650px,80vh)] sm:origin-top-right transition-all duration-300"
     >
 
       {/* ── Header ─────────────────────────────────────────── */}
@@ -200,7 +208,7 @@ export default function NotificationPanel({ onClose }) {
       </div>
 
       {/* ── Notification List ────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto custom-scroll py-2">
+      <div ref={listRef} className="flex-1 overflow-y-auto custom-scroll py-2 scroll-smooth">
         {loading ? (
           <div className="space-y-2 px-2 py-3">
             {[1, 2, 3].map(i => (

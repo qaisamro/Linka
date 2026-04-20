@@ -34,5 +34,9 @@ router.post('/programs/:programId/complete', verifyToken, ctrl.completeProgram);
 router.post('/programs/:programId/reviews', verifyToken, ctrl.submitStudentReview);
 router.get('/offers/:offerId/reviews', ctrl.listPublicReviewsForOffer);
 
+// Management
+router.delete('/offers/:id', verifyToken, ctrl.deleteOffer);
+router.delete('/programs/:id', verifyToken, ctrl.deleteProgram);
+
 module.exports = router;
 

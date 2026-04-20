@@ -10,7 +10,7 @@ const listUsers = async (req, res) => {
 
   let query = `
     SELECT u.id, u.name, u.email, u.phone, u.role, u.points,
-           u.total_hours, u.is_active, u.created_at,
+           u.total_hours, u.is_active, u.created_at, u.avatar_url,
            n.name AS neighborhood_name,
            (SELECT COUNT(*) FROM registrations WHERE user_id = u.id) AS total_regs,
            (SELECT COUNT(*) FROM registrations WHERE user_id = u.id AND status = 'attended') AS attended_count
@@ -36,15 +36,13 @@ const listUsers = async (req, res) => {
   }
 
   // Total count for pagination
-  const countQuery = `SELECT COUNT(*) AS total FROM users u WHERE 1=1${
-    q.trim() ? ` AND (u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)` : ''
-  }${role ? ` AND u.role = ?` : ''}${
-    status === 'active' ? ` AND u.is_active = TRUE` : status === 'inactive' ? ` AND u.is_active = FALSE` : ''
-  }`;
+  const countQuery = `SELECT COUNT(*) AS total FROM users u WHERE 1=1${q.trim() ? ` AND (u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)` : ''
+    }${role ? ` AND u.role = ?` : ''}${status === 'active' ? ` AND u.is_active = TRUE` : status === 'inactive' ? ` AND u.is_active = FALSE` : ''
+    }`;
 
   const countParams = [...params];
 
-  query += ` ORDER BY u.created_at DESC LIMIT ? OFFSET ?`;
+  query += ` ORDER BY CASE WHEN u.email = 'admin@linka.ps' THEN 0 ELSE 1 END, u.created_at DESC LIMIT ? OFFSET ?`;
   params.push(parseInt(limit), offset);
 
   try {
@@ -73,7 +71,7 @@ const listUsers = async (req, res) => {
 // Enable / disable a user account
 const toggleUserStatus = async (req, res) => {
   const { id } = req.params;
-  const adminId   = req.user.id;
+  const adminId = req.user.id;
 
   try {
     const [rows] = await pool.query(
@@ -128,7 +126,7 @@ const toggleUserStatus = async (req, res) => {
 // ─── DELETE /api/admin/users/:id ─────────────────────────────────────────────
 // Permanently delete a user and all their data (CASCADE handles relations)
 const deleteUser = async (req, res) => {
-  const { id }  = req.params;
+  const { id } = req.params;
   const adminId = req.user.id;
 
   try {
@@ -176,7 +174,7 @@ const getEventRegistrationsAdmin = async (req, res) => {
   let query = `
     SELECT r.id, r.status, r.registered_at, r.confirmed_at,
            u.id AS user_id, u.name AS user_name, u.email, u.phone,
-           u.points, u.is_active,
+           u.points, u.is_active, u.avatar_url,
            n.name AS neighborhood_name
     FROM registrations r
     JOIN users u ON r.user_id = u.id
@@ -211,7 +209,7 @@ const getEventRegistrationsAdmin = async (req, res) => {
 // ─── DELETE /api/admin/registrations/:id ─────────────────────────────────────
 // Cancel (remove) a registration and decrement event participant count
 const cancelRegistration = async (req, res) => {
-  const { id }  = req.params;
+  const { id } = req.params;
   const adminId = req.user.id;
 
   try {
@@ -276,9 +274,9 @@ const cancelRegistration = async (req, res) => {
 // ─── PATCH /api/admin/registrations/:id/status ───────────────────────────────
 // Change registration status (registered | cancelled | attended | absent)
 const changeRegistrationStatus = async (req, res) => {
-  const { id }     = req.params;
+  const { id } = req.params;
   const { status } = req.body;
-  const adminId    = req.user.id;
+  const adminId = req.user.id;
 
   const VALID = ['registered', 'cancelled', 'attended', 'absent'];
   if (!VALID.includes(status)) {
@@ -296,7 +294,7 @@ const changeRegistrationStatus = async (req, res) => {
     );
     if (regRows.length === 0) return res.status(404).json({ error: 'التسجيل غير موجود' });
 
-    const reg        = regRows[0];
+    const reg = regRows[0];
     const prevStatus = reg.status;
 
     if (prevStatus === status) {
@@ -392,9 +390,7 @@ const getAuditLog = async (req, res) => {
     params.push(s, s, s);
   }
 
-  const countQuery = `SELECT COUNT(*) AS total FROM admin_audit_log WHERE 1=1${
-    action ? ` AND action = ?` : ''}${target_type ? ` AND target_type = ?` : ''}${
-    search ? ` AND (admin_name LIKE ? OR target_name LIKE ? OR action LIKE ?)` : ''}`;
+  const countQuery = `SELECT COUNT(*) AS total FROM admin_audit_log WHERE 1=1${action ? ` AND action = ?` : ''}${target_type ? ` AND target_type = ?` : ''}${search ? ` AND (admin_name LIKE ? OR target_name LIKE ? OR action LIKE ?)` : ''}`;
   const countParams = [...params];
 
   query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
@@ -457,9 +453,9 @@ const getSystemMonitoring = async (req, res) => {
     const [activeUsers] = await pool.query("SELECT COUNT(DISTINCT user_id) as count FROM registrations WHERE registered_at > NOW() - INTERVAL '7 days'");
     const [events] = await pool.query("SELECT COUNT(*) as count FROM events WHERE date >= CURRENT_DATE");
     const [totalHours] = await pool.query("SELECT SUM(total_hours) as total FROM users");
-    
+
     const [recentLogs] = await pool.query("SELECT * FROM admin_audit_log ORDER BY created_at DESC LIMIT 10");
-    
+
     // Insights
     const [topNeighborhood] = await pool.query(`
       SELECT n.name, COUNT(*) as count 

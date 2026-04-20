@@ -45,9 +45,10 @@ export const eventsAPI = {
 // ─── Registrations ────────────────────────────────────────────────
 export const registrationsAPI = {
   register: (eventId) => api.post(`/registrations/event/${eventId}`),
-  getMy: () => api.get('/registrations/my'),
+  getMyRegistrations: () => api.get('/registrations/my'),
   getByEvent: (eventId) => api.get(`/registrations/event/${eventId}/participants`),
   confirm: (id) => api.patch(`/registrations/${id}/confirm`),
+  delete: (id) => api.delete(`/registrations/${id}`),
 };
 
 // ─── Users ────────────────────────────────────────────────────────
@@ -121,6 +122,14 @@ export const jobsAPI = {
   getRecommend: () => api.get('/jobs/recommend'),
   getSkills: () => api.get('/jobs/skills'),
   getCareerPath: () => api.get('/jobs/career-path'),
+  apply: (id, payload) => api.post(`/jobs/${id}/apply`, payload),
+  listApplications: (jobId) => api.get(`/jobs/${jobId}/applications`),
+  getMyApplications: () => api.get('/jobs/my-applications'),
+  update: (id, data) => api.put(`/jobs/${id}`, data),
+  delete: (id) => api.delete(`/jobs/${id}`),
+  deleteApplication: (jobId, appId) => api.delete(`/jobs/${jobId}/applications/${appId}`),
+  updateApplicationStatus: (jobId, appId, status) => api.patch(`/jobs/${jobId}/applications/${appId}/status`, { status }),
+  contactApplicant: (jobId, appId, data) => api.post(`/jobs/${jobId}/applications/${appId}/contact`, data),
 };
 
 // ─── Entities (Super Admin) ───────────────────────────────────────
@@ -184,6 +193,8 @@ export const superAdminAPI = {
     api.get('/super-admin/export/users.csv', { responseType: 'blob' }).then((res) => {
       downloadBlob(res.data, 'users-report.csv');
     }),
+  listAllJobs: () => api.get('/super-admin/jobs'),
+  deleteJob: (id) => api.delete(`/super-admin/jobs/${id}`),
 };
 
 export default api;

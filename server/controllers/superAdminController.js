@@ -28,7 +28,7 @@ async function maybeAutoAlerts() {
            VALUES ('warning', 'SPIKE_REGISTRATIONS', 'زيادة حادة في التسجيلات',
                    'عدد التسجيلات خلال 24 ساعة تجاوز 3× اليوم السابق',
                    ?)`,
-          [JSON.stringify({regs24, regsPrev})]
+          [JSON.stringify({ regs24, regsPrev })]
         );
       }
     }
@@ -44,7 +44,7 @@ async function maybeAutoAlerts() {
            VALUES ('info', 'SPIKE_NEW_USERS', 'عدد كبير من المستخدمين الجدد',
                    'تم إنشاء حسابات جديدة بوتيرة عالية',
                    ?)`,
-          [JSON.stringify({users24})]
+          [JSON.stringify({ users24 })]
         );
       }
     }
@@ -385,6 +385,69 @@ const exportUsersCsv = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (parseInt(id, 10) === req.user.id) {
+      return res.status(400).json({ error: 'لا يمكنك حذف حسابك الخاص من هنا' });
+    }
+    const [rows] = await pool.query('SELECT name FROM users WHERE id = ?', [id]);
+    if (!rows.length) return res.status(404).json({ error: 'المستخدم غير موجود' });
+    const targetName = rows[0].name;
+
+    await pool.query('DELETE FROM users WHERE id = ?', [id]);
+
+    const [adminRows] = await pool.query('SELECT name FROM users WHERE id = ?', [req.user.id]);
+    await writeAdminAudit(
+      req.user.id,
+      adminRows[0]?.name,
+      'USER_DELETED',
+      'user',
+      parseInt(id, 10),
+      targetName
+    );
+
+    res.json({ message: 'تم حذف المستخدم بنجاح' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'خطأ في حذف المستخدم' });
+  }
+};
+
+const listAllJobs = async (req, res) => {
+  try {
+    const [jobs] = await pool.query(`
+      SELECT j.*, u.name as company_name,
+             (SELECT COUNT(*) FROM job_applications ja WHERE ja.job_id = j.id) as applications_count
+      FROM jobs j
+      LEFT JOIN users u ON j.entity_id = u.id
+      ORDER BY j.created_at DESC
+    `);
+    res.json({ jobs });
+  } catch (err) {
+    console.error('listAllJobs error:', err);
+    res.status(500).json({ error: 'خطأ في جلب الوظائف' });
+  }
+};
+
+const deleteJob = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await pool.query('SELECT title FROM jobs WHERE id = ?', [id]);
+    if (!rows.length) return res.status(404).json({ error: 'الوظيفة غير موجودة' });
+    const jobTitle = rows[0].title;
+
+    await pool.query('DELETE FROM jobs WHERE id = ?', [id]);
+
+    const [adminRows] = await pool.query('SELECT name FROM users WHERE id = ?', [req.user.id]);
+    await writeAdminAudit(req.user.id, adminRows[0]?.name, 'JOB_DELETED_BY_SUPER', 'job', parseInt(id), jobTitle);
+
+    res.json({ message: 'تم حذف الوظيفة بنجاح' });
+  } catch (err) {
+    res.status(500).json({ error: 'خطأ في حذف الوظيفة' });
+  }
+};
+
 module.exports = {
   getOverview,
   listAlerts,
@@ -396,4 +459,7 @@ module.exports = {
   patchUser,
   exportAuditCsv,
   exportUsersCsv,
+  deleteUser,
+  listAllJobs,
+  deleteJob,
 };

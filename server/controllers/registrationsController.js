@@ -71,11 +71,11 @@ const registerToEvent = async (req, res) => {
       'registration', parseInt(eventId), 'event'
     );
 
-    // Confirm registration to the user
+    // Confirm registration to the user (Pending review)
     await createNotificationForUser(
       userId,
-      `تم تسجيلك في "${event.title}" ✅`,
-      `موعد الفعالية: ${new Date(event.date).toLocaleDateString('ar-EG')} · ${event.location_name}`,
+      `تم استلام طلب انضمامك في "${event.title}" 📋`,
+      `طلبك قيد المراجعة حالياً، سيصلك إشعار فور تأكيد الطلب.`,
       'registration', parseInt(eventId), 'event'
     );
 
@@ -132,7 +132,7 @@ const getEventRegistrations = async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      `SELECT r.*, u.name as user_name, u.email, u.phone,
+      `SELECT r.*, u.name as user_name, u.email, u.phone, u.avatar_url,
               n.name as neighborhood_name
        FROM registrations r
        JOIN users u ON r.user_id = u.id
@@ -251,9 +251,36 @@ const checkAndAwardBadges = async (userId) => {
   }
 };
 
+const deleteRegistration = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [regRows] = await pool.query('SELECT * FROM registrations WHERE id = ?', [id]);
+    if (!regRows.length) return res.status(404).json({ error: 'التسجيل غير موجود' });
+    const reg = regRows[0];
+
+    // Ownership check for regular admins/users, but super admin bypass
+    if (!req.user.is_super_admin && reg.user_id !== req.user.id) {
+      // Check if requester is creator of the event
+      const [event] = await pool.query('SELECT created_by FROM events WHERE id = ?', [reg.event_id]);
+      if (!event.length || event[0].created_by !== req.user.id) {
+        return res.status(403).json({ error: 'غير مصرح لك بحذف هذا التسجيل' });
+      }
+    }
+
+    await pool.query('DELETE FROM registrations WHERE id = ?', [id]);
+    await pool.query('UPDATE events SET current_participants = GREATEST(0, current_participants - 1) WHERE id = ?', [reg.event_id]);
+
+    res.json({ message: 'تم حذف التسجيل بنجاح' });
+  } catch (err) {
+    console.error('deleteRegistration error:', err.message);
+    res.status(500).json({ error: 'خطأ في حذف التسجيل' });
+  }
+};
+
 module.exports = {
   registerToEvent,
   getMyRegistrations,
   getEventRegistrations,
-  confirmAttendance
+  confirmAttendance,
+  deleteRegistration
 };

@@ -7,6 +7,8 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ScrollToTop from './components/layout/ScrollToTop';
 import ChatbotWidget from './components/chat/ChatbotWidget';
+import { Shield, ArrowLeftRight, LogOut, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Pages
 import Home from './pages/Home';
@@ -15,6 +17,7 @@ import MapView from './pages/MapView';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import MyEvents from './pages/MyEvents';
 import Leaderboard from './pages/Leaderboard';
 import EventDetail from './pages/EventDetail';
 import About from './pages/About';
@@ -24,6 +27,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 
 const UniversityPortal = lazy(() => import('./pages/UniversityPortal'));
 const Jobs = lazy(() => import('./pages/Jobs'));
+const MyJobApplications = lazy(() => import('./pages/MyJobApplications'));
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
 const CompanyPortal = lazy(() => import('./pages/CompanyPortal'));
 const TrainingHub = lazy(() => import('./pages/TrainingHub'));
@@ -55,38 +59,71 @@ const SuperAdminRoute = ({ children }) => {
 };
 
 function AppContent() {
+  const { isImpersonating, user, exitImpersonation } = useAuth();
+
   return (
     <>
-      <ScrollToTop />
-      <Navbar />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/map" element={<MapView />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/profile" element={<Protected><Profile /></Protected>} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/events/:id" element={<EventDetail />} />
-          <Route path="/admin" element={<Protected><AdminDashboard /></Protected>} />
-          <Route path="/university" element={<Protected><UniversityDashboard /></Protected>} />
-          <Route path="/university-portal" element={<UniversityPortal />} />
-          <Route path="/jobs" element={<Jobs />} />
-          <Route path="/training" element={<Protected><TrainingHub /></Protected>} />
-          <Route path="/super-admin" element={<SuperAdminRoute><SuperAdminDashboard /></SuperAdminRoute>} />
-          <Route path="/company-portal" element={<CompanyPortal />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/help" element={<HelpCenter />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-      <Footer />
-      <ChatbotWidget />
+      <AnimatePresence>
+        {isImpersonating && (
+          <motion.div
+            initial={{ y: -100 }}
+            animate={{ y: 0 }}
+            exit={{ y: -100 }}
+            className="fixed top-0 inset-x-0 z-[10000] bg-[#344F1F] text-[#F9F5F0] py-3 px-4 shadow-2xl border-b border-[#F4991A]/30 flex items-center justify-between pointer-events-auto"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-[#F4991A] rounded-lg flex items-center justify-center shadow-lg animate-pulse">
+                <Shield size={18} className="text-[#344F1F]" />
+              </div>
+              <div>
+                <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#F4991A]">وضع التقمص نشط</p>
+                <p className="text-xs sm:text-sm font-bold">أنت تتصفح الآن كـ: <span className="text-[#F4991A]">{user?.name}</span></p>
+              </div>
+            </div>
+
+            <button
+              onClick={exitImpersonation}
+              className="flex items-center gap-2 px-4 py-2 bg-[#F4991A] text-[#344F1F] rounded-xl font-black text-xs sm:text-sm hover:scale-105 active:scale-95 transition-all shadow-lg"
+            >
+              <LogOut size={16} /> العودة للوحة الإدارة
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div className={isImpersonating ? 'pt-16 sm:pt-14' : ''}>
+        <ScrollToTop />
+        <Navbar />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/map" element={<MapView />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/profile" element={<Protected><Profile /></Protected>} />
+            <Route path="/my-events" element={<Protected><MyEvents /></Protected>} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/events/:id" element={<EventDetail />} />
+            <Route path="/admin" element={<Protected><AdminDashboard /></Protected>} />
+            <Route path="/university" element={<Protected><UniversityDashboard /></Protected>} />
+            <Route path="/university-portal" element={<UniversityPortal />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/my-jobs" element={<Protected><MyJobApplications /></Protected>} />
+            <Route path="/training" element={<Protected><TrainingHub /></Protected>} />
+            <Route path="/super-admin" element={<SuperAdminRoute><SuperAdminDashboard /></SuperAdminRoute>} />
+            <Route path="/company-portal" element={<CompanyPortal />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/help" element={<HelpCenter />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+        <Footer />
+        <ChatbotWidget />
+      </div>
     </>
   );
 }

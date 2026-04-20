@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { entitiesAPI, adminAPI, superAdminAPI, analyticsAPI } from '../api';
 import toast from 'react-hot-toast';
+import ConfirmModal from '../components/ui/ConfirmModal';
 
 const ENTITY_TYPES = {
   university: { label: 'جامعة', icon: GraduationCap, color: 'text-[#344F1F]', bg: 'bg-[#F9F5F0]' },
@@ -34,6 +35,7 @@ export default function SuperAdminDashboard() {
   const [blockedIps, setBlockedIps] = useState([]);
   const [logActionFilter, setLogActionFilter] = useState('');
   const [heatmapData, setHeatmapData] = useState(null);
+  const [jobs, setJobs] = useState([]);
 
   const [isEntityModalOpen, setIsEntityModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -41,6 +43,13 @@ export default function SuperAdminDashboard() {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { },
+    type: 'danger'
+  });
 
   useEffect(() => {
     fetchTabData();
@@ -89,6 +98,9 @@ export default function SuperAdminDashboard() {
       } else if (activeTab === 'settings') {
         const res = await adminAPI.getSettings();
         setSettings(res.data.settings);
+      } else if (activeTab === 'jobs') {
+        const res = await superAdminAPI.listAllJobs();
+        setJobs(res.data.jobs);
       }
     } catch (err) {
       toast.error('خطأ في مزامنة البيانات');
@@ -102,6 +114,7 @@ export default function SuperAdminDashboard() {
     { id: 'users', icon: Users, label: 'المستخدمون' },
     { id: 'entities', icon: Building, label: 'الجهات والشركاء' },
     { id: 'events', icon: Calendar, label: 'الفعاليات' },
+    { id: 'jobs', icon: Briefcase, label: 'فرص العمل' },
     { id: 'logs', icon: Clock, label: 'سجل العمليات' },
     { id: 'security', icon: ShieldAlert, label: 'الأمن والحظر' },
     { id: 'newsletter', icon: Mail, label: 'النشرة الإخبارية' },
@@ -110,11 +123,18 @@ export default function SuperAdminDashboard() {
 
   const handleImpersonate = async (id) => {
     try {
+      const currentToken = localStorage.getItem('token');
       const res = await adminAPI.impersonate(id);
+
+      // Save admin session
+      localStorage.setItem('admin_token', currentToken);
+
+      // Switch to user session
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+
       toast.success(res.data.message);
-      window.location.href = '/profile';
+      window.location.href = '/';
     } catch (err) {
       toast.error('خطأ في عملية التقمص');
     }
@@ -130,15 +150,22 @@ export default function SuperAdminDashboard() {
     }
   };
 
-  const handleDeleteEntity = async (id) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذه الجهة نهائياً؟')) return;
-    try {
-      await entitiesAPI.delete(id);
-      setEntities(entities.filter(e => e.id !== id));
-      toast.success('تم حذف الجهة بنجاح');
-    } catch (err) {
-      toast.error('خطأ في عملية الحذف');
-    }
+  const handleDeleteEntity = (id) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'حذف الجهة',
+      message: 'هل أنت متأكد من حذف هذه الجهة نهائياً؟',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          await entitiesAPI.delete(id);
+          setEntities(entities.filter(e => e.id !== id));
+          toast.success('تم حذف الجهة بنجاح');
+        } catch (err) {
+          toast.error('خطأ في عملية الحذف');
+        }
+      }
+    });
   };
 
   const handleUpdateEntity = async (id, data) => {
@@ -173,15 +200,22 @@ export default function SuperAdminDashboard() {
     }
   };
 
-  const handleDeleteUser = async (id) => {
-    if (!window.confirm('تأكيد حذف المستخدم نهائيا؟')) return;
-    try {
-      await adminAPI.deleteUser(id);
-      toast.success('تم الحذف');
-      setUsers(users.filter((u) => u.id !== id));
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'تعذر الحذف');
-    }
+  const handleDeleteUser = (id) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'حذف المستخدم',
+      message: 'تأكيد حذف المستخدم نهائيا؟ سيتم حذف جميع بياناته المرتبطة.',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          await adminAPI.deleteUser(id);
+          toast.success('تم الحذف');
+          setUsers(users.filter((u) => u.id !== id));
+        } catch (err) {
+          toast.error(err.response?.data?.error || 'تعذر الحذف');
+        }
+      }
+    });
   };
 
   const handleMarkAlertRead = async (id) => {
@@ -215,6 +249,45 @@ export default function SuperAdminDashboard() {
     } catch (_) {
       toast.error('فشل الإلغاء');
     }
+  };
+
+  const handleDeleteJob = (id) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'حذف الوظيفة',
+      message: 'حذف هذه الوظيفة نهائياً وبشكل غير قابل للاسترجاع؟',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          await superAdminAPI.deleteJob(id);
+          setJobs(jobs.filter(j => j.id !== id));
+          toast.success('تم حذف الوظيفة');
+        } catch (err) {
+          toast.error('فشل الحذف');
+        }
+      }
+    });
+  };
+
+  const handleDeleteEvent = (id) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'حذف الفعالية',
+      message: 'هل أنت متأكد من حذف هذه الفعالية نهائياً؟ سيتم إلغاء جميع التسجيلات.',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          await fetch(`/api/events/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          });
+          toast.success('تم حذف الفعالية بنجاح');
+          setAllEvents(allEvents.filter(ev => ev.id !== id));
+        } catch (err) {
+          toast.error('فشل في حذف الفعالية');
+        }
+      }
+    });
   };
 
   return (
@@ -388,17 +461,31 @@ export default function SuperAdminDashboard() {
                 setSearch={setSearch}
               />
             )}
+            {activeTab === 'jobs' && (
+              <JobsAdminView
+                jobs={jobs}
+                onDelete={handleDeleteJob}
+                search={search}
+                setSearch={setSearch}
+              />
+            )}
             {activeTab === 'entities' && (
               <EntitiesView
                 entities={entities}
                 onToggle={handleToggleEntity}
                 onDelete={handleDeleteEntity}
-                onEdit={(entity) => { setSelectedEntity(entity); setIsSettingsModalOpen(true); }}
+                onUpdate={(entity) => { setSelectedEntity(entity); setIsSettingsModalOpen(true); }}
                 search={search}
                 setSearch={setSearch}
               />
             )}
-            {activeTab === 'events' && <EventsAdminView events={allEvents} />}
+            {activeTab === 'events' && (
+              <EventsAdminView
+                events={allEvents}
+                onDelete={handleDeleteEvent}
+                onEdit={(ev) => window.open(`/events/${ev.id}`, '_blank')}
+              />
+            )}
             {activeTab === 'logs' && (
               <LogsView
                 logs={logs}
@@ -438,6 +525,16 @@ export default function SuperAdminDashboard() {
           />
         )}
       </AnimatePresence>
+
+      {/* Global Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState({ ...confirmState, isOpen: false })}
+        onConfirm={confirmState.onConfirm}
+        title={confirmState.title}
+        message={confirmState.message}
+        type={confirmState.type}
+      />
     </div>
   );
 }
@@ -634,7 +731,7 @@ function UsersView({ users, onImpersonate, onToggleUser, onDeleteUser, onSearch,
             <div className="relative z-10 flex flex-col gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-[#F9F5F0] flex items-center justify-center font-black text-[#344F1F] border border-[#F2EAD3] text-lg">
-                  {u.avatar ? <img src={u.avatar} className="w-full h-full object-cover" /> : u.name[0]}
+                  {u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" /> : u.name[0]}
                 </div>
                 <div className="flex-1">
                   <p className="font-black text-[#344F1F] text-base">{u.name}</p>
@@ -690,7 +787,7 @@ function UsersView({ users, onImpersonate, onToggleUser, onDeleteUser, onSearch,
                 <td className="p-5">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-[#F9F5F0] flex items-center justify-center font-black text-[#344F1F] border border-[#F2EAD3] shadow-sm transform group-hover:rotate-3 transition-transform text-xs overflow-hidden">
-                      {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" /> : user.name[0]}
+                      {user.avatar_url ? <img src={user.avatar_url} className="w-full h-full object-cover" /> : user.name[0]}
                     </div>
                     <div>
                       <p className="font-black text-[#344F1F] text-sm">{user.name}</p>
@@ -882,6 +979,7 @@ function EventsAdminView({ events }) {
               <th className="p-5">الحالة</th>
               <th className="p-5">التسجيل</th>
               <th className="p-5">التاريخ</th>
+              <th className="p-5 text-center">الإجراءات</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F2EAD3]">
@@ -903,6 +1001,23 @@ function EventsAdminView({ events }) {
                 </td>
                 <td className="p-5 text-xs text-[#F4991A] font-bold">
                   {ev.date ? new Date(ev.date).toLocaleDateString('ar-EG') : '—'}
+                </td>
+                <td className="p-5">
+                  <div className="flex justify-center gap-2">
+                    <button onClick={() => window.open(`/events/${ev.id}`, '_blank')} className="p-2 bg-[#F9F5F0] text-[#344F1F] rounded-xl border border-[#F2EAD3]">
+                      <Eye size={14} />
+                    </button>
+                    <button onClick={() => {
+                      if (window.confirm('هل أنت متأكد من حذف هذه الفعالية نهائياً؟')) {
+                        // call delete API directly if we have it or generic
+                        fetch(`/api/events/${ev.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
+                          .then(() => toast.success('تم الحذف'))
+                          .catch(() => toast.error('فشل الحذف'));
+                      }
+                    }} className="p-2 bg-[#F9F5F0] text-red-600 rounded-xl border border-[#F2EAD3]">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -973,6 +1088,17 @@ function LogsView({ logs, search, setSearch, logActionFilter, setLogActionFilter
     SETTING_CHANGED: 'تعديل إعداد سيستم',
     IP_BLOCKED: 'حظر عنوان IP',
     IP_UNBLOCKED: 'إلغاء حظر IP',
+    USER_JOINED_EVENT: 'انضمام لفعالية',
+    EVENT_CREATED: 'إنشاء فعالية جديدة',
+    EVENT_UPDATED: 'تحديث بيانات فعالية',
+    EVENT_DELETED: 'حذف فعالية نهائياً',
+    JOB_CREATED: 'إنشاء فرصة عمل',
+    JOB_UPDATED: 'تحديث فرصة عمل',
+    JOB_DELETED: 'حذف فرصة عمل',
+    JOB_APP_DELETED: 'حذف طلب توظيف',
+    JOB_DELETED_BY_SUPER: 'حذف وظيفة (سوبر أدمن)',
+    NEWSLETTER_SENT: 'إرسال نشرة بريدية جماعية',
+    BULK_STATUS_UPDATE: 'تحديث جماعي للحالات',
   };
 
   return (
@@ -1242,8 +1368,8 @@ function NewsletterBroadcastView() {
   };
 
   const allContacts = getCombinedContacts();
-  const filteredContacts = allContacts.filter(c => 
-    (c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredContacts = allContacts.filter(c =>
+    (c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (c.name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -1263,7 +1389,7 @@ function NewsletterBroadcastView() {
   const handleDeleteSubscriber = async (email, e) => {
     e.stopPropagation();
     if (!window.confirm('هل أنت متأكد من حذف هذا الإيميل والانهاء من النشرة الإخبارية بشكل دائم؟')) return;
-    
+
     try {
       const res = await fetch(`/api/newsletter/subscribers/${encodeURIComponent(email)}`, {
         method: 'DELETE',
@@ -1271,7 +1397,7 @@ function NewsletterBroadcastView() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'فشل الحذف');
-      
+
       toast.success(data.message || 'تم إزالة المشترك بنجاح');
       fetchContacts();
       setSelectedEmails(prev => prev.filter(em => em !== email));
@@ -1283,17 +1409,17 @@ function NewsletterBroadcastView() {
   const handleSend = async (e) => {
     e.preventDefault();
     if (!subject || !messageHtml) return toast.error('الموضوع ونص الرسالة مطلوبان');
-    
+
     if (audience === 'specific' && selectedEmails.length === 0) {
       return toast.error('يرجى تحديد جهة اتصال واحدة على الأقل');
     }
 
     if (!window.confirm('أنت على وشك إرسال هذه الرسالة. هل أنت متأكد؟')) return;
-    
+
     setLoading(true);
     try {
       const submitAudience = audience === 'all' ? 'all' : 'custom';
-      
+
       const res = await fetch('/api/newsletter/broadcast', {
         method: 'POST',
         headers: {
@@ -1304,7 +1430,7 @@ function NewsletterBroadcastView() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'فشل الإرسال');
-      
+
       toast.success(data.message || 'تم الإرسال بنجاح');
       setSubject('');
       setMessageHtml('');
@@ -1333,18 +1459,18 @@ function NewsletterBroadcastView() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-xs font-black text-[#F4991A] mb-2 mr-2 uppercase">عنوان الرسالة (Subject)</label>
-              <input 
-                value={subject} 
-                onChange={(e) => setSubject(e.target.value)} 
+              <input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
                 placeholder="مثال: إشعار هام..."
-                className="w-full px-5 py-4 bg-[#F9F5F0] border-0 rounded-2xl focus:ring-2 focus:ring-[#F4991A] font-bold text-sm" 
+                className="w-full px-5 py-4 bg-[#F9F5F0] border-0 rounded-2xl focus:ring-2 focus:ring-[#F4991A] font-bold text-sm"
               />
             </div>
 
             <div>
               <label className="block text-xs font-black text-[#F4991A] mb-2 mr-2 uppercase">من سيستلم الرسالة؟</label>
-              <select 
-                value={audience} 
+              <select
+                value={audience}
                 onChange={(e) => {
                   setAudience(e.target.value);
                   if (e.target.value === 'all') setSelectedEmails([]);
@@ -1365,11 +1491,11 @@ function NewsletterBroadcastView() {
                   {selectedEmails.length === filteredContacts.length && filteredContacts.length > 0 ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
                 </button>
               </label>
-              
+
               <div className="mb-4 relative">
                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-[#F4991A]" size={18} />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="بحث عن اسم أو بريد..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -1395,16 +1521,16 @@ function NewsletterBroadcastView() {
                     </thead>
                     <tbody className="divide-y divide-[#F2EAD3]">
                       {filteredContacts.map((c, i) => (
-                        <tr 
-                          key={i} 
+                        <tr
+                          key={i}
                           onClick={() => handleToggleSelect(c.email)}
                           className={`cursor-pointer transition-colors ${selectedEmails.includes(c.email) ? 'bg-[#344F1F]/5 text-[#344F1F]' : 'hover:bg-white'}`}
                         >
                           <td className="p-2 sm:p-3 text-center">
-                            <input 
-                              type="checkbox" 
-                              checked={selectedEmails.includes(c.email)} 
-                              readOnly 
+                            <input
+                              type="checkbox"
+                              checked={selectedEmails.includes(c.email)}
+                              readOnly
                               className="w-4 h-4 sm:w-5 sm:h-5 accent-[#F4991A] rounded"
                             />
                           </td>
@@ -1436,9 +1562,9 @@ function NewsletterBroadcastView() {
 
           <div>
             <label className="block text-xs font-black text-[#F4991A] mb-2 mr-2 uppercase">محتوى الرسالة المنسق</label>
-            <textarea 
-              value={messageHtml} 
-              onChange={(e) => setMessageHtml(e.target.value)} 
+            <textarea
+              value={messageHtml}
+              onChange={(e) => setMessageHtml(e.target.value)}
               rows={8}
               placeholder="اكتب رسالتك هنا... (يدعم أكواد HTML للتنسيق والصور)"
               className="w-full px-5 py-4 bg-[#F9F5F0] border-0 rounded-2xl focus:ring-2 focus:ring-[#F4991A] font-medium text-sm resize-none text-right"
@@ -1448,8 +1574,8 @@ function NewsletterBroadcastView() {
         </div>
 
         <div className="flex justify-end pt-4">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             className="px-8 py-4 bg-[#344F1F] text-[#F9F5F0] rounded-2xl font-black shadow-lg shadow-[#344F1F]/20 disabled:opacity-50 flex items-center justify-center gap-3 transition-all hover:scale-105 active:scale-95"
           >
@@ -1462,3 +1588,84 @@ function NewsletterBroadcastView() {
   );
 }
 
+function JobsAdminView({ jobs, onDelete, search, setSearch }) {
+  const filtered = jobs.filter(j =>
+    j.title.toLowerCase().includes(search.toLowerCase()) ||
+    j.company_name?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#F9F5F0] rounded-[2.5rem] p-4 sm:p-8 shadow-sm border border-[#F9F5F0] overflow-hidden">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+        <div>
+          <h3 className="text-xl sm:text-2xl font-black text-[#344F1F]">بنك الوظائف المركزي</h3>
+          <p className="text-[10px] sm:text-xs text-[#F4991A] font-bold mt-1 uppercase tracking-widest">إدارة كافة الفرص المطروحة على المنصة</p>
+        </div>
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-[#F4991A]" size={18} />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="بحث عن وظيفة أو شركة..." className="w-full pr-12 pl-4 py-3 bg-white border border-[#F2EAD3] rounded-2xl focus:ring-2 focus:ring-[#F4991A] transition-all text-sm font-bold" />
+        </div>
+      </div>
+
+      <div className="hidden lg:block overflow-x-auto rich-scroll rounded-[2rem] border border-[#F2EAD3]">
+        <table className="w-full text-right">
+          <thead>
+            <tr className="bg-[#F9F5F0] text-[#344F1F] text-xs font-black uppercase tracking-wider border-b border-[#F2EAD3]">
+              <th className="p-5">الوظيفة</th>
+              <th className="p-5">الشركة</th>
+              <th className="p-5">المتقدمين</th>
+              <th className="p-5">الحالة</th>
+              <th className="p-5 text-center">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#F2EAD3]">
+            {filtered.map(job => (
+              <tr key={job.id} className="hover:bg-[#F9F5F0]/50 transition-colors group">
+                <td className="p-5">
+                  <p className="font-black text-[#344F1F] text-sm">{job.title}</p>
+                  <p className="text-[10px] text-[#F4991A] font-medium">{job.location}</p>
+                </td>
+                <td className="p-5">
+                  <p className="text-sm font-bold text-[#344F1F]">{job.company_name || 'جهة خارجية'}</p>
+                </td>
+                <td className="p-5">
+                  <span className="font-black text-[#344F1F]">{job.applications_count || 0}</span>
+                </td>
+                <td className="p-5">
+                  <span className={`px-2 py-1 rounded-lg text-[10px] font-black ${job.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {job.is_active ? 'نشطة' : 'مغلقة'}
+                  </span>
+                </td>
+                <td className="p-5 text-center">
+                  <button onClick={() => onDelete(job.id)} className="p-2.5 bg-[#F9F5F0] text-red-600 rounded-xl border border-[#F2EAD3] hover:bg-red-50 transition-all shadow-sm">
+                    <Trash2 size={16} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="lg:hidden space-y-4">
+        {filtered.map(job => (
+          <div key={job.id} className="p-5 bg-white rounded-[2rem] border border-[#F2EAD3] shadow-sm flex flex-col gap-3">
+            <div className="flex justify-between">
+              <div>
+                <h4 className="font-black text-[#344F1F] text-sm">{job.title}</h4>
+                <p className="text-xs text-[#F4991A] font-bold">{job.company_name}</p>
+              </div>
+              <button onClick={() => onDelete(job.id)} className="p-2 text-red-600">
+                <Trash2 size={20} />
+              </button>
+            </div>
+            <div className="flex items-center gap-4 text-[10px] font-bold text-[#344F1F]/60">
+              <span className="flex items-center gap-1"><Users size={12} /> {job.applications_count} متقدم</span>
+              <span className="flex items-center gap-1"><MapPin size={12} /> {job.location}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}

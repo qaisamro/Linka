@@ -1,4 +1,4 @@
-const jwt  = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const pool = require('../db/pool');
 
 const verifyToken = async (req, res, next) => {
@@ -49,7 +49,8 @@ const verifyToken = async (req, res, next) => {
       return res.status(403).json({ error: 'تم تعطيل حسابك من قِبل الإدارة. يُرجى التواصل معنا.' });
     }
 
-    req.user = decoded; // { id, email, role }
+    const user = rows[0];
+    req.user = { ...decoded, is_super_admin: user.role === 'super_admin' || user.role === 'admin' };
     next();
   } catch (err) {
     console.error('Auth middleware DB error:', err.message);

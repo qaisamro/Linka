@@ -84,7 +84,7 @@ const getMyNotifications = async (req, res) => {
 
     res.json({
       notifications: rows,
-      total:  Number(stats.total)  || 0,
+      total: Number(stats.total) || 0,
       unread: Number(stats.unread) || 0,
     });
   } catch (err) {

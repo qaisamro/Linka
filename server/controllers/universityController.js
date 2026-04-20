@@ -256,7 +256,7 @@ const getMyStudents = async (req, res) => {
       ) att ON att.user_id = u.id
       LEFT JOIN (
         SELECT student_user_id, SUM(computed_hours) AS field_hours
-        FROM training_sessions
+        FROM training_attendance_sessions
         WHERE status = 'university_approved'
         GROUP BY student_user_id
       ) ts ON ts.student_user_id = u.id
