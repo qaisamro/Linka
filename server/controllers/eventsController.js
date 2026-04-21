@@ -259,7 +259,7 @@ const deleteEvent = async (req, res) => {
   }
 };
 
-// ─── POST /api/events/entity  (Entity creates event, pending approval) ──
+// ─── POST /api/events/entity  (Entity creates event, auto-approved) ──
 const createEntityEvent = async (req, res) => {
   const {
     title, description, type, neighborhood_id,
@@ -281,14 +281,27 @@ const createEntityEvent = async (req, res) => {
       `INSERT INTO events
         (title, description, type, neighborhood_id, location_name, lat, lng,
          date, duration_hours, max_participants, image_url, created_by, entity_id, approval_status, status)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'pending','active') RETURNING id`,
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'approved','active') RETURNING id`,
       [title, description, type || 'اجتماعية', neighborhood_id, location_name,
         lat, lng, date, duration_hours || 2, max_participants || 50,
-        image_url, null, entityId]
+        image_url, req.user.id, entityId]
     );
 
-    const [rows] = await pool.query('SELECT * FROM events WHERE id = ?', [insertResult.insertId]);
-    res.status(201).json({ message: 'تم إرسال الفعالية بانتظار موافقة الإدارة', event: rows[0] });
+    const eventId = insertResult.insertId;
+    const [rows] = await pool.query('SELECT * FROM events WHERE id = ?', [eventId]);
+    const event = rows[0];
+
+    // Notify all users about the new event
+    const eventDate = new Date(date).toLocaleDateString('ar-EG', {
+      weekday: 'long', day: 'numeric', month: 'long',
+    });
+    await notifyAllUsers(
+      `فعالية جديدة: "${title}" 🎉`,
+      `${eventDate} · ${location_name || ''} · سجّل الآن!`,
+      'new_event', eventId, 'event', null
+    );
+
+    res.status(201).json({ message: 'تم نشر الفعالية بنجاح وإبلاغ الشباب', event });
   } catch (err) {
     console.error('createEntityEvent error:', err.message);
     res.status(500).json({ error: 'خطأ في إنشاء الفعالية' });
@@ -300,12 +313,13 @@ const getEntityEvents = async (req, res) => {
   const entityId = req.user.entity_id ?? req.user.id;
   try {
     const [rows] = await pool.query(
-      `SELECT e.*, n.name as neighborhood_name
+      `SELECT e.*, n.name as neighborhood_name,
+              (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status = 'pending')::int as pending_registrations_count
        FROM events e
        LEFT JOIN neighborhoods n ON e.neighborhood_id = n.id
-       WHERE e.entity_id = ?
+       WHERE e.entity_id = ? OR e.created_by = ?
        ORDER BY e.created_at DESC`,
-      [entityId]
+      [entityId, req.user.id]
     );
     res.json({ events: rows });
   } catch (err) {

@@ -6,7 +6,7 @@ import {
   CheckCircle2, AlertCircle, BarChart3, TrendingUp,
   Mail, ExternalLink, Activity, X, FileText, Check
 } from 'lucide-react';
-import { jobsAPI, trainingAPI, eventsAPI } from '../api';
+import { jobsAPI, trainingAPI, eventsAPI, registrationsAPI } from '../api';
 import toast from 'react-hot-toast';
 
 const EmailModal = ({ isOpen, onClose, onSend, applicantName }) => {
@@ -117,6 +117,9 @@ export default function CompanyPortal() {
     title: '', description: '', type: 'اجتماعية',
     location_name: '', date: '', duration_hours: 2, max_participants: 50
   });
+  // Event registrations management
+  const [selectedEventRegs, setSelectedEventRegs] = useState(null); // { event, registrations }
+  const [regsLoading, setRegsLoading] = useState(false);
 
   const [newJob, setNewJob] = useState({
     title: '', description: '', type: 'وظيفة',
@@ -172,12 +175,46 @@ export default function CompanyPortal() {
     e.preventDefault();
     try {
       await eventsAPI.createEntityEvent(newEvent);
-      toast.success('تم إرسال الفعالية بانتظار موافقة الإدارة ✅');
+      toast.success('تم نشر الفعالية وإبلاغ الشباب ✅');
       setEventModalOpen(false);
       setNewEvent({ title: '', description: '', type: 'اجتماعية', location_name: '', date: '', duration_hours: 2, max_participants: 50 });
       fetchEntityEvents();
     } catch (err) {
       toast.error(err.response?.data?.error || 'خطأ في إرسال الفعالية');
+    }
+  };
+
+  const openEventRegs = async (ev) => {
+    setRegsLoading(true);
+    setSelectedEventRegs({ event: ev, registrations: [] });
+    try {
+      const res = await registrationsAPI.getEntityEventRegs(ev.id);
+      setSelectedEventRegs({ event: ev, registrations: res.data.registrations || [] });
+    } catch (err) {
+      toast.error('خطأ في جلب الطلبات');
+    } finally {
+      setRegsLoading(false);
+    }
+  };
+
+  const handleEntityApprove = async (regId) => {
+    try {
+      await registrationsAPI.entityApprove(regId);
+      toast.success('تمت الموافقة ✅');
+      openEventRegs(selectedEventRegs.event);
+      fetchEntityEvents();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'تعذر تنفيذ الإجراء');
+    }
+  };
+
+  const handleEntityReject = async (regId) => {
+    try {
+      await registrationsAPI.entityReject(regId);
+      toast.success('تم الرفض');
+      openEventRegs(selectedEventRegs.event);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'تعذر تنفيذ الإجراء');
     }
   };
 
@@ -492,32 +529,38 @@ export default function CompanyPortal() {
               ) : entityEvents.length === 0 ? (
                 <div className="text-center py-12 bg-[#F9F5F0] rounded-2xl">
                   <p className="text-[#F4991A] font-bold">لم تقم بإضافة أي فعاليات بعد.</p>
-                  <p className="text-[#344F1F]/60 text-sm mt-1">اضغط "إضافة فعالية" لإرسال فعالية للمراجعة.</p>
+                  <p className="text-[#344F1F]/60 text-sm mt-1">اضغط "إضافة فعالية" لإنشاء فعالية ونشرها فوراً.</p>
                 </div>
               ) : (
                 entityEvents.map(ev => {
-                  const statusMap = {
-                    pending: { label: 'قيد المراجعة', cls: 'bg-amber-100 text-amber-700' },
-                    approved: { label: 'مُعتمدة', cls: 'bg-green-100 text-green-700' },
-                    rejected: { label: 'مرفوضة', cls: 'bg-red-100 text-red-700' },
-                  };
-                  const s = statusMap[ev.approval_status] || statusMap.pending;
+                  const pendingCount = ev.pending_registrations_count ?? 0;
                   return (
                     <div key={ev.id} className="group p-6 rounded-2xl bg-[#F9F5F0] border border-[#F2EAD3] transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-[#F9F5F0] rounded-xl flex items-center justify-center text-2xl border border-[#F2EAD3]">
-                          🎉
-                        </div>
+                        <div className="w-12 h-12 bg-[#F9F5F0] rounded-xl flex items-center justify-center text-2xl border border-[#F2EAD3]">🎉</div>
                         <div>
                           <h4 className="font-bold text-[#344F1F]">{ev.title}</h4>
                           <div className="flex items-center gap-4 mt-1 text-[#F4991A] text-xs font-bold flex-wrap">
                             <span className="flex items-center gap-1"><MapPin size={12} /> {ev.location_name || '—'}</span>
                             <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(ev.date).toLocaleDateString('ar-EG')}</span>
-                            <span className="flex items-center gap-1"><Users size={12} /> {ev.max_participants} مقعد</span>
+                            <span className="flex items-center gap-1"><Users size={12} /> {ev.current_participants ?? 0} / {ev.max_participants} مشارك</span>
                           </div>
                         </div>
                       </div>
-                      <span className={`text-xs font-black px-3 py-1 rounded-full ${s.cls}`}>{s.label}</span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => openEventRegs(ev)}
+                          className="relative flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#344F1F] text-[#F9F5F0] text-xs font-black hover:bg-[#2A3F19] transition-all"
+                        >
+                          <Users size={14} /> إدارة التسجيلات
+                          {pendingCount > 0 && (
+                            <span className="absolute -top-2 -left-2 w-5 h-5 bg-[#F4991A] text-[#344F1F] rounded-full text-[10px] font-black flex items-center justify-center">
+                              {pendingCount}
+                            </span>
+                          )}
+                        </button>
+                        <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">منشورة</span>
+                      </div>
                     </div>
                   );
                 })
@@ -529,6 +572,108 @@ export default function CompanyPortal() {
       </div>
 
       {/* Modal */}
+      {/* ─── Event Registrations Management Panel ─── */}
+      <AnimatePresence>
+        {selectedEventRegs && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-[#344F1F]/60 backdrop-blur-sm"
+              onClick={() => setSelectedEventRegs(null)}
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative bg-[#F9F5F0] rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden z-10 max-h-[90vh] flex flex-col"
+            >
+              {/* Header */}
+              <div className="h-2 w-full bg-[#344F1F]" />
+              <div className="flex items-center justify-between p-6 border-b border-[#F2EAD3]">
+                <div>
+                  <h3 className="text-lg font-black text-[#344F1F]">طلبات التسجيل</h3>
+                  <p className="text-xs text-[#F4991A] font-bold mt-0.5">{selectedEventRegs.event?.title}</p>
+                </div>
+                <button onClick={() => setSelectedEventRegs(null)} className="p-2 hover:bg-[#F2EAD3] rounded-xl transition-all">
+                  <X size={20} className="text-[#344F1F]/60" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="overflow-y-auto flex-1 p-6 space-y-3">
+                {regsLoading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="w-8 h-8 border-4 border-[#F2EAD3] border-t-[#344F1F] rounded-full animate-spin" />
+                  </div>
+                ) : selectedEventRegs.registrations.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-5xl mb-3">📭</div>
+                    <p className="text-[#F4991A] font-bold">لا توجد طلبات تسجيل بعد.</p>
+                  </div>
+                ) : (
+                  selectedEventRegs.registrations.map(reg => {
+                    const statusCfg = {
+                      pending: { label: 'بانتظار المراجعة', cls: 'bg-amber-100 text-amber-700 border-amber-200' },
+                      registered: { label: 'مقبول', cls: 'bg-green-100 text-green-700 border-green-200' },
+                      attended: { label: 'حضر', cls: 'bg-[#344F1F]/10 text-[#344F1F] border-[#344F1F]/20' },
+                      cancelled: { label: 'مرفوض', cls: 'bg-red-100 text-red-600 border-red-200' },
+                    };
+                    const sc = statusCfg[reg.status] || statusCfg.pending;
+                    return (
+                      <div key={reg.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-[#F2EAD3] gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-full bg-[#F2EAD3] flex items-center justify-center font-black text-[#344F1F] text-sm flex-shrink-0">
+                            {reg.user_name?.charAt(0) || '?'}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-bold text-[#344F1F] text-sm truncate">{reg.user_name}</p>
+                            <p className="text-[10px] text-[#F4991A] font-bold truncate">{reg.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg border ${sc.cls}`}>{sc.label}</span>
+                          {reg.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={() => handleEntityApprove(reg.id)}
+                                className="p-2 bg-green-50 text-green-700 rounded-xl border border-green-200 hover:bg-green-100 transition-all"
+                                title="موافقة"
+                              >
+                                <Check size={15} />
+                              </button>
+                              <button
+                                onClick={() => handleEntityReject(reg.id)}
+                                className="p-2 bg-red-50 text-red-600 rounded-xl border border-red-200 hover:bg-red-100 transition-all"
+                                title="رفض"
+                              >
+                                <X size={15} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Footer counts */}
+              <div className="px-6 py-4 border-t border-[#F2EAD3] flex gap-4 text-xs font-black bg-[#F2EAD3]/30">
+                {['pending','registered','attended','cancelled'].map(s => {
+                  const cnt = selectedEventRegs.registrations.filter(r => r.status === s).length;
+                  if (!cnt) return null;
+                  const labels = { pending: 'بانتظار', registered: 'مقبول', attended: 'حضر', cancelled: 'مرفوض' };
+                  const colors = { pending: 'text-amber-700', registered: 'text-green-700', attended: 'text-[#344F1F]', cancelled: 'text-red-600' };
+                  return (
+                    <span key={s} className={colors[s]}>{labels[s]}: {cnt}</span>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#344F1F]/60 backdrop-blur-sm">
           <motion.div

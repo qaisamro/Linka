@@ -55,6 +55,10 @@ export const registrationsAPI = {
   getByEvent: (eventId) => api.get(`/registrations/event/${eventId}/participants`),
   confirm: (id) => api.patch(`/registrations/${id}/confirm`),
   delete: (id) => api.delete(`/registrations/${id}`),
+  // Entity portal — manage registrations for entity's own events
+  getEntityEventRegs: (eventId) => api.get(`/registrations/entity/event/${eventId}`),
+  entityApprove: (id) => api.patch(`/registrations/${id}/entity-approve`),
+  entityReject: (id) => api.patch(`/registrations/${id}/entity-reject`),
 };
 
 // ─── Users ────────────────────────────────────────────────────────

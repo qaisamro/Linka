@@ -70,6 +70,14 @@ async function runMigrations() {
     console.error('⚠️  Could not migrate events (entity_id/approval_status):', err.message);
   }
 
+  // Allow 'pending' status for registrations awaiting entity approval
+  try {
+    await pool.query(`ALTER TABLE registrations DROP CONSTRAINT IF EXISTS registrations_status_check`);
+    await pool.query(`ALTER TABLE registrations ADD CONSTRAINT registrations_status_check CHECK (status IN ('registered', 'attended', 'absent', 'cancelled', 'pending'))`);
+  } catch (err) {
+    console.error('⚠️  Could not migrate registrations status CHECK:', err.message);
+  }
+
   // Job applications table
   try {
     await pool.query(`

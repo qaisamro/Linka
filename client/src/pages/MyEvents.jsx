@@ -105,9 +105,17 @@ export default function MyEvents() {
                                             <span className="flex items-center gap-1 bg-[#344F1F] text-[#F9F5F0] text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg">
                                                 ✅ تم الحضور
                                             </span>
+                                        ) : reg.status === 'pending' ? (
+                                            <span className="flex items-center gap-1 bg-amber-500 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg">
+                                                ⏳ بانتظار موافقة الجهة
+                                            </span>
+                                        ) : reg.status === 'cancelled' ? (
+                                            <span className="flex items-center gap-1 bg-red-500 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg">
+                                                ❌ تم الرفض
+                                            </span>
                                         ) : (
                                             <span className="flex items-center gap-1 bg-[#F4991A] text-[#344F1F] text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg">
-                                                <Heart size={10} fill="currentColor" /> مفضلة / قيد المراجعة
+                                                <Heart size={10} fill="currentColor" /> مسجّل
                                             </span>
                                         )}
                                     </div>
