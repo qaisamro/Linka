@@ -941,32 +941,62 @@ function EntitiesView({ entities, onToggle, onDelete, onUpdate, search, setSearc
   );
 }
 
-function EventsAdminView({ events }) {
+function EventsAdminView({ events, onDelete, onEdit }) {
+  const STATUS_MAP = {
+    active: { label: 'نشطة', cls: 'bg-green-50 text-green-700 border-green-200' },
+    completed: { label: 'منتهية', cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' },
+    cancelled: { label: 'ملغاة', cls: 'bg-red-50 text-red-600 border-red-200' },
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#F9F5F0] rounded-[2.5rem] p-4 sm:p-8 shadow-sm border border-[#F9F5F0] overflow-hidden">
-      <div className="mb-8">
-        <h3 className="text-xl sm:text-2xl font-black text-[#344F1F]">جميع الفعاليات</h3>
-        <p className="text-[10px] sm:text-xs text-[#F4991A] font-bold mt-1 uppercase tracking-widest">نظرة شاملة على نشاط المنصة</p>
+      <div className="mb-8 flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h3 className="text-xl sm:text-2xl font-black text-[#344F1F]">جميع الفعاليات</h3>
+          <p className="text-[10px] sm:text-xs text-[#F4991A] font-bold mt-1 uppercase tracking-widest">نظرة شاملة على نشاط المنصة</p>
+        </div>
+        <span className="px-4 py-1.5 rounded-full bg-[#F2EAD3] text-[#344F1F] text-xs font-black">{events.length} فعالية</span>
       </div>
+
+      {events.length === 0 && (
+        <div className="text-center py-16 text-[#F4991A] font-bold">لا توجد فعاليات بعد.</div>
+      )}
 
       {/* Mobile: Cards */}
       <div className="lg:hidden space-y-4">
-        {events.map((ev) => (
-          <div key={ev.id} className="p-5 bg-white rounded-[2rem] border border-[#F2EAD3] shadow-sm flex flex-col gap-3">
-            <div className="flex justify-between items-start">
-              <h4 className="font-black text-[#344F1F] text-sm leading-tight">{ev.title}</h4>
-              <span className="text-[10px] font-black px-2 py-1 bg-[#F9F5F0] text-[#344F1F] border border-[#F2EAD3] rounded-lg">{ev.status}</span>
-            </div>
-            <div className="flex justify-between items-center text-[10px] font-bold">
-              <div className="flex items-center gap-1.5 text-[#F4991A]">
-                <MapPin size={12} /> {ev.neighborhood_name || '—'}
+        {events.map((ev) => {
+          const s = STATUS_MAP[ev.status] || STATUS_MAP.active;
+          return (
+            <div key={ev.id} className="p-5 bg-white rounded-[2rem] border border-[#F2EAD3] shadow-sm flex flex-col gap-3">
+              <div className="flex justify-between items-start gap-2">
+                <h4 className="font-black text-[#344F1F] text-sm leading-tight flex-1">{ev.title}</h4>
+                <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg border whitespace-nowrap ${s.cls}`}>{s.label}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-[#344F1F]">
-                <Users size={12} /> {ev.registration_count ?? 0} / {ev.max_participants}
+              <div className="flex justify-between items-center text-[10px] font-bold">
+                <div className="flex items-center gap-1.5 text-[#F4991A]">
+                  <MapPin size={12} /> {ev.neighborhood_name || '—'}
+                </div>
+                <div className="flex items-center gap-1.5 text-[#344F1F]">
+                  <Users size={12} /> {ev.registration_count ?? 0} / {ev.max_participants}
+                </div>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => window.open(`/events/${ev.id}`, '_blank')}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#F9F5F0] border border-[#F2EAD3] text-[#344F1F] text-xs font-black hover:bg-[#F2EAD3] transition-all"
+                >
+                  <Eye size={13} /> عرض
+                </button>
+                <button
+                  onClick={() => onDelete && onDelete(ev.id)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-black hover:bg-red-100 transition-all"
+                >
+                  <Trash2 size={13} /> حذف
+                </button>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Desktop: Table */}
@@ -983,44 +1013,59 @@ function EventsAdminView({ events }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F2EAD3]">
-            {events.map((ev) => (
-              <tr key={ev.id} className="hover:bg-[#F9F5F0]/50 transition-colors group">
-                <td className="p-5">
-                  <p className="font-bold text-[#344F1F]">{ev.title}</p>
-                </td>
-                <td className="p-5">
-                  <p className="text-sm text-[#344F1F]">{ev.neighborhood_name || '—'}</p>
-                </td>
-                <td className="p-5">
-                  <span className="px-3 py-1 bg-[#F9F5F0] text-[#344F1F] rounded-lg text-[10px] font-black border border-[#F2EAD3]">
-                    {ev.status}
-                  </span>
-                </td>
-                <td className="p-5">
-                  <p className="text-xs font-black text-[#344F1F]">{ev.registration_count ?? 0} / {ev.max_participants}</p>
-                </td>
-                <td className="p-5 text-xs text-[#F4991A] font-bold">
-                  {ev.date ? new Date(ev.date).toLocaleDateString('ar-EG') : '—'}
-                </td>
-                <td className="p-5">
-                  <div className="flex justify-center gap-2">
-                    <button onClick={() => window.open(`/events/${ev.id}`, '_blank')} className="p-2 bg-[#F9F5F0] text-[#344F1F] rounded-xl border border-[#F2EAD3]">
-                      <Eye size={14} />
-                    </button>
-                    <button onClick={() => {
-                      if (window.confirm('هل أنت متأكد من حذف هذه الفعالية نهائياً؟')) {
-                        // call delete API directly if we have it or generic
-                        fetch(`/api/events/${ev.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
-                          .then(() => toast.success('تم الحذف'))
-                          .catch(() => toast.error('فشل الحذف'));
-                      }
-                    }} className="p-2 bg-[#F9F5F0] text-red-600 rounded-xl border border-[#F2EAD3]">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {events.map((ev) => {
+              const s = STATUS_MAP[ev.status] || STATUS_MAP.active;
+              return (
+                <tr key={ev.id} className="hover:bg-[#F9F5F0]/50 transition-colors group">
+                  <td className="p-5">
+                    <p className="font-bold text-[#344F1F]">{ev.title}</p>
+                    {ev.entity_name && (
+                      <p className="text-[10px] text-[#F4991A] mt-0.5 font-bold">{ev.entity_name}</p>
+                    )}
+                  </td>
+                  <td className="p-5">
+                    <p className="text-sm text-[#344F1F]">{ev.neighborhood_name || '—'}</p>
+                  </td>
+                  <td className="p-5">
+                    <span className={`px-3 py-1 rounded-xl text-[10px] font-black border ${s.cls}`}>
+                      {s.label}
+                    </span>
+                  </td>
+                  <td className="p-5">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 bg-[#F2EAD3] rounded-full overflow-hidden w-16">
+                        <div
+                          className="h-full bg-[#F4991A] rounded-full"
+                          style={{ width: `${Math.min(100, ((ev.registration_count ?? 0) / ev.max_participants) * 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-black text-[#344F1F]">{ev.registration_count ?? 0}/{ev.max_participants}</span>
+                    </div>
+                  </td>
+                  <td className="p-5 text-xs text-[#F4991A] font-bold">
+                    {ev.date ? new Date(ev.date).toLocaleDateString('ar-EG') : '—'}
+                  </td>
+                  <td className="p-5">
+                    <div className="flex justify-center gap-2">
+                      <button
+                        onClick={() => window.open(`/events/${ev.id}`, '_blank')}
+                        className="p-2 bg-[#F9F5F0] text-[#344F1F] rounded-xl border border-[#F2EAD3] hover:bg-[#F2EAD3] transition-all"
+                        title="عرض"
+                      >
+                        <Eye size={14} />
+                      </button>
+                      <button
+                        onClick={() => onDelete && onDelete(ev.id)}
+                        className="p-2 bg-red-50 text-red-600 rounded-xl border border-red-200 hover:bg-red-100 transition-all"
+                        title="حذف"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
