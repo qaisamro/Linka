@@ -7,9 +7,9 @@ import {
   Clock, ArrowRight, TrendingUp, AlertCircle, Eye, Bell,
   Settings, Database, Filter, Download, UserPlus, Fingerprint,
   Map as MapIcon, Power, Printer, Server, ShieldAlert, LineChart,
-  Zap, Globe, MousePointer2, AlertTriangle, MapPin, Mail, Send
+  Zap, Globe, MousePointer2, AlertTriangle, MapPin, Mail, Send, Edit2, X, Save
 } from 'lucide-react';
-import { entitiesAPI, adminAPI, superAdminAPI, analyticsAPI } from '../api';
+import { entitiesAPI, adminAPI, superAdminAPI, analyticsAPI, eventsAPI } from '../api';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/ui/ConfirmModal';
 
@@ -483,7 +483,7 @@ export default function SuperAdminDashboard() {
               <EventsAdminView
                 events={allEvents}
                 onDelete={handleDeleteEvent}
-                onEdit={(ev) => window.open(`/events/${ev.id}`, '_blank')}
+                onRefresh={fetchTabData}
               />
             )}
             {activeTab === 'logs' && (
@@ -941,15 +941,144 @@ function EntitiesView({ entities, onToggle, onDelete, onUpdate, search, setSearc
   );
 }
 
-function EventsAdminView({ events, onDelete, onEdit }) {
+function EventsAdminView({ events, onDelete, onRefresh }) {
   const STATUS_MAP = {
     active: { label: 'نشطة', cls: 'bg-green-50 text-green-700 border-green-200' },
     completed: { label: 'منتهية', cls: 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' },
     cancelled: { label: 'ملغاة', cls: 'bg-red-50 text-red-600 border-red-200' },
   };
 
+  const [editingEv, setEditingEv] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [saving, setSaving] = useState(false);
+
+  function openEdit(ev) {
+    setEditingEv(ev);
+    setEditForm({
+      title: ev.title || '',
+      description: ev.description || '',
+      location_name: ev.location_name || '',
+      date: ev.date ? ev.date.slice(0, 16) : '',
+      max_participants: ev.max_participants || '',
+      status: ev.status || 'active',
+    });
+  }
+
+  async function saveEdit() {
+    setSaving(true);
+    try {
+      await eventsAPI.update(editingEv.id, editForm);
+      toast.success('تم تحديث الفعالية بنجاح');
+      setEditingEv(null);
+      onRefresh && onRefresh();
+    } catch {
+      toast.error('خطأ في تحديث الفعالية');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#F9F5F0] rounded-[2.5rem] p-4 sm:p-8 shadow-sm border border-[#F9F5F0] overflow-hidden">
+
+      {/* ── Edit Modal ── */}
+      <AnimatePresence>
+        {editingEv && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+            onClick={(e) => e.target === e.currentTarget && setEditingEv(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-[2rem] shadow-2xl p-7 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              dir="rtl"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-black text-[#344F1F]">تعديل الفعالية</h3>
+                <button onClick={() => setEditingEv(null)} className="p-2 rounded-xl hover:bg-[#F9F5F0] text-[#344F1F] transition-all">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-black text-[#344F1F] block mb-1">عنوان الفعالية</label>
+                  <input
+                    value={editForm.title}
+                    onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
+                    className="w-full border border-[#F2EAD3] rounded-xl px-4 py-2.5 text-sm font-medium text-[#344F1F] focus:outline-none focus:border-[#F4991A] bg-[#F9F5F0]"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-black text-[#344F1F] block mb-1">الوصف</label>
+                  <textarea
+                    value={editForm.description}
+                    onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+                    rows={3}
+                    className="w-full border border-[#F2EAD3] rounded-xl px-4 py-2.5 text-sm font-medium text-[#344F1F] focus:outline-none focus:border-[#F4991A] bg-[#F9F5F0] resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-black text-[#344F1F] block mb-1">موقع الفعالية</label>
+                  <input
+                    value={editForm.location_name}
+                    onChange={e => setEditForm(f => ({ ...f, location_name: e.target.value }))}
+                    className="w-full border border-[#F2EAD3] rounded-xl px-4 py-2.5 text-sm font-medium text-[#344F1F] focus:outline-none focus:border-[#F4991A] bg-[#F9F5F0]"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-black text-[#344F1F] block mb-1">التاريخ والوقت</label>
+                    <input
+                      type="datetime-local"
+                      value={editForm.date}
+                      onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))}
+                      className="w-full border border-[#F2EAD3] rounded-xl px-3 py-2.5 text-sm font-medium text-[#344F1F] focus:outline-none focus:border-[#F4991A] bg-[#F9F5F0]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-black text-[#344F1F] block mb-1">الطاقة الاستيعابية</label>
+                    <input
+                      type="number"
+                      value={editForm.max_participants}
+                      onChange={e => setEditForm(f => ({ ...f, max_participants: e.target.value }))}
+                      className="w-full border border-[#F2EAD3] rounded-xl px-3 py-2.5 text-sm font-medium text-[#344F1F] focus:outline-none focus:border-[#F4991A] bg-[#F9F5F0]"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-black text-[#344F1F] block mb-1">الحالة</label>
+                  <select
+                    value={editForm.status}
+                    onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))}
+                    className="w-full border border-[#F2EAD3] rounded-xl px-4 py-2.5 text-sm font-medium text-[#344F1F] focus:outline-none focus:border-[#F4991A] bg-[#F9F5F0]"
+                  >
+                    <option value="active">نشطة</option>
+                    <option value="completed">منتهية</option>
+                    <option value="cancelled">ملغاة</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-7">
+                <button
+                  onClick={saveEdit}
+                  disabled={saving}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-[1.2rem] bg-[#344F1F] text-white text-sm font-black hover:bg-[#F4991A] transition-all disabled:opacity-50"
+                >
+                  <Save size={15} /> {saving ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+                </button>
+                <button
+                  onClick={() => setEditingEv(null)}
+                  className="px-6 py-3 rounded-[1.2rem] bg-[#F9F5F0] border border-[#F2EAD3] text-[#344F1F] text-sm font-black hover:bg-[#F2EAD3] transition-all"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="mb-8 flex items-center justify-between flex-wrap gap-3">
         <div>
           <h3 className="text-xl sm:text-2xl font-black text-[#344F1F]">جميع الفعاليات</h3>
@@ -986,6 +1115,12 @@ function EventsAdminView({ events, onDelete, onEdit }) {
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#F9F5F0] border border-[#F2EAD3] text-[#344F1F] text-xs font-black hover:bg-[#F2EAD3] transition-all"
                 >
                   <Eye size={13} /> عرض
+                </button>
+                <button
+                  onClick={() => openEdit(ev)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-black hover:bg-blue-100 transition-all"
+                >
+                  <Edit2 size={13} /> تعديل
                 </button>
                 <button
                   onClick={() => onDelete && onDelete(ev.id)}
@@ -1053,6 +1188,13 @@ function EventsAdminView({ events, onDelete, onEdit }) {
                         title="عرض"
                       >
                         <Eye size={14} />
+                      </button>
+                      <button
+                        onClick={() => openEdit(ev)}
+                        className="p-2 bg-blue-50 text-blue-700 rounded-xl border border-blue-200 hover:bg-blue-100 transition-all"
+                        title="تعديل"
+                      >
+                        <Edit2 size={14} />
                       </button>
                       <button
                         onClick={() => onDelete && onDelete(ev.id)}

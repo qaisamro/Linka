@@ -1,6 +1,67 @@
 const pool = require('../db/pool');
 const { notifyAdmins, createNotificationForUser } = require('./notificationsController');
 const { writeAdminAudit } = require('../utils/auditLog');
+const { emailHeader, emailFooter } = require('../utils/emailHelpers');
+
+// ─── Email helper ────────────────────────────────────────────────
+function buildTransporter() {
+  return require('nodemailer').createTransport({
+    service: 'gmail',
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+  });
+}
+
+async function sendRegistrationEmail(to, userName, eventTitle, eventDate, action) {
+  if (!to || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
+  const configs = {
+    pending: {
+      subject: `طلب التسجيل في "${eventTitle}" — جاري المعالجة`,
+      bodyHtml: `
+        <p style="font-size:15px;">عزيزي <b>${userName}</b>،</p>
+        <p style="font-size:15px;">تم استلام طلبك للانضمام إلى الفعالية التالية:</p>
+        <div style="background:#F9F5F0;border-right:5px solid #F4991A;padding:15px 20px;border-radius:10px;margin:20px 0;">
+          <p style="margin:0;font-size:16px;font-weight:bold;color:#344F1F;">${eventTitle}</p>
+          ${eventDate ? `<p style="margin:5px 0 0;color:#F4991A;">${eventDate}</p>` : ''}
+        </div>
+        <p style="font-size:15px;">طلبك <b>جاري المعالجة</b> حالياً من قِبل الجهة المنظمة، وستصلك رسالة بمجرد البت في طلبك.</p>
+        <p style="font-size:15px;">نتمنى لك التوفيق!</p>
+      `
+    },
+    approved: {
+      subject: `تمت الموافقة على طلبك في "${eventTitle}" ✅`,
+      bodyHtml: `
+        <p style="font-size:15px;">عزيزي <b>${userName}</b>،</p>
+        <p style="font-size:15px;">يسعدنا إعلامك بأن طلبك قد <b style="color:#22c55e;">قُبل</b> للمشاركة في:</p>
+        <div style="background:#F9F5F0;border-right:5px solid #22c55e;padding:15px 20px;border-radius:10px;margin:20px 0;">
+          <p style="margin:0;font-size:16px;font-weight:bold;color:#344F1F;">${eventTitle}</p>
+          ${eventDate ? `<p style="margin:5px 0 0;color:#F4991A;">${eventDate}</p>` : ''}
+        </div>
+        <p style="font-size:15px;">نراك في الفعالية! لا تنسَ تسجيل حضورك لتحصد نقاطك.</p>
+      `
+    },
+    rejected: {
+      subject: `بخصوص طلب التسجيل في "${eventTitle}"`,
+      bodyHtml: `
+        <p style="font-size:15px;">عزيزي <b>${userName}</b>،</p>
+        <p style="font-size:15px;">نأسف لإعلامك بأنه <b style="color:#ef4444;">لم يتم قبول</b> طلبك للمشاركة في:</p>
+        <div style="background:#F9F5F0;border-right:5px solid #ef4444;padding:15px 20px;border-radius:10px;margin:20px 0;">
+          <p style="margin:0;font-size:16px;font-weight:bold;color:#344F1F;">${eventTitle}</p>
+        </div>
+        <p style="font-size:15px;">يمكنك الاطلاع على الفعاليات الأخرى المتاحة ومحاولة التسجيل فيها.</p>
+        <p style="font-size:15px;">شكراً لاهتمامك.</p>
+      `
+    }
+  };
+  const cfg = configs[action];
+  if (!cfg) return;
+  const mailOptions = {
+    from: `"منصة لينكا" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: cfg.subject,
+    html: emailHeader(cfg.subject) + cfg.bodyHtml + emailFooter()
+  };
+  buildTransporter().sendMail(mailOptions).catch(err => console.error('Registration email error:', err.message));
+}
 
 // ─── POST /api/registrations/:eventId  ──────────────────────────
 // Register current user to an event
@@ -75,13 +136,17 @@ const registerToEvent = async (req, res) => {
       WHERE r.id = ?
     `, [insertResult.insertId]);
 
-    // Fetch user name
-    const [userRows] = await pool.query('SELECT name FROM users WHERE id = ?', [userId]);
+    // Fetch user name + email
+    const [userRows] = await pool.query('SELECT name, email FROM users WHERE id = ?', [userId]);
     const userName = userRows[0]?.name || 'مستخدم';
+    const userEmail = userRows[0]?.email || null;
     const regTime = new Date().toLocaleString('ar-EG', {
       timeZone: 'Asia/Hebron', hour: '2-digit', minute: '2-digit',
       day: 'numeric', month: 'short',
     });
+    const eventDateStr = event.date ? new Date(event.date).toLocaleDateString('ar-EG', {
+      weekday: 'long', day: 'numeric', month: 'long'
+    }) : '';
 
     if (isEntityEvent) {
       // Notify entity creator to review the registration
@@ -93,13 +158,15 @@ const registerToEvent = async (req, res) => {
           'registration', parseInt(eventId), 'event'
         );
       }
-      // Inform user their request is pending
+      // Inform user their request is pending (in-app)
       await createNotificationForUser(
         userId,
         `طلبك قيد المراجعة في "${event.title}" ⏳`,
         `أرسلنا طلبك إلى الجهة المنظمة، ستصلك إشارة فور الموافقة.`,
         'registration', parseInt(eventId), 'event'
       );
+      // Send email "جاري المعالجة"
+      sendRegistrationEmail(userEmail, userName, event.title, eventDateStr, 'pending');
     } else {
       // Normal admin-created event — notify admins
       await notifyAdmins(
@@ -320,16 +387,17 @@ const entityApproveRegistration = async (req, res) => {
 
   try {
     const [regRows] = await pool.query(
-      `SELECT r.*, e.title, e.entity_id, e.created_by, e.id as ev_id
+      `SELECT r.*, e.title, e.entity_id, e.created_by, e.id as ev_id, e.date as ev_date,
+              u.name as user_name, u.email as user_email
        FROM registrations r
        JOIN events e ON r.event_id = e.id
+       JOIN users u ON r.user_id = u.id
        WHERE r.id = ?`,
       [id]
     );
     if (!regRows.length) return res.status(404).json({ error: 'التسجيل غير موجود' });
 
     const reg = regRows[0];
-    // Verify entity owns the event
     if (reg.entity_id !== entityId && reg.created_by !== req.user.id) {
       return res.status(403).json({ error: 'ليس لديك صلاحية الموافقة على هذا الطلب' });
     }
@@ -350,12 +418,19 @@ const entityApproveRegistration = async (req, res) => {
     await pool.query(`UPDATE registrations SET status = 'registered' WHERE id = ?`, [id]);
     await pool.query('UPDATE events SET current_participants = current_participants + 1 WHERE id = ?', [reg.ev_id]);
 
+    // In-app notification
     await createNotificationForUser(
       reg.user_id,
       `تمت الموافقة على طلبك في "${reg.title}" ✅`,
       `تم قبولك في الفعالية، نراك هناك!`,
       'registration', reg.ev_id, 'event'
     );
+
+    // Email notification
+    const eventDateStr = reg.ev_date ? new Date(reg.ev_date).toLocaleDateString('ar-EG', {
+      weekday: 'long', day: 'numeric', month: 'long'
+    }) : '';
+    sendRegistrationEmail(reg.user_email, reg.user_name, reg.title, eventDateStr, 'approved');
 
     res.json({ message: 'تمت الموافقة على التسجيل بنجاح' });
   } catch (err) {
@@ -371,9 +446,11 @@ const entityRejectRegistration = async (req, res) => {
 
   try {
     const [regRows] = await pool.query(
-      `SELECT r.*, e.title, e.entity_id, e.created_by, e.id as ev_id
+      `SELECT r.*, e.title, e.entity_id, e.created_by, e.id as ev_id,
+              u.name as user_name, u.email as user_email
        FROM registrations r
        JOIN events e ON r.event_id = e.id
+       JOIN users u ON r.user_id = u.id
        WHERE r.id = ?`,
       [id]
     );
@@ -389,12 +466,16 @@ const entityRejectRegistration = async (req, res) => {
 
     await pool.query(`UPDATE registrations SET status = 'cancelled' WHERE id = ?`, [id]);
 
+    // In-app notification
     await createNotificationForUser(
       reg.user_id,
       `عذراً، لم يتم قبول طلبك في "${reg.title}"`,
       `نأسف، لا تتوفر مقاعد كافية أو لم تستوفِ متطلبات الفعالية.`,
       'registration', reg.ev_id, 'event'
     );
+
+    // Email notification
+    sendRegistrationEmail(reg.user_email, reg.user_name, reg.title, '', 'rejected');
 
     res.json({ message: 'تم رفض التسجيل' });
   } catch (err) {
