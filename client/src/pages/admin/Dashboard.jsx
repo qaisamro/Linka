@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Users, Calendar, Clock, CheckCircle,
+  Users, Calendar, Clock, CheckCircle, XCircle,
   Plus, Eye, MapPin, BarChart2, Activity,
   Sparkles, RefreshCw, Trash2, Megaphone, Send,
   UserCog, ClipboardList, LayoutDashboard,
@@ -160,12 +160,36 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
   });
   const [sending, setSending] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState({ show: false, id: null });
+  const [pendingEvents, setPendingEvents] = useState([]);
+  const [approving, setApproving] = useState(null);
 
   useEffect(() => {
     neighborhoodsAPI.getAll()
       .then(r => setNeighborhoods(r.data.neighborhoods || []))
       .catch(() => { });
+    loadPendingEvents();
   }, []);
+
+  const loadPendingEvents = async () => {
+    try {
+      const res = await eventsAPI.getPendingEvents();
+      setPendingEvents(res.data.events || []);
+    } catch { /* silent */ }
+  };
+
+  const handleApproveEvent = async (id, action) => {
+    setApproving(id + action);
+    try {
+      await eventsAPI.approveEvent(id, action);
+      toast.success(action === 'approve' ? 'تمت الموافقة على الفعالية ✅' : 'تم رفض الفعالية');
+      loadPendingEvents();
+      if (action === 'approve') onRefresh();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'خطأ في المعالجة');
+    } finally {
+      setApproving(null);
+    }
+  };
 
   const loadEventRegs = async (eventId) => {
     try {
@@ -417,6 +441,52 @@ function OverviewTab({ stats, events, onCreateEvent, onRefresh, refreshing }) {
               <p className="text-sm font-semibold">اختر فعالية لعرض المسجّلين</p>
             </div>
           )}
+        </SectionCard>
+      )}
+
+      {/* Pending Entity Events Approval */}
+      {pendingEvents.length > 0 && (
+        <SectionCard delay={0.75}>
+          <div className="p-5 border-b border-[#F9F5F0] flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-[#F4991A] flex items-center justify-center shadow-md">
+              <Calendar size={16} className="text-white" />
+            </div>
+            <div>
+              <h2 className="font-bold text-[#344F1F] text-sm leading-none">فعاليات بانتظار الموافقة</h2>
+              <p className="text-amber-600 text-[10px] mt-0.5">{pendingEvents.length} فعالية مقدّمة من الجهات</p>
+            </div>
+          </div>
+          <div className="divide-y divide-[#F9F5F0]">
+            {pendingEvents.map(ev => (
+              <div key={ev.id} className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <p className="font-bold text-[#344F1F] text-sm">{ev.title}</p>
+                  <p className="text-xs text-[#F4991A] mt-0.5">
+                    {ev.entity_name} · {ev.location_name || '—'} · {new Date(ev.date).toLocaleDateString('ar-EG')}
+                  </p>
+                  {ev.description && (
+                    <p className="text-xs text-[#344F1F]/60 mt-1 line-clamp-2">{ev.description}</p>
+                  )}
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => handleApproveEvent(ev.id, 'approve')}
+                    disabled={approving === ev.id + 'approve'}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-green-600 text-white text-xs font-black hover:bg-green-700 transition-all disabled:opacity-50"
+                  >
+                    <CheckCircle size={14} /> موافقة
+                  </button>
+                  <button
+                    onClick={() => handleApproveEvent(ev.id, 'reject')}
+                    disabled={approving === ev.id + 'reject'}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-100 text-red-700 text-xs font-black hover:bg-red-200 transition-all disabled:opacity-50"
+                  >
+                    <XCircle size={14} /> رفض
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </SectionCard>
       )}
 

@@ -6,7 +6,7 @@ import {
   CheckCircle2, AlertCircle, BarChart3, TrendingUp,
   Mail, ExternalLink, Activity, X, FileText, Check
 } from 'lucide-react';
-import { jobsAPI, trainingAPI } from '../api';
+import { jobsAPI, trainingAPI, eventsAPI } from '../api';
 import toast from 'react-hot-toast';
 
 const EmailModal = ({ isOpen, onClose, onSend, applicantName }) => {
@@ -94,7 +94,7 @@ const EmailModal = ({ isOpen, onClose, onSend, applicantName }) => {
 };
 
 export default function CompanyPortal() {
-  const [activeTab, setActiveTab] = useState('jobs'); // jobs | training
+  const [activeTab, setActiveTab] = useState('jobs'); // jobs | training | events
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -108,6 +108,15 @@ export default function CompanyPortal() {
   const [editingJobId, setEditingJobId] = useState(null);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [targetApplicant, setTargetApplicant] = useState(null);
+
+  // Events state
+  const [entityEvents, setEntityEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventModalOpen, setEventModalOpen] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '', description: '', type: 'اجتماعية',
+    location_name: '', date: '', duration_hours: 2, max_participants: 50
+  });
 
   const [newJob, setNewJob] = useState({
     title: '', description: '', type: 'وظيفة',
@@ -131,19 +140,44 @@ export default function CompanyPortal() {
 
   useEffect(() => {
     if (activeTab === 'training') fetchTrainingOffers();
+    if (activeTab === 'events') fetchEntityEvents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      // Future: filter by created_by or entity_id
-      const res = await jobsAPI.list();
-      setJobs(res.data.jobs); // Filtered manually for demo
+      const res = await jobsAPI.list({ my: true });
+      setJobs(res.data.jobs || []);
     } catch (err) {
       toast.error('خطأ في جلب البيانات');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEntityEvents = async () => {
+    setEventsLoading(true);
+    try {
+      const res = await eventsAPI.getEntityEvents();
+      setEntityEvents(res.data.events || []);
+    } catch (err) {
+      toast.error('خطأ في جلب الفعاليات');
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  const handleCreateEvent = async (e) => {
+    e.preventDefault();
+    try {
+      await eventsAPI.createEntityEvent(newEvent);
+      toast.success('تم إرسال الفعالية بانتظار موافقة الإدارة ✅');
+      setEventModalOpen(false);
+      setNewEvent({ title: '', description: '', type: 'اجتماعية', location_name: '', date: '', duration_hours: 2, max_participants: 50 });
+      fetchEntityEvents();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'خطأ في إرسال الفعالية');
     }
   };
 
@@ -322,11 +356,15 @@ export default function CompanyPortal() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => (activeTab === 'training' ? setTrainingModalOpen(true) : setIsModalOpen(true))}
+              onClick={() => {
+                if (activeTab === 'training') setTrainingModalOpen(true);
+                else if (activeTab === 'events') setEventModalOpen(true);
+                else setIsModalOpen(true);
+              }}
               className="flex items-center gap-2 px-8 py-3.5 bg-[#344F1F] text-[#F9F5F0] rounded-2xl font-black shadow-lg shadow-[#344F1F]/20"
             >
               <Plus size={20} />
-              {activeTab === 'training' ? 'نشر تدريب جديد' : 'نشر فرصة جديدة'}
+              {activeTab === 'training' ? 'نشر تدريب جديد' : activeTab === 'events' ? 'إضافة فعالية' : 'نشر فرصة جديدة'}
             </motion.button>
           </div>
         </div>
@@ -339,13 +377,24 @@ export default function CompanyPortal() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          <button onClick={() => setActiveTab('jobs')} className={`px-5 py-3 rounded-2xl font-black text-sm border ${activeTab === 'jobs' ? 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' : 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]'}`}>
-            فرص العمل
-          </button>
-          <button onClick={() => setActiveTab('training')} className={`px-5 py-3 rounded-2xl font-black text-sm border ${activeTab === 'training' ? 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]' : 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3]'}`}>
-            التدريب الميداني
-          </button>
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {[
+            { key: 'jobs', label: 'فرص العمل' },
+            { key: 'training', label: 'التدريب الميداني' },
+            { key: 'events', label: 'الفعاليات' },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-5 py-3 rounded-2xl font-black text-sm border transition-all ${
+                activeTab === tab.key
+                  ? 'bg-[#344F1F] text-[#F9F5F0] border-[#344F1F] shadow-md'
+                  : 'bg-[#F9F5F0] text-[#344F1F] border-[#F2EAD3] hover:bg-[#F2EAD3]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Content */}
@@ -432,6 +481,47 @@ export default function CompanyPortal() {
                   </div>
                 </div>
               ))
+            )}
+
+            {/* ─── Events Tab Content ─── */}
+            {activeTab === 'events' && (
+              eventsLoading ? (
+                <div className="h-40 flex items-center justify-center">
+                  <div className="w-8 h-8 border-4 border-[#F2EAD3] border-t-[#344F1F] rounded-full animate-spin" />
+                </div>
+              ) : entityEvents.length === 0 ? (
+                <div className="text-center py-12 bg-[#F9F5F0] rounded-2xl">
+                  <p className="text-[#F4991A] font-bold">لم تقم بإضافة أي فعاليات بعد.</p>
+                  <p className="text-[#344F1F]/60 text-sm mt-1">اضغط "إضافة فعالية" لإرسال فعالية للمراجعة.</p>
+                </div>
+              ) : (
+                entityEvents.map(ev => {
+                  const statusMap = {
+                    pending: { label: 'قيد المراجعة', cls: 'bg-amber-100 text-amber-700' },
+                    approved: { label: 'مُعتمدة', cls: 'bg-green-100 text-green-700' },
+                    rejected: { label: 'مرفوضة', cls: 'bg-red-100 text-red-700' },
+                  };
+                  const s = statusMap[ev.approval_status] || statusMap.pending;
+                  return (
+                    <div key={ev.id} className="group p-6 rounded-2xl bg-[#F9F5F0] border border-[#F2EAD3] transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-[#F9F5F0] rounded-xl flex items-center justify-center text-2xl border border-[#F2EAD3]">
+                          🎉
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-[#344F1F]">{ev.title}</h4>
+                          <div className="flex items-center gap-4 mt-1 text-[#F4991A] text-xs font-bold flex-wrap">
+                            <span className="flex items-center gap-1"><MapPin size={12} /> {ev.location_name || '—'}</span>
+                            <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(ev.date).toLocaleDateString('ar-EG')}</span>
+                            <span className="flex items-center gap-1"><Users size={12} /> {ev.max_participants} مقعد</span>
+                          </div>
+                        </div>
+                      </div>
+                      <span className={`text-xs font-black px-3 py-1 rounded-full ${s.cls}`}>{s.label}</span>
+                    </div>
+                  );
+                })
+              )
             )}
           </div>
         </div>
@@ -777,6 +867,75 @@ export default function CompanyPortal() {
         onSend={handleSendCustomEmail}
         applicantName={targetApplicant?.applicant_name}
       />
+
+      {/* Event Creation Modal */}
+      {eventModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#344F1F]/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-[#F9F5F0] rounded-[2rem] w-full max-w-xl shadow-2xl overflow-hidden"
+          >
+            <div className="p-6 border-b border-[#F2EAD3] flex justify-between items-center bg-[#344F1F]/5">
+              <h3 className="text-xl font-black text-[#344F1F]">إضافة فعالية جديدة</h3>
+              <button onClick={() => setEventModalOpen(false)} className="p-2 hover:bg-[#F2EAD3] rounded-xl transition">
+                <X size={20} className="text-[#344F1F]" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateEvent} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              <div>
+                <label className="block text-sm font-bold text-[#344F1F] mb-1">عنوان الفعالية *</label>
+                <input required value={newEvent.title} onChange={e => setNewEvent(p => ({ ...p, title: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#F2EAD3] focus:border-[#F4991A] outline-none font-bold text-[#344F1F]" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-[#344F1F] mb-1">الوصف</label>
+                <textarea value={newEvent.description} onChange={e => setNewEvent(p => ({ ...p, description: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#F2EAD3] focus:border-[#F4991A] outline-none h-24 resize-none text-[#344F1F]" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-[#344F1F] mb-1">النوع</label>
+                  <select value={newEvent.type} onChange={e => setNewEvent(p => ({ ...p, type: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-[#F2EAD3] focus:border-[#F4991A] outline-none text-[#344F1F] font-bold">
+                    {['اجتماعية', 'تعليمية', 'تطوعية', 'ثقافية', 'رياضية', 'بيئية'].map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#344F1F] mb-1">الموقع</label>
+                  <input value={newEvent.location_name} onChange={e => setNewEvent(p => ({ ...p, location_name: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-[#F2EAD3] focus:border-[#F4991A] outline-none text-[#344F1F]" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-[#344F1F] mb-1">التاريخ والوقت *</label>
+                  <input required type="datetime-local" value={newEvent.date} onChange={e => setNewEvent(p => ({ ...p, date: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-[#F2EAD3] focus:border-[#F4991A] outline-none text-[#344F1F]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#344F1F] mb-1">عدد المقاعد</label>
+                  <input type="number" min="1" value={newEvent.max_participants} onChange={e => setNewEvent(p => ({ ...p, max_participants: parseInt(e.target.value) }))}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-[#F2EAD3] focus:border-[#F4991A] outline-none text-[#344F1F]" />
+                </div>
+              </div>
+              <p className="text-xs text-[#F4991A] font-bold bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                ⚠️ سيتم مراجعة الفعالية من قبل الإدارة قبل نشرها على المنصة.
+              </p>
+              <div className="flex gap-3 pt-2">
+                <button type="submit" className="flex-1 bg-[#344F1F] text-[#F9F5F0] py-3.5 rounded-xl font-black hover:bg-[#2A3F19] transition-all">
+                  إرسال للمراجعة
+                </button>
+                <button type="button" onClick={() => setEventModalOpen(false)} className="px-6 py-3.5 rounded-xl border-2 border-[#F2EAD3] text-[#344F1F] font-black hover:bg-[#F2EAD3] transition-all">
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

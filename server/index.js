@@ -62,6 +62,14 @@ async function runMigrations() {
     console.error('⚠️  Could not migrate jobs.entity_id:', err.message);
   }
 
+  // Entity-created events: add entity_id + approval_status
+  try {
+    await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS entity_id INTEGER REFERENCES entities(id) ON DELETE SET NULL`);
+    await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS approval_status VARCHAR(20) DEFAULT 'approved'`);
+  } catch (err) {
+    console.error('⚠️  Could not migrate events (entity_id/approval_status):', err.message);
+  }
+
   // Job applications table
   try {
     await pool.query(`

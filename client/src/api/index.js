@@ -40,6 +40,12 @@ export const eventsAPI = {
   create: (data) => api.post('/events', data),
   update: (id, data) => api.put(`/events/${id}`, data),
   remove: (id) => api.delete(`/events/${id}`),
+  // Entity portal
+  createEntityEvent: (data) => api.post('/events/entity/create', data),
+  getEntityEvents: () => api.get('/events/entity/my'),
+  // Admin approval
+  getPendingEvents: () => api.get('/events/admin/pending'),
+  approveEvent: (id, action) => api.patch(`/events/${id}/approve`, { action }),
 };
 
 // ─── Registrations ────────────────────────────────────────────────

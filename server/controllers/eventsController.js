@@ -11,10 +11,12 @@ const getEvents = async (req, res) => {
     SELECT e.*,
            n.name as neighborhood_name,
            u.name as created_by_name,
+           ent.name as entity_name,
            (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.user_id = ?)::int as is_registered
     FROM events e
     LEFT JOIN neighborhoods n ON e.neighborhood_id = n.id
     LEFT JOIN users u ON e.created_by = u.id
+    LEFT JOIN entities ent ON e.entity_id = ent.id
     WHERE 1=1
   `;
   const params = [req.user?.id];
@@ -34,6 +36,9 @@ const getEvents = async (req, res) => {
     query += ` AND e.date <= ?`;
     params.push(date_to);
   }
+
+  // Only show approved events to the public
+  query += ` AND (e.approval_status IS NULL OR e.approval_status = 'approved')`;
 
   // Default: show only active events
   query += ` AND e.status = ?`;
@@ -254,4 +259,117 @@ const deleteEvent = async (req, res) => {
   }
 };
 
-module.exports = { getEvents, getEventById, createEvent, updateEvent, deleteEvent };
+// ─── POST /api/events/entity  (Entity creates event, pending approval) ──
+const createEntityEvent = async (req, res) => {
+  const {
+    title, description, type, neighborhood_id,
+    location_name, lat, lng, date, duration_hours,
+    max_participants, image_url
+  } = req.body;
+
+  if (!title || !date) {
+    return res.status(400).json({ error: 'عنوان الفعالية والتاريخ مطلوبان' });
+  }
+
+  const entityId = req.user.entity_id ?? req.user.id;
+
+  try {
+    const [entRows] = await pool.query('SELECT name FROM entities WHERE id = ?', [entityId]);
+    if (!entRows.length) return res.status(404).json({ error: 'الجهة غير موجودة' });
+
+    const [insertResult] = await pool.query(
+      `INSERT INTO events
+        (title, description, type, neighborhood_id, location_name, lat, lng,
+         date, duration_hours, max_participants, image_url, created_by, entity_id, approval_status, status)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'pending','active') RETURNING id`,
+      [title, description, type || 'اجتماعية', neighborhood_id, location_name,
+        lat, lng, date, duration_hours || 2, max_participants || 50,
+        image_url, null, entityId]
+    );
+
+    const [rows] = await pool.query('SELECT * FROM events WHERE id = ?', [insertResult.insertId]);
+    res.status(201).json({ message: 'تم إرسال الفعالية بانتظار موافقة الإدارة', event: rows[0] });
+  } catch (err) {
+    console.error('createEntityEvent error:', err.message);
+    res.status(500).json({ error: 'خطأ في إنشاء الفعالية' });
+  }
+};
+
+// ─── GET /api/events/entity  (Entity sees their own events) ─────
+const getEntityEvents = async (req, res) => {
+  const entityId = req.user.entity_id ?? req.user.id;
+  try {
+    const [rows] = await pool.query(
+      `SELECT e.*, n.name as neighborhood_name
+       FROM events e
+       LEFT JOIN neighborhoods n ON e.neighborhood_id = n.id
+       WHERE e.entity_id = ?
+       ORDER BY e.created_at DESC`,
+      [entityId]
+    );
+    res.json({ events: rows });
+  } catch (err) {
+    console.error('getEntityEvents error:', err.message);
+    res.status(500).json({ error: 'خطأ في جلب الفعاليات' });
+  }
+};
+
+// ─── GET /api/events/pending  (Admin: list pending entity events) ─
+const getPendingEvents = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT e.*, n.name as neighborhood_name, ent.name as entity_name
+       FROM events e
+       LEFT JOIN neighborhoods n ON e.neighborhood_id = n.id
+       LEFT JOIN entities ent ON e.entity_id = ent.id
+       WHERE e.approval_status = 'pending'
+       ORDER BY e.created_at DESC`
+    );
+    res.json({ events: rows });
+  } catch (err) {
+    console.error('getPendingEvents error:', err.message);
+    res.status(500).json({ error: 'خطأ في جلب الفعاليات المعلّقة' });
+  }
+};
+
+// ─── PATCH /api/events/:id/approve  (Admin approves/rejects) ────
+const approveEvent = async (req, res) => {
+  const { id } = req.params;
+  const { action } = req.body; // 'approve' | 'reject'
+
+  if (!['approve', 'reject'].includes(action)) {
+    return res.status(400).json({ error: 'action يجب أن يكون approve أو reject' });
+  }
+
+  const newStatus = action === 'approve' ? 'approved' : 'rejected';
+
+  try {
+    const [ev] = await pool.query('SELECT * FROM events WHERE id = ?', [id]);
+    if (!ev.length) return res.status(404).json({ error: 'الفعالية غير موجودة' });
+
+    await pool.query(`UPDATE events SET approval_status = ? WHERE id = ?`, [newStatus, id]);
+
+    // If approved, notify all users about the new event
+    if (newStatus === 'approved') {
+      const event = ev[0];
+      const eventDate = new Date(event.date).toLocaleDateString('ar-EG', {
+        weekday: 'long', day: 'numeric', month: 'long',
+      });
+      await notifyAllUsers(
+        `فعالية جديدة: "${event.title}" 🎉`,
+        `${eventDate} · ${event.location_name || ''} · سجّل الآن!`,
+        'new_event',
+        event.id,
+        'event',
+        null
+      );
+    }
+
+    res.json({ message: newStatus === 'approved' ? 'تمت الموافقة على الفعالية' : 'تم رفض الفعالية' });
+  } catch (err) {
+    console.error('approveEvent error:', err.message);
+    res.status(500).json({ error: 'خطأ في معالجة الطلب' });
+  }
+};
+
+module.exports = { getEvents, getEventById, createEvent, updateEvent, deleteEvent, createEntityEvent, getEntityEvents, getPendingEvents, approveEvent };

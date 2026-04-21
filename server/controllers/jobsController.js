@@ -54,12 +54,20 @@ async function computeUserSkills(userId) {
 
 // ─── GET /api/jobs ────────────────────────────────────────────────
 const listJobs = async (req, res) => {
-    const { type, search } = req.query;
+    const { type, search, my } = req.query;
     const userId = req.user?.id;
 
     try {
         let query = `SELECT * FROM jobs WHERE is_active = TRUE`;
         const params = [];
+
+        // Entity users requesting only their own jobs
+        if (my === 'true' && req.user?.role === 'entity') {
+            const entityId = req.user.entity_id ?? req.user.id;
+            query += ` AND entity_id = ?`;
+            params.push(entityId);
+        }
+
         if (type) { query += ` AND type = ?`; params.push(type); }
         if (search) { query += ` AND (title LIKE ? OR organization LIKE ?)`; params.push(`%${search}%`, `%${search}%`); }
         query += ` ORDER BY created_at DESC`;
